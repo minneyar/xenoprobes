@@ -1,0 +1,47 @@
+# This is how the inventory file looks like:
+# Each line contains:
+#
+#      TYPE,QUANTITY
+#
+# where the type works like this:
+#
+#   M1 = Mining Probe G1
+#   M2 = Mining Probe G2
+#   ...
+#   R1 = Research Probe G1
+#   R2 = Research Probe G2
+#   ...
+#   B1 = Booster Probe G1
+#   S = Storage Probe
+#   D = Duplicator Probe
+#   B = Basic Probe
+#
+# Note: you don't need to specify Basic Probes, the program assumes you have an
+# infinite amount of them.
+#
+# Note: If you have more than enough probes for the entire map, it's a good idea
+# to leave some probes out of the inventory. In this example, I commented out
+# the M1, M2 and M3 probes, since I have more than enough of the better mining probes
+# for the entire map. Less probes means less computation.
+
+#M1,19
+#M2,22
+#M3,7
+M4,12
+M5,9
+M6,9
+M7,2
+M8,23
+M9,8
+M10,2
+R1,3
+R2,3
+R3,2
+R4,5
+R5,5
+R6,4
+B1,3
+B2,3
+S,10
+D,4
+

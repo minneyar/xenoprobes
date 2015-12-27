@@ -1,0 +1,9 @@
+#!/bin/sh
+
+#libtoolize -c -i || exit 1
+aclocal -I m4 --install || exit 1
+autoheader || exit 1
+autoconf || exit 1
+automake -a -c || exit 1
+
+exit 0
