@@ -16,33 +16,12 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <iostream>
-#include <fstream>
-#include <string>
-#include <memory>
-#include <map>
-#include <vector>
-#include <queue>
-#include <utility>
-#include <cstdio>
-#include <cstddef>
-#include <algorithm>
-#include <random>
-#include <utility>
-#include <iomanip>
-#include <atomic>
 #include <csignal>
-#include <cassert>
-#include <cmath>
-
+#include <iostream>
 #include <boost/program_options.hpp>
 #include <boost/filesystem.hpp>
 #include <expat_config.h>
 
-#include "probe.h"
-#include "solution.h"
-#include "site.h"
-#include "site_list.h"
 #include "probe_optimizer.h"
 
 #ifdef __MINGW32__
@@ -50,12 +29,6 @@
 #include <windows.h>
 #include <wincrypt.h>
 #endif
-
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
-
-
 
 using std::size_t;
 using std::cout;
