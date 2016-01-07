@@ -124,9 +124,9 @@ void ProbeOptimizer::doHillClimbing() const
 
 
     std::vector<Solution> population(maxPopSize_), newGen;
-    for (size_t i=0; i<maxPopSize_; ++i) {
-        population[i].randomize();
-        population[i].setScore(population[i].evaluate());
+    for (auto& solution : population) {
+        solution.randomize();
+        solution.evaluate();
     }
 
     Solution globalBest, best, worst;
@@ -143,24 +143,16 @@ void ProbeOptimizer::doHillClimbing() const
         killed = 0;
 
         for (const auto& ancestor : population) {
-            auto bestChild = ancestor;
-            for (size_t i=0; i<numOffsprings_; ++i) {
-                auto child = ancestor;
-                child.setAge(0);
-                child.mutate(mutationRate_);
-
-                if (ancestor.hasSameArrangement(child))
-                    continue;
-
-                child.setScore(child.evaluate());
-                if (child > bestChild)
-                    bestChild = std::move(child);
-            }
+            // First, create a bunch of children of this and try t
+            // find the best one.
+            auto bestChild = ancestor.findBestChild(numOffsprings_, mutationRate_);
+            // If none of the children were better than the original,
+            // this generation's a flop.  Reset it from scratch.
             if (bestChild.getScore() == ancestor.getScore() && maxAge_ > 0) {
                 bestChild.setAge(bestChild.getAge()+1);
                 if (bestChild.getAge() > maxAge_) {
                     bestChild.randomize();
-                    bestChild.setScore(bestChild.evaluate());
+                    bestChild.evaluate();
                     bestChild.setAge(0);
                     ++killed;
                 }
@@ -173,8 +165,9 @@ void ProbeOptimizer::doHillClimbing() const
         worst = *extremes.first;
         best = *extremes.second;
 
-        if (best > globalBest)
+        if (best > globalBest) {
             globalBest = best;
+        }
 
         swap(population, newGen);
     }

@@ -17,16 +17,17 @@ public:
     void setAge(int);
 
     double getScore() const;
-    void setScore(double);
 
     void randomize();
-    double evaluate();
+    void evaluate();
     void mutate(double rate);
 
     void printTotals() const;
     void printSetup() const;
 
     bool hasSameArrangement(const Solution& arr2) const;
+
+    Solution findBestChild(size_t numOffsprings, double mutationRate) const;
 
     bool operator==(const Solution& b);
     bool operator<(const Solution& b);

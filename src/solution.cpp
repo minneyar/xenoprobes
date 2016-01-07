@@ -14,10 +14,6 @@ double Solution::getScore() const {
     return score_;
 }
 
-void Solution::setScore(double score) {
-    score_ = score;
-}
-
 int Solution::getAge() const {
     return age_;
 }
@@ -31,8 +27,8 @@ void Solution::randomize() {
     setup_.randomize();
 }
 
-double Solution::evaluate() {
-    return setup_.evaluate();
+void Solution::evaluate() {
+    score_ = setup_.evaluate();
 }
 
 void Solution::mutate(double rate) {
@@ -50,6 +46,27 @@ void Solution::printSetup() const {
 
 bool Solution::hasSameArrangement(const Solution &arr2) const {
     return setup_ == arr2.setup_;
+}
+
+
+Solution Solution::findBestChild(size_t numOffsprings, double mutationRate) const {
+    Solution bestChild = *this;
+    for (size_t i=0; i<numOffsprings; ++i) {
+        Solution child = *this;
+        child.setAge(0);
+        child.mutate(mutationRate);
+
+        if (hasSameArrangement(child)) {
+            continue;
+        }
+
+        child.evaluate();
+        if (child > bestChild) {
+            bestChild = std::move(child);
+        }
+    }
+
+    return bestChild;
 }
 
 bool Solution::operator==(const Solution &b) {

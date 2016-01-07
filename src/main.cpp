@@ -56,9 +56,8 @@ RunMode parseOptions(int argc, const char** argv, ProbeOptimizer& optimizer)
 
     po::options_description desc("Allowed options");
     desc.add_options()
-            ("help", "prints help message")
+            ("help,h", "prints help message")
             ("print",
-             po::value<std::string>(),
              "Just print estimated output for a given setup file (in CSV format.)")
             ("storageweight",
              po::value<float>()->default_value(1000),
@@ -78,8 +77,8 @@ RunMode parseOptions(int argc, const char** argv, ProbeOptimizer& optimizer)
             ("mutation,m",
              po::value<float>()->default_value(1.0/32),
              "Mutation rate (probability of any probe swapping places with another.)")
-            ("setup, s",
-             po::value<std::string>()->default_value(""),
+            ("setup,s",
+             po::value<std::string>()->default_value("sites.csv"),
              "Probe setup file, in CSV format.")
             ("inventory,i",
              po::value<std::string>()->default_value("inventory.csv"),
@@ -135,7 +134,7 @@ void doWin32Init()
         }
 
         std::seed_seq seq(buffer, buffer+length);
-        mt.seed(seq);
+        ProbeArrangement::seedMT(seq);
 
         if (!::CryptReleaseContext(provider, 0))
             throw std::runtime_error{"could not release crypto context"};

@@ -11,7 +11,11 @@
 #include "probe_arrangement.h"
 #include "probe_optimizer.h"
 
-std::mt19937_64 ProbeArrangement::mt;
+#ifdef __MINGW32__
+std::mt19937 ProbeArrangement::mt; // note it wasn't seeded properly
+#else
+std::mt19937_64 ProbeArrangement::mt{std::random_device{}()};
+#endif
 
 const std::vector<Probe> ProbeArrangement::PROBE_VALUES = {
         Probe(Probe::Type::Basic     , 0.5, 0.5, 1.0),
@@ -58,6 +62,10 @@ bool operator==(const ProbeArrangement &l, const ProbeArrangement &r) {
         }
     }
     return true;
+}
+
+void ProbeArrangement::seedMT(std::seed_seq& seed) {
+    mt.seed(seed);
 }
 
 Probe::Type ProbeArrangement::getProbeAt(int index) const {
