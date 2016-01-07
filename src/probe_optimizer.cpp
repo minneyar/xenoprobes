@@ -157,8 +157,11 @@ void ProbeOptimizer::doHillClimbing() const
               // find the best one.
               auto bestChild = ancestor.findBestChild(numOffsprings_, mutationRate_);
               // If none of the children were better than the original,
-              // this generation's a flop.  Reset it from scratch.
-              if (bestChild.getScore() == ancestor.getScore() && maxAge_ > 0) {
+              // this generation's a flop.  Reset it from scratch if it's old
+              // Don't reset it if it's the best one we've gotten so far, though.
+              if (bestChild.getScore() == ancestor.getScore() &&
+                  maxAge_ > 0 &&
+                  bestChild.getScore() != globalBest.getScore() ) {
                   bestChild.setAge(bestChild.getAge()+1);
                   if (bestChild.getAge() > maxAge_) {
                       bestChild.randomize();
