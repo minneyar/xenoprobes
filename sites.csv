@@ -1,7 +1,7 @@
 # Format:
-#   SiteName,MiningGrade,RevenueGrade,CombatGrade,SightseeingSpots,RareOre
+#   SiteName,MiningGrade,RevenueGrade,CombatGrade,SightseeingSpots,RareOre,RareOre,RareOre,...
 #
-# Note: currently RareOre is ignored
+# Everything after a # will be ignored.
 
 101,C,S,S,1
 102,C,F,B,0
@@ -11,7 +11,7 @@
 106,B,E,B,1,Arc Sand Ore
 107,A,F,B,0
 108,C,F,B,0,Aurorite,Arc Sand Ore,Foucaultium
-109,C,D,B,0,Foucaultium,Dawnstone,Lionbone,Bort
+109,C,D,B,0,Foucaultium,Dawnstone,Lionbone Bort
 110,C,E,B,1,Aurorite,Arc Sand Ore,White Cometite,Dawnstone
 111,C,F,B,0,Foucaultium
 112,A,F,A,0
@@ -24,84 +24,88 @@
 119,C,E,B,0
 120,B,B,B,0
 121,A,E,B,0
+
 201,C,B,S,0
-202,C,C,B,0
-203,C,A,B,0
+202,C,C,B,0,Cimmerian Cinnabar,Everfreeze Ore
+203,C,A,B,0,Cimmerian Cinnabar
 204,A,C,B,0
 205,A,F,B,0
 206,B,A,S,0
-207,C,C,B,0
-208,B,D,B,0
+207,C,C,B,0,Infernium,White Cometite,Cimmerian Cinnabar,Foucaultium
+208,B,D,B,0,Foucaultium
 209,C,F,B,0
 210,B,D,B,0
 211,A,D,B,0
-212,B,E,B,0
+212,B,E,B,0,Aurorite,Enduron Lead,White Cometite
 213,C,S,B,1
 214,C,D,B,2
-215,C,D,B,0
+215,C,D,B,0,Aurorite,Enduron Lead,Everfreeze Ore
 216,C,A,A,1
-217,C,C,B,0
-218,C,E,B,0
-219,C,E,B,0
-220,C,C,A,1
+217,C,C,B,0,Aurorite,Infernium,Cimmerian Cinnabar
+218,C,E,B,0,Aurorite,Enduron Lead,White Cometite
+219,C,E,B,0,Enduron Lead,White Cometite
+220,C,C,A,1,Infernium,Everfreeze Ore
 221,C,E,B,2
 222,C,D,B,1
 223,C,F,B,1
 224,C,A,B,0
 225,C,A,B,1
-301,B,D,B,0
+
+301,B,D,B,0,Infernium,Arc Sand Ore,Lionbone Bort
 302,C,E,B,0
-303,C,E,B,0
+303,C,E,B,0,Aurorite,White Cometite
 304,B,A,S,0
-305,C,E,B,0
+305,C,E,B,0,Aurorite,Arc Sand Ore,Enduron Lead
 306,C,D,B,1
-307,C,B,B,0
-308,B,C,A,0
-309,C,C,B,0
+307,C,B,B,0,Infernium,Arc Sand Ore,Enduron Lead,White Cometite
+308,B,C,A,0,Ouroboros Crystal
+309,C,C,B,0,Enduron Lead,Ouroboros Crystal
 310,C,A,B,0
 311,C,B,B,0
-312,C,D,B,0
+312,C,D,B,0,Infernium,Boiled-Egg Ore,Lionbone Bort
 313,C,E,A,2
 314,C,B,S,0
 315,A,S,B,2
 316,C,D,B,0
 317,C,A,B,1
-318,C,B,B,2
-319,C,D,B,1
-320,C,B,B,0
+318,C,B,B,2,Boiled-Egg Ore,White Cometite,Lionbone Bort
+319,C,D,B,1,Infernium,Boiled-Egg Ore
+320,C,B,B,0,Aurorite,Ouroboros Crystal
 321,A,D,A,0
 322,A,A,B,0
-401,C,B,B,0
+
+401,C,B,B,0,Parhelion Platinum,Marine Rutile
 402,A,B,B,0
 403,A,C,S,0
 404,B,S,S,1
-405,A,E,A,0
+405,A,E,A,0,Arc Sand Ore
 406,C,B,B,0
 407,A,B,B,0
-408,B,D,B,1
+408,B,D,B,1,Aurorite,Arc Sand Ore,Everfreeze Ore
 409,B,S,B,0
 410,C,S,B,1
 411,A,A,S,0
 412,A,B,A,0
 413,C,A,B,1
-414,C,B,B,2
+414,C,B,B,2,Parhelion Platinum,Marine Rutile
 415,C,S,B,0
 416,C,B,B,0
-417,B,D,B,0
-418,C,C,B,0
+417,B,D,B,0,Everfreeze Ore,Boiled-Egg Ore
+418,C,C,B,0,Parhelion Platinum,Arc Sand Ore,Everfreeze Ore,Boiled-Egg Ore,Marine Rutile
 419,C,S,S,1
-420,B,C,B,0
-501,B,F,B,0
-502,A,C,B,1
-503,C,D,B,1
-504,C,C,B,0
+420,B,C,B,0,Everfreeze Ore
+
+501,B,F,B,0,Arc Sand Ore
+502,A,C,B,1,Bonjelium
+503,C,D,B,1,Enduron Lead
+504,C,C,B,0,Arc Sand Ore,Enduron Lead,Marine Rutile,Bonjelium
 505,C,B,B,2
-506,C,B,B,1
-507,C,A,B,1
-508,A,B,S,1
+506,C,B,B,1,Bonjelium,Arc Sand Ore
+507,C,A,B,1,Bonjelium
+508,A,B,S,1,Enduron Lead,Marine Rutile
 509,A,A,A,0
-510,C,B,B,0
-511,A,C,A,0
+510,C,B,B,0,Bonjelium
+511,A,C,A,0,Bonjelium
 512,C,A,S,0
 513,C,A,B,2
 514,C,A,B,1
