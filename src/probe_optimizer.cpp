@@ -9,9 +9,12 @@
 #include <boost/algorithm/string/split.hpp>
 #include <boost/algorithm/string/trim.hpp>
 #include <iomanip>
+#include <thread>
+#include <mutex>
 
 #include "probe_optimizer.h"
 #include "solution.h"
+#include "semaphore.h"
 
 std::atomic<bool> ProbeOptimizer::shouldStop_(false);
 ProbeArrangement ProbeOptimizer::setup_;
@@ -142,24 +145,41 @@ void ProbeOptimizer::doHillClimbing() const
         newGen.clear();
         killed = 0;
 
+        std::vector<std::thread> threads;
+        std::mutex newGenLock;
+        int count = 0;
+        semaphore sem(max_threads_);
         for (const auto& ancestor : population) {
-            // First, create a bunch of children of this and try t
-            // find the best one.
-            auto bestChild = ancestor.findBestChild(numOffsprings_, mutationRate_);
-            // If none of the children were better than the original,
-            // this generation's a flop.  Reset it from scratch.
-            if (bestChild.getScore() == ancestor.getScore() && maxAge_ > 0) {
-                bestChild.setAge(bestChild.getAge()+1);
-                if (bestChild.getAge() > maxAge_) {
-                    bestChild.randomize();
-                    bestChild.evaluate();
-                    bestChild.setAge(0);
-                    ++killed;
-                }
-            }
+            int local_count = count;
+            sem.wait();
+            auto functor = [&] {
+              // First, create a bunch of children of this and try t
+              // find the best one.
+              auto bestChild = ancestor.findBestChild(numOffsprings_, mutationRate_);
+              // If none of the children were better than the original,
+              // this generation's a flop.  Reset it from scratch.
+              if (bestChild.getScore() == ancestor.getScore() && maxAge_ > 0) {
+                  bestChild.setAge(bestChild.getAge()+1);
+                  if (bestChild.getAge() > maxAge_) {
+                      bestChild.randomize();
+                      bestChild.evaluate();
+                      bestChild.setAge(0);
+                      ++killed;
+                  }
+              }
 
-            newGen.push_back(std::move(bestChild));
+              {
+                  std::unique_lock<std::mutex> lock(newGenLock);
+                  newGen.push_back(std::move(bestChild));
+              }
+              sem.notify();
+            };
+            threads.push_back(std::thread(functor));
         }
+        for (auto& thread : threads) {
+            thread.join();
+        }
+        threads.clear();
 
         auto extremes = std::minmax_element(newGen.begin(), newGen.end());
         worst = *extremes.first;
@@ -218,6 +238,11 @@ void ProbeOptimizer::setSetupInput(const std::string &setupInput) {
 
 void ProbeOptimizer::setInventoryInput(const std::string &inventoryInput) {
     inventoryInput_ = inventoryInput;
+}
+
+void ProbeOptimizer::setMaxThreads(size_t threads)
+{
+    max_threads_ = threads;
 }
 
 void ProbeOptimizer::handleSIGINT(int) {

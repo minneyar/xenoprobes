@@ -3,6 +3,7 @@ project (xenoprobes)
 
 add_definitions(-std=c++11)
 
+find_package (Threads)
 find_package (Boost COMPONENTS program_options system REQUIRED)
 include_directories(${Boost_INCLUDE_DIR})
 
@@ -22,9 +23,10 @@ set (SOURCE_FILES
   src/site_list.h
   src/solution.cpp
   src/solution.h
-)
+  src/semaphore.cpp
+  src/semaphore.h)
 
 add_executable (xenoprobes ${SOURCE_FILES})
 
-target_link_libraries (xenoprobes ${Boost_LIBRARIES})
+target_link_libraries (xenoprobes ${Boost_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
 

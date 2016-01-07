@@ -26,3 +26,9 @@
 *.exe
 *.out
 *.app
+
+# CLion project
+.idea/
+
+# CMake build dir
+build/

@@ -11,6 +11,7 @@
 #include "site_list.h"
 #include "probe.h"
 #include "probe_arrangement.h"
+#include "solution.h"
 
 class ProbeOptimizer {
 public:
@@ -36,6 +37,7 @@ public:
     void setMaxAge(int maxAge);
     void setSetupInput(const std::string &setupInput);
     void setInventoryInput(const std::string &inventoryInput);
+    void setMaxThreads(size_t threads);
 
     static void handleSIGINT(int);
 
@@ -71,6 +73,7 @@ private:
     int maxAge_;
     std::string setupInput_;
     std::string inventoryInput_;
+    size_t max_threads_;
 
     static std::atomic<bool> shouldStop_;
 };

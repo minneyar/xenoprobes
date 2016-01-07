@@ -183,8 +183,9 @@ int ProbeArrangement::getComboSize(size_t source) const
 
     int comboSize = 0;
 
-    static std::vector<char> visited;
-    static std::queue<size_t> Q;
+    // TODO Why were these static...?
+    std::vector<char> visited;
+    std::queue<size_t> Q;
 
     visited.clear();
     visited.resize(probes_.size());
@@ -198,8 +199,12 @@ int ProbeArrangement::getComboSize(size_t source) const
         ++comboSize;
 
         for (auto nidx : ProbeOptimizer::getSites().getSite(idx).getNeighbors())
+        {
             if (probes_[nidx] == stype && !visited[nidx])
+            {
                 Q.push(nidx);
+            }
+        }
 
     }
     return comboSize;

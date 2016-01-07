@@ -71,7 +71,7 @@ RunMode parseOptions(int argc, const char** argv, ProbeOptimizer& optimizer)
             ("iterations",
              po::value<size_t>()->default_value(2000),
              "How many iterations to run.")
-            ("offsprings",
+            ("offsprings,o",
              po::value<size_t>()->default_value(100),
              "How many random variations to generate from each solution.")
             ("mutation,m",
@@ -83,12 +83,15 @@ RunMode parseOptions(int argc, const char** argv, ProbeOptimizer& optimizer)
             ("inventory,i",
              po::value<std::string>()->default_value("inventory.csv"),
              "The inventory file, in CSV format.")
-            ("population",
+            ("population,p",
              po::value<size_t>()->default_value(200),
              "Maximum population size.")
-            ("age",
+            ("age,a",
              po::value<int>()->default_value(50),
              "Maximum age for a stuck solution; after this many generations, replace this solution by a new, random one. Set to zero to disable discarding stuck solutions.")
+            ("threads,t",
+             po::value<size_t>()->default_value(8),
+             "Number of concurrent solutions to evaluate.")
             ;
     po::variables_map vm;
     po::store(po::parse_command_line(argc, argv, desc), vm);
@@ -103,14 +106,16 @@ RunMode parseOptions(int argc, const char** argv, ProbeOptimizer& optimizer)
     optimizer.setInventoryInput(vm["inventory"].as<std::string>());
     optimizer.setMaxPopSize(vm["population"].as<size_t>());
     optimizer.setMaxAge(vm["age"].as<int>());
+    optimizer.setMaxThreads(vm["threads"].as<size_t>());
 
     if (vm.count("help")) {
         cerr << desc << endl;
         return HelpMode;
     }
 
-    if (vm.count("print"))
+    if (vm.count("print")) {
         return PrintMode;
+    }
 
     return OptimizeMode;
 }
@@ -171,8 +176,9 @@ int main(int argc, const char** argv)
 
     auto mode = parseOptions(argc, argv, optimizer);
 
-    if (mode == HelpMode)
+    if (mode == HelpMode) {
         return 0;
+    }
 
     optimizer.loadSites();
 
