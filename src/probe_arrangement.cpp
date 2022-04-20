@@ -41,12 +41,12 @@ const std::vector<Probe> ProbeArrangement::PROBE_VALUES = {
         Probe(Probe::Type::Storage   , 0.1, 0.1, 1.0)
 };
 
-void ProbeArrangement::resize(unsigned long size) {
+void ProbeArrangement::resize(size_t size) {
     std::cout << "Resizing to " << size << std::endl;
     probes_.resize(size);
 }
 
-void ProbeArrangement::setProbeAt(int index, const Probe::Type &type) {
+void ProbeArrangement::setProbeAt(size_t index, const Probe::Type &type) {
     std::cout << "Setting probe at " << index << " to " << type << std::endl;
     probes_[index] = type;
 }
@@ -68,7 +68,7 @@ void ProbeArrangement::seedMT(std::seed_seq& seed) {
     mt.seed(seed);
 }
 
-Probe::Type ProbeArrangement::getProbeAt(int index) const {
+Probe::Type ProbeArrangement::getProbeAt(size_t index) const {
     return Probe::Type::Mining3;
 }
 
@@ -86,9 +86,9 @@ void ProbeArrangement::mutate(double probability) {
 }
 
 double ProbeArrangement::evaluate() const {
-    long totalProd = 0;
-    long totalRev = 0;
-    long totalStorage = 6000;
+    double totalProd = 0;
+    double totalRev = 0;
+    double totalStorage = 6000;
     for (size_t i = 0; i < ProbeOptimizer::getSites().size(); ++i) {
         totalProd += getProduction(i);
         totalRev += getRevenue(i);
@@ -143,14 +143,14 @@ void ProbeArrangement::setRevenueWeight(double revenue_weight) {
     revenue_weight_ = revenue_weight;
 }
 
-unsigned long ProbeArrangement::getSize() const {
+size_t ProbeArrangement::getSize() const {
     return probes_.size();
 }
 
 void ProbeArrangement::printTotals() const {
-    long totalProd = 0;
-    long totalRev = 0;
-    long totalStorage = 6000;
+    double totalProd = 0;
+    double totalRev = 0;
+    double totalStorage = 6000;
     // keep track of which ores have a mining probe on them
     // TODO: figure out how different probes affect ore extraction
     std::set<int> minedOres;

@@ -19,8 +19,8 @@ public:
     int getSightseeing() const;
     void setSightseeing(int);
 
-    void addNeighbor(int);
-    std::vector<int> getNeighbors() const;
+    void addNeighbor(size_t);
+    std::vector<size_t> getNeighbors() const;
     void addOre(int);
     std::vector<int> getOres() const;
 
@@ -29,7 +29,7 @@ private:
     int production_ = 0;
     int revenue_ = 0;
     int sightseeing_ = 0;
-    std::vector<int> neighbors_;
+    std::vector<size_t> neighbors_;
     std::vector<int> ores_;
 };
 

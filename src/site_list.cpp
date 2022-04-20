@@ -9,7 +9,7 @@
 #include "site_list.h"
 #include "probe_optimizer.h"
 
-void SiteList::addNeighborToSite(int site_index, int neighbor_index) {
+void SiteList::addNeighborToSite(size_t site_index, size_t neighbor_index) {
     sites_[site_index].addNeighbor(neighbor_index);
     sites_[neighbor_index].addNeighbor(site_index);
 }
@@ -84,7 +84,7 @@ void SiteList::loadSites() {
 
 }
 
-int SiteList::findIndexForSiteName(int name) const {
+long SiteList::findIndexForSiteName(int name) const {
     for (int i=0; i< sites_.size(); ++i) {
         if (sites_[i].getName() == name) {
             return i;
@@ -93,11 +93,11 @@ int SiteList::findIndexForSiteName(int name) const {
     return -1;
 }
 
-Site SiteList::getSite(int index) const {
+Site SiteList::getSite(size_t index) const {
     return sites_[index];
 }
 
-int SiteList::findIndexForOreName(const std::string& name) const {
+long SiteList::findIndexForOreName(const std::string& name) const {
     for (int i = 0; i < ores_.size(); i++) {
         if (ores_[i].getName() == name) {
             return i;
@@ -110,14 +110,14 @@ void SiteList::clear() {
     sites_.clear();
 }
 
-unsigned long SiteList::size() const {
+size_t SiteList::size() const {
     return sites_.size();
 }
 
-Ore SiteList::getOreByIndex(int index) const {
+Ore SiteList::getOreByIndex(size_t index) const {
     return ores_[index];
 }
 
-unsigned long SiteList::getOreCount() const {
+size_t SiteList::getOreCount() const {
     return ores_.size();
 }
