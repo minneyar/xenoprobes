@@ -53,7 +53,7 @@ public:
         for (const auto& item : inventory_) {
             ++histoInv[item];
         }
-        for (int i = 0; i < setup_.getSize(); i++) {
+        for (size_t i = 0; i < setup_.getSize(); i++) {
             ++histoSetup[setup_.getProbeAt(i)];
         }
         return histoInv == histoSetup;

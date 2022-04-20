@@ -166,8 +166,6 @@ void doWin32Init()
 
 int main(int argc, const char** argv)
 {
-    clog << PACKAGE_STRING << endl;
-
 #ifdef __MINGW32__
     doWin32Init();
 #endif

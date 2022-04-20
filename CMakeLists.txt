@@ -1,32 +1,49 @@
-cmake_minimum_required (VERSION 2.8.11)
-project (xenoprobes)
-
-add_definitions(-std=c++11)
+cmake_minimum_required (VERSION 3.8)
+project (xenoprobes
+    VERSION 1.0.0
+    LANGUAGES CXX)
 
 find_package (Threads)
-find_package (Boost COMPONENTS program_options system REQUIRED)
-include_directories(${Boost_INCLUDE_DIR})
+set(Boost_USE_STATIC_LIBS ON)
+set(Boost_USE_MULTITHREADED ON)
+find_package (Boost COMPONENTS filesystem program_options system REQUIRED)
 
-set (SOURCE_FILES
+if(MSVC)
+  add_compile_options(
+    $<$<CONFIG:>:/MT> #---------|
+    $<$<CONFIG:Debug>:/MTd> #---|-- Statically link the runtime libraries
+    $<$<CONFIG:Release>:/MT> #--|
+  )
+endif()
+
+add_executable(${PROJECT_NAME})
+
+if (MSVC)
+  set_target_properties(${PROJECT_NAME} PROPERTIES
+      MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+      CXX_STANDARD 14
+      )
+else()
+  set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD 14)
+endif()
+
+target_sources(${PROJECT_NAME} PRIVATE
   src/main.cpp
   src/ore.cpp
-  src/ore.h
   src/probe_arrangement.cpp
-  src/probe_arrangement.h
   src/probe.cpp
-  src/probe.h
   src/probe_optimizer.cpp
-  src/probe_optimizer.h
   src/site.cpp
-  src/site.h
   src/site_list.cpp
-  src/site_list.h
   src/solution.cpp
-  src/solution.h
   src/semaphore.cpp
-  src/semaphore.h)
-
-add_executable (xenoprobes ${SOURCE_FILES})
-
-target_link_libraries (xenoprobes ${Boost_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
+)
+target_link_libraries (${PROJECT_NAME}
+  PRIVATE
+  Boost::filesystem
+  Boost::program_options
+  Boost::system
+  Threads::Threads
+  $<IF:$<BOOL:MSVC>,,-static>
+)
 

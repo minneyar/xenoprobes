@@ -11,16 +11,16 @@
 
 class SiteList {
 public:
-    void addNeighborToSite(int site_index, int neighbor_index);
+    void addNeighborToSite(size_t site_index, size_t neighbor_index);
     void loadSites();
-    int findIndexForSiteName(int name) const;
-    Site getSite(int index) const;
-    int findIndexForOreName(const std::string& name) const;
-    Ore getOreByIndex(int index) const;
+    long findIndexForSiteName(int name) const;
+    Site getSite(size_t index) const;
+    long findIndexForOreName(const std::string& name) const;
+    Ore getOreByIndex(size_t index) const;
     void clear();
 
-    unsigned long size() const;
-    unsigned long getOreCount() const;
+    size_t size() const;
+    size_t getOreCount() const;
 
 private:
     std::vector<Site> sites_;

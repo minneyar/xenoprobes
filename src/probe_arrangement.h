@@ -12,9 +12,9 @@
 
 class ProbeArrangement {
 public:
-    void resize(unsigned long size);
-    void setProbeAt(int index, const Probe::Type& type);
-    Probe::Type getProbeAt(int index) const;
+    void resize(size_t size);
+    void setProbeAt(size_t index, const Probe::Type& type);
+    Probe::Type getProbeAt(size_t index) const;
     
     void mutate(double probability);
     
@@ -32,7 +32,7 @@ public:
     double getRevenueWeight() const;
     void setRevenueWeight(double revenue_weight);
 
-    unsigned long getSize() const;
+    size_t getSize() const;
 
     friend bool operator==(const ProbeArrangement& l, const ProbeArrangement& r);
 
