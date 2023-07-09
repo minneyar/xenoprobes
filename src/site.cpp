@@ -32,11 +32,11 @@ void Site::setSightseeing(int i) {
     sightseeing_ = i;
 }
 
-void Site::addNeighbor(size_t i) {
+void Site::addNeighbor(std::size_t i) {
     neighbors_.push_back(i);
 }
 
-std::vector<size_t> Site::getNeighbors() const {
+std::vector<std::size_t> Site::getNeighbors() const {
     return neighbors_;
 }
 
