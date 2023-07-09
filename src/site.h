@@ -6,6 +6,7 @@
 #define XENOPROBES_SITE_H
 
 #include <vector>
+#include <cstddef>
 
 class Site {
 public:
@@ -19,8 +20,8 @@ public:
     int getSightseeing() const;
     void setSightseeing(int);
 
-    void addNeighbor(size_t);
-    std::vector<size_t> getNeighbors() const;
+    void addNeighbor(std::size_t);
+    std::vector<std::size_t> getNeighbors() const;
     void addOre(int);
     std::vector<int> getOres() const;
 
@@ -29,7 +30,7 @@ private:
     int production_ = 0;
     int revenue_ = 0;
     int sightseeing_ = 0;
-    std::vector<size_t> neighbors_;
+    std::vector<std::size_t> neighbors_;
     std::vector<int> ores_;
 };
 
