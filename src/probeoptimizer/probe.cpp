@@ -2,7 +2,7 @@
 // Created by preed on 12/27/15.
 //
 
-#include "probe.h"
+#include "probeoptimizer/probe.h"
 
 
 Probe::Probe(Type type, double production, double revenue, double boost) {

@@ -6,8 +6,8 @@
 #include <map>
 #include <iostream>
 #include <fstream>
-#include "site_list.h"
-#include "probe_optimizer.h"
+#include "probeoptimizer/site_list.h"
+#include "probeoptimizer/probe_optimizer.h"
 
 void SiteList::addNeighborToSite(size_t site_index, size_t neighbor_index) {
     sites_[site_index].addNeighbor(neighbor_index);

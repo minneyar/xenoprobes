@@ -2,7 +2,7 @@
 // Created by preed on 1/6/16.
 //
 
-#include "ore.h"
+#include "probeoptimizer/ore.h"
 
 Ore::Ore(int id, const std::string &name, int importance) :
     id_(id),

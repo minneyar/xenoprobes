@@ -2,7 +2,7 @@
 // Created by preed on 1/6/16.
 //
 
-#include "site.h"
+#include "probeoptimizer/site.h"
 
 int Site::getName() const {
     return name_;

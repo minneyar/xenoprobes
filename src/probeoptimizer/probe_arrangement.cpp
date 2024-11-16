@@ -8,8 +8,8 @@
 #include <iostream>
 #include <algorithm>
 
-#include "probe_arrangement.h"
-#include "probe_optimizer.h"
+#include "probeoptimizer/probe_arrangement.h"
+#include "probeoptimizer/probe_optimizer.h"
 
 #ifdef __MINGW32__
 std::mt19937 ProbeArrangement::mt; // note it wasn't seeded properly

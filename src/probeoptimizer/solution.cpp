@@ -2,8 +2,8 @@
 // Created by preed on 1/6/16.
 //
 
-#include "solution.h"
-#include "probe_optimizer.h"
+#include "probeoptimizer/solution.h"
+#include "probeoptimizer/probe_optimizer.h"
 
 Solution::Solution() :
     setup_(ProbeOptimizer::getDefaultArrangement())

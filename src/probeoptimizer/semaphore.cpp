@@ -2,7 +2,7 @@
 // Created by preed on 1/7/16.
 //
 
-#include "semaphore.h"
+#include "probeoptimizer/semaphore.h"
 
 
 semaphore::semaphore(size_t n) : count{n} {}

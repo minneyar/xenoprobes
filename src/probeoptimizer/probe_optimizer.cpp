@@ -12,9 +12,9 @@
 #include <thread>
 #include <mutex>
 
-#include "probe_optimizer.h"
-#include "solution.h"
-#include "semaphore.h"
+#include "probeoptimizer/probe_optimizer.h"
+#include "probeoptimizer/solution.h"
+#include "probeoptimizer/semaphore.h"
 
 std::atomic<bool> ProbeOptimizer::shouldStop_(false);
 ProbeArrangement ProbeOptimizer::setup_;

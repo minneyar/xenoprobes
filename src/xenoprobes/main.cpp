@@ -22,7 +22,7 @@
 #include <boost/filesystem.hpp>
 #include <expat_config.h>
 
-#include "probe_optimizer.h"
+#include "probeoptimizer/probe_optimizer.h"
 
 #ifdef __MINGW32__
 #define WIN32_LEAN_AND_MEAN
