@@ -1,0 +1,18 @@
+{
+  "name" : "xenoprobes",
+  "version-string" : "1.0.0",
+  "builtin-baseline" : "b2cb0da531c2f1f740045bfe7c4dac59f0b2b69c",
+  "dependencies" : [ {
+    "name" : "boost-filesystem",
+    "version>=" : "1.85.0#2"
+  }, {
+    "name" : "boost-program-options",
+    "version>=" : "1.85.0#2"
+  }, {
+    "name" : "boost-system",
+    "version>=" : "1.85.0#1"
+  }, {
+    "name" : "boost-algorithm",
+    "version>=" : "1.85.0#1"
+  } ]
+}
