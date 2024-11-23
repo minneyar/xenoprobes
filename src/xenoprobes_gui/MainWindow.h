@@ -22,14 +22,29 @@ public:
     explicit MainWindow(QWidget* parent = nullptr);
 
 private:
+    struct Actions
+    {
+        QAction* fileImportSites = nullptr;
+        QAction* fileExportSites = nullptr;
+        QAction* fileExit = nullptr;
+    };
+
+    Actions actions;
+
     struct Widgets
     {
         MiraMap* miraMap = nullptr;
     };
+
     Widgets widgets_;
     FnSite::IdList sitesVisited_;
 
     void initUi();
+    void initActions();
+
+private Q_SLOTS:
+    void fileImportSites();
+    void fileExportSites();
 };
 
 

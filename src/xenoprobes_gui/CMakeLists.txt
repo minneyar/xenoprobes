@@ -13,6 +13,8 @@ qt_add_executable(${PROJECT_NAME}_gui
         MiraMap.cpp
         FnSite.h
         FnSite.cpp
+        SiteListLoader.h
+        SiteListLoader.cpp
 )
 
 # Create FN Site data file

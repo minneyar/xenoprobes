@@ -21,6 +21,7 @@ class MiraMap : public QGraphicsView
 
 public:
     explicit MiraMap(FnSite::IdList* sitesVisited, QWidget* parent = nullptr);
+    void setSitesVisited(FnSite::IdList* sitesVisited);
 
 protected:
     void wheelEvent(QWheelEvent* event) override;
@@ -33,12 +34,13 @@ private:
     FnSite::IdList* sitesVisited_;
     std::vector<std::unique_ptr<QGraphicsItem, QGraphicsItemDeleter>> linkGraphics_;
 
-    void calculateLinks();
-
     bool linkVisited(const decltype(FnSite::kAllLinks)::value_type& link) const
     {
         return sitesVisited_->contains(link[0]) && sitesVisited_->contains(link[1]);
     }
+
+private Q_SLOTS:
+    void calculateLinks();
 };
 
 

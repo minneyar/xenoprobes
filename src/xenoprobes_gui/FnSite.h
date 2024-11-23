@@ -19,6 +19,7 @@ struct FnSite
 {
     using Id = unsigned int;
     using IdList = std::unordered_set<Id>;
+
     enum class Grade
     {
         F,
@@ -29,6 +30,28 @@ struct FnSite
         A,
         S
     };
+
+    static char gradeToChar(const Grade grade)
+    {
+        switch (grade)
+        {
+        case Grade::F:
+            return 'F';
+        case Grade::E:
+            return 'E';
+        case Grade::D:
+            return 'D';
+        case Grade::C:
+            return 'C';
+        case Grade::B:
+            return 'B';
+        case Grade::A:
+            return 'A';
+        case Grade::S:
+            return 'S';
+        }
+        Q_UNREACHABLE();
+    }
 
     static const QHash<Id, FnSite> kAllSites;
     static const std::vector<std::array<Id, 2>> kAllLinks;

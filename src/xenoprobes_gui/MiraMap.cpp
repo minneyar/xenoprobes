@@ -55,6 +55,12 @@ MiraMap::MiraMap(FnSite::IdList* sitesVisited, QWidget* parent) : QGraphicsView(
     setScene(&mapScene_);
 }
 
+void MiraMap::setSitesVisited(FnSite::IdList* sitesVisited)
+{
+    sitesVisited_ = sitesVisited;
+    calculateLinks();
+}
+
 void MiraMap::wheelEvent(QWheelEvent* event)
 {
     if (qApp->queryKeyboardModifiers() == Qt::ControlModifier)
