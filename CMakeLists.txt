@@ -1,4 +1,4 @@
-cmake_minimum_required (VERSION 3.8)
+cmake_minimum_required (VERSION 3.28)
 project (xenoprobes
     VERSION 1.0.0
     LANGUAGES CXX)
@@ -11,6 +11,6 @@ set(Boost_USE_STATIC_LIBS ON)
 set(Boost_USE_MULTITHREADED ON)
 
 add_compile_definitions(QT_NO_KEYWORDS)
-include_directories(${PROJECT_SOURCE_DIR}/include)
+include_directories("${PROJECT_SOURCE_DIR}/include" "${PROJECT_BINARY_DIR}/include")
 
 add_subdirectory(src)

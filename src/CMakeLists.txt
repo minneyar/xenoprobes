@@ -1,2 +1,3 @@
 add_subdirectory(probeoptimizer)
 add_subdirectory(xenoprobes)
+add_subdirectory(xenoprobes_gui)

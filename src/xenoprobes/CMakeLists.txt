@@ -9,3 +9,9 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
         Boost::program_options
         $<IF:$<BOOL:MSVC>,,-static>
 )
+
+include(GNUInstallDirs)
+install(TARGETS ${PROJECT_NAME}
+        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+)
