@@ -32,14 +32,11 @@ private:
     static constexpr auto kZMap = -100;
     QGraphicsScene mapScene_;
     FnSite::IdList* sitesVisited_;
+    std::vector<std::unique_ptr<QGraphicsItem, QGraphicsItemDeleter>> siteWidgets_;
     std::vector<std::unique_ptr<QGraphicsItem, QGraphicsItemDeleter>> linkGraphics_;
 
-    bool linkVisited(const decltype(FnSite::kAllLinks)::value_type& link) const
-    {
-        return sitesVisited_->contains(link[0]) && sitesVisited_->contains(link[1]);
-    }
-
 private Q_SLOTS:
+    void calculateSiteWidgets();
     void calculateLinks();
 };
 

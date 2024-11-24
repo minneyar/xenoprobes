@@ -178,10 +178,11 @@
 <file>./map_tiles/tile_9_9.png</file>
 <file>./probe_icons/basic.png</file>
 <file>./probe_icons/booster.png</file>
-<file>./probe_icons/combat.png</file>
+<file>./probe_icons/battle.png</file>
 <file>./probe_icons/duplicator.png</file>
 <file>./probe_icons/mining.png</file>
 <file>./probe_icons/none.png</file>
+<file>./probe_icons/notvisited.png</file>
 <file>./probe_icons/research.png</file>
 <file>./probe_icons/storage.png</file>
 </qresource>

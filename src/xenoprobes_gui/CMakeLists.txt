@@ -6,15 +6,19 @@ qt_standard_project_setup(REQUIRES 6.5)
 
 qt_add_executable(${PROJECT_NAME}_gui
         ${PROJECT_SOURCE_DIR}/resources/resources.qrc
-        main.cpp
-        MainWindow.h
-        MainWindow.cpp
-        MiraMap.h
-        MiraMap.cpp
-        FnSite.h
+        DataProbe.cpp
+        DataProbe.h
         FnSite.cpp
-        SiteListLoader.h
+        FnSite.h
+        FnSiteWidget.cpp
+        FnSiteWidget.h
+        MainWindow.cpp
+        MainWindow.h
+        MiraMap.cpp
+        MiraMap.h
         SiteListLoader.cpp
+        SiteListLoader.h
+        main.cpp
 )
 
 # Create FN Site data file
