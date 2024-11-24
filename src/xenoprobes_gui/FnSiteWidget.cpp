@@ -11,22 +11,45 @@
 #include <QPainter>
 
 FnSiteWidget::FnSiteWidget(const FnSite &site, QWidget *parent)
-    : QWidget(parent), site_(site) {
+    : QStackedWidget(parent), site_(site),
+      dataProbeWidget_(new detail::DataProbeWidget(site, this)) {
+  setAttribute(Qt::WA_NoSystemBackground, true);
   setFixedSize(kSize, kSize);
-  setAttribute(Qt::WA_NoSystemBackground);
+  addWidget(dataProbeWidget_);
+  setViewMode(viewMode_);
 }
-void FnSiteWidget::paintEvent(QPaintEvent *event) {
-  const auto image = probeImage();
 
+void FnSiteWidget::setViewMode(const ViewMode viewMode) {
+  viewMode_ = viewMode;
+  switch (viewMode) {
+  case ViewMode::Visited:
+    break;
+  case ViewMode::DataProbe:
+    setCurrentWidget(dataProbeWidget_);
+    break;
+  }
+}
+
+namespace detail {
+DataProbeWidget::DataProbeWidget(const FnSite &site, FnSiteWidget *parent)
+    : QWidget(parent), site_(site) {
+  setAttribute(Qt::WA_NoSystemBackground, true);
+}
+
+FnSiteWidget *DataProbeWidget::parentFnSiteWidget() const {
+  return static_cast<FnSiteWidget *>(parent());
+}
+
+void DataProbeWidget::paintEvent(QPaintEvent *event) {
+  const auto image = probeImage();
   QPainter painter(this);
   painter.setRenderHint(QPainter::Antialiasing);
   painter.setRenderHint(QPainter::SmoothPixmapTransform);
   painter.drawPixmap(rect(), image);
-
   event->accept();
 }
 
-QPixmap FnSiteWidget::probeImage() const {
+QPixmap DataProbeWidget::probeImage() const {
   if (!visited_) {
     return QPixmap(":/probe_icons/notvisited.png");
   }
@@ -35,3 +58,4 @@ QPixmap FnSiteWidget::probeImage() const {
   }
   return QPixmap(dataProbe_->icon());
 }
+} // namespace detail
