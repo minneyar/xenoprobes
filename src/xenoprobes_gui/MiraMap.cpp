@@ -36,12 +36,41 @@ MiraMap::MiraMap(FnSite::IdList *sitesVisited, QWidget *parent)
   }
   setScene(&mapScene_);
 
-  calculateSiteWidgets();
+  // Site widgets.
+  for (const auto &node : FnSite::kAllSites) {
+    auto siteWidget = new FnSiteWidget(node);
+    siteWidget->setVisited(sitesVisited_->contains(node.id));
+    connect(siteWidget, &FnSiteWidget::visitedChanged,
+            [this, &node](const bool visited) {
+              if (visited) {
+                sitesVisited_->insert(node.id);
+              } else {
+                sitesVisited_->erase(node.id);
+              }
+              calculateLinks();
+            });
+    auto &siteButton =
+        siteWidgets_.emplace_back(mapScene_.addWidget(siteWidget));
+    // Site data stores the center point, so we need to half it to get the
+    // corners for drawing.
+    siteButton->setX(node.position.x() - (siteWidget->width() / 2.0));
+    siteButton->setY(node.position.y() - (siteWidget->height() / 2.0));
+    siteButton->setZValue(kZSites);
+  }
+  calculateLinks();
 }
 
 void MiraMap::setSitesVisited(FnSite::IdList *sitesVisited) {
   sitesVisited_ = sitesVisited;
   calculateSiteWidgets();
+}
+
+void MiraMap::setViewMode(const FnSiteWidget::ViewMode viewMode) {
+  for (auto &widget : siteWidgets_) {
+    auto *fnSiteWidget = dynamic_cast<FnSiteWidget *>(
+        dynamic_cast<QGraphicsProxyWidget *>(widget.get())->widget());
+    fnSiteWidget->setViewMode(viewMode);
+  }
 }
 
 void MiraMap::wheelEvent(QWheelEvent *event) {
@@ -60,27 +89,12 @@ void MiraMap::wheelEvent(QWheelEvent *event) {
 }
 
 void MiraMap::calculateSiteWidgets() {
-  siteWidgets_.clear();
-  for (const auto &node : FnSite::kAllSites) {
-    auto siteWidget = new FnSiteWidget(node);
-    siteWidget->setVisited(sitesVisited_->contains(node.id));
-    connect(siteWidget, &FnSiteWidget::visitedChanged,
-            [this, &node](const bool visited) {
-              if (visited) {
-                sitesVisited_->insert(node.id);
-              } else {
-                sitesVisited_->erase(node.id);
-              }
-              calculateSiteWidgets();
-            });
-    auto &siteButton =
-        siteWidgets_.emplace_back(mapScene_.addWidget(siteWidget));
-    // Site data stores the center point, so we need to half it to get the
-    // corners for drawing.
-    siteButton->setX(node.position.x() - (siteWidget->width() / 2));
-    siteButton->setY(node.position.y() - (siteWidget->height() / 2));
-    siteButton->setZValue(kZSites);
+  for (auto &widget : siteWidgets_) {
+    auto *fnSiteWidget = dynamic_cast<FnSiteWidget *>(
+        dynamic_cast<QGraphicsProxyWidget *>(widget.get())->widget());
+    fnSiteWidget->setVisited(sitesVisited_->contains(fnSiteWidget->site().id));
   }
+
   calculateLinks();
 }
 

@@ -34,6 +34,7 @@ private:
     struct Widgets
     {
         MiraMap* miraMap = nullptr;
+        QTabBar* tabBar = nullptr;
     };
 
     Widgets widgets_;
@@ -45,6 +46,7 @@ private:
 private Q_SLOTS:
     void fileImportSites();
     void fileExportSites();
+    void tabChanged(int index);
 };
 
 

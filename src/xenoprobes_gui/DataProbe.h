@@ -27,7 +27,7 @@ struct DataProbe {
   Category category;
   unsigned int level;
   QString name;
-  QString icon() const {
+  [[nodiscard]] QString icon() const {
     switch (category) {
     case Category::Basic:
       return ":/probe_icons/basic.png";
