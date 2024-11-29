@@ -9,6 +9,7 @@
 #include "MainWindow.h"
 #include <QFileDialog>
 #include <QHBoxLayout>
+#include <QHeaderView>
 #include <QMenuBar>
 #include <QMessageBox>
 #include <QTabBar>
@@ -17,7 +18,10 @@
 #include "InventoryLoader.h"
 #include "SiteListLoader.h"
 
-MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) { initUi(); }
+MainWindow::MainWindow(QWidget *parent)
+    : QMainWindow(parent), inventoryModel_(new InventoryModel(this)) {
+  initUi();
+}
 
 void MainWindow::initUi() {
   resize(1024, 768);
@@ -62,6 +66,19 @@ void MainWindow::initUi() {
   connect(widgets_.tabBar, &QTabBar::currentChanged, this,
           &MainWindow::tabChanged);
   tabChanged(widgets_.tabBar->currentIndex());
+
+  // Config pane
+  auto configLayout = new QVBoxLayout();
+  layout->addLayout(configLayout);
+  // Inventory
+  widgets_.inventoryTable = new QTableView(central);
+  configLayout->addWidget(widgets_.inventoryTable);
+  widgets_.inventoryTable->setModel(inventoryModel_);
+  widgets_.inventoryTable->verticalHeader()->hide();
+  widgets_.inventoryTable->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+  widgets_.inventoryTable->setSizePolicy(QSizePolicy::MinimumExpanding,
+                                         QSizePolicy::MinimumExpanding);
+  widgets_.inventoryTable->resizeColumnsToContents();
 }
 
 void MainWindow::initActions() {
@@ -139,8 +156,7 @@ void MainWindow::fileImportInventory() {
   const auto filenames = dialog.selectedFiles();
   try {
     const auto newInventory = InventoryLoader::readInventory(filenames.first());
-    probeInventory_ = newInventory;
-    // TODO: Update something
+    inventoryModel_->setProbeInventory(newInventory);
   } catch (const std::exception &) {
     QMessageBox::critical(this, tr("Failed to open file"),
                           tr("Could not open %1").arg(filenames.first()));
@@ -157,7 +173,8 @@ void MainWindow::fileExportInventory() {
   }
   const auto filenames = dialog.selectedFiles();
   try {
-    InventoryLoader::writeInventory(probeInventory_, filenames.first());
+    InventoryLoader::writeInventory(inventoryModel_->probeInventory(),
+                                    filenames.first());
   } catch (const std::exception &) {
     QMessageBox::critical(this, tr("Failed to save file"),
                           tr("Could not save %1").arg(filenames.first()));

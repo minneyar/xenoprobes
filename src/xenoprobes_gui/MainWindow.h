@@ -9,50 +9,48 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
-
-#include <QMainWindow>
 #include "FnSite.h"
+#include "InventoryModel.h"
 #include "MiraMap.h"
+#include <QMainWindow>
+#include <QTableView>
 
-class MainWindow : public QMainWindow
-{
-    Q_OBJECT
+class MainWindow : public QMainWindow {
+  Q_OBJECT
 
 public:
-    explicit MainWindow(QWidget* parent = nullptr);
+  explicit MainWindow(QWidget *parent = nullptr);
 
 private:
-    struct Actions
-    {
-        QAction* fileImportSites = nullptr;
-        QAction* fileExportSites = nullptr;
-        QAction* fileImportInventory = nullptr;
-        QAction* fileExportInventory = nullptr;
-        QAction* fileExit = nullptr;
-    };
+  struct Actions {
+    QAction *fileImportSites = nullptr;
+    QAction *fileExportSites = nullptr;
+    QAction *fileImportInventory = nullptr;
+    QAction *fileExportInventory = nullptr;
+    QAction *fileExit = nullptr;
+  };
 
-    Actions actions;
+  Actions actions;
 
-    struct Widgets
-    {
-        MiraMap* miraMap = nullptr;
-        QTabBar* tabBar = nullptr;
-    };
+  struct Widgets {
+    MiraMap *miraMap = nullptr;
+    QTabBar *tabBar = nullptr;
+    QTableView *inventoryTable = nullptr;
+  };
 
-    Widgets widgets_;
-    FnSite::IdList sitesVisited_;
-    DataProbe::ProbeInventory probeInventory_;
+  Widgets widgets_;
+  FnSite::IdList sitesVisited_;
+  InventoryModel *inventoryModel_;
 
-    void initUi();
-    void initActions();
+  void initUi();
+  void initActions();
 
 private Q_SLOTS:
-    void fileImportSites();
-    void fileExportSites();
-    void fileImportInventory();
-    void fileExportInventory();
-    void tabChanged(int index);
+  void fileImportSites();
+  void fileExportSites();
+  void fileImportInventory();
+  void fileExportInventory();
+  void tabChanged(int index);
 };
 
-
-#endif //MAINWINDOW_H
+#endif // MAINWINDOW_H

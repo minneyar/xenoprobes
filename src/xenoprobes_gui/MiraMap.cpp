@@ -16,6 +16,7 @@
 
 MiraMap::MiraMap(FnSite::IdList *sitesVisited, QWidget *parent)
     : QGraphicsView(parent), sitesVisited_(sitesVisited) {
+  setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
   setDragMode(ScrollHandDrag);
 
   // Add map tiles.
