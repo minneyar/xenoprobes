@@ -9,20 +9,22 @@
 #ifndef SITELISTLOADER_H
 #define SITELISTLOADER_H
 
-#include <QString>
 #include "FnSite.h"
+#include <QJsonValue>
 
 /**
  * Read a site list.
  *
- * This uses the same format as the command-line xenoprobes, but ignores the extra metadata.
+ * This uses the same format as the command-line xenoprobes, but ignores the
+ * extra metadata.
  */
 class SiteListLoader {
 public:
-    static FnSite::IdList readSiteList(const QString& path);
-    static void writeSiteList(const FnSite::IdList& ids, const QString& path);
+  [[nodiscard]] static FnSite::IdList readSiteListFromFile(const QString &path);
+  [[nodiscard]] static FnSite::IdList readSiteListFromJson(const QJsonValue &json);
+  static void writeSiteListToFile(const FnSite::IdList &ids,
+                                  const QString &path);
+  [[nodiscard]] static QJsonValue writeSiteListToJson(const FnSite::IdList &ids);
 };
 
-
-
-#endif //SITELISTLOADER_H
+#endif // SITELISTLOADER_H

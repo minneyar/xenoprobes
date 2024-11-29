@@ -19,8 +19,21 @@ class MiraMap : public QGraphicsView {
   Q_OBJECT
 
 public:
-  explicit MiraMap(FnSite::IdList *sitesVisited, QWidget *parent = nullptr);
-  void setSitesVisited(FnSite::IdList *sitesVisited);
+  using SiteProbeMap = QHash<FnSite::Id, DataProbe::Id>;
+
+  [[nodiscard]] static QJsonValue
+  siteProbesToJson(const SiteProbeMap &siteProbeMap);
+  [[nodiscard]] static SiteProbeMap siteProbesFromJson(const QJsonValue &json);
+
+  explicit MiraMap(QWidget *parent = nullptr);
+  [[nodiscard]] const FnSite::IdList &sitesVisited() const {
+    return sitesVisited_;
+  }
+  void setSitesVisited(const FnSite::IdList &sitesVisited);
+  [[nodiscard]] const SiteProbeMap &siteProbeMap() const {
+    return siteProbeMap_;
+  }
+  void setSiteProbeMap(const SiteProbeMap &siteProbeMap);
   void setViewMode(const FnSiteWidget::ViewMode viewMode);
 
 protected:
@@ -31,7 +44,8 @@ private:
   static constexpr auto kZLinks = -10;
   static constexpr auto kZMap = -100;
   QGraphicsScene mapScene_;
-  FnSite::IdList *sitesVisited_;
+  FnSite::IdList sitesVisited_;
+  SiteProbeMap siteProbeMap_;
   std::vector<std::unique_ptr<QGraphicsItem, QGraphicsItemDeleter>>
       siteWidgets_;
   std::vector<std::unique_ptr<QGraphicsItem, QGraphicsItemDeleter>>

@@ -25,6 +25,9 @@ public:
 
 private:
   struct Actions {
+    QAction *fileOpen = nullptr;
+    QAction *fileSave = nullptr;
+    QAction *fileSaveAs = nullptr;
     QAction *fileImportSites = nullptr;
     QAction *fileExportSites = nullptr;
     QAction *fileImportInventory = nullptr;
@@ -42,13 +45,16 @@ private:
   };
 
   Widgets widgets_;
-  FnSite::IdList sitesVisited_;
   InventoryModel *inventoryModel_;
 
   void initUi();
   void initActions();
+  void saveToPath(const QString &path);
 
 private Q_SLOTS:
+  void fileOpen();
+  void fileSave();
+  void fileSaveAs();
   void fileImportSites();
   void fileExportSites();
   void fileImportInventory();

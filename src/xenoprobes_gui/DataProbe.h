@@ -13,6 +13,7 @@
 #include <QString>
 
 struct DataProbe {
+  using Id = QString;
   friend constexpr std::weak_ordering operator<=>(const DataProbe &lhs,
                                                   const DataProbe &rhs) {
     if (lhs.category != rhs.category) {
@@ -33,7 +34,7 @@ struct DataProbe {
     Battle,
   };
 
-  QString id;
+  Id id;
   Category category;
   unsigned int level;
   QString name;
@@ -57,7 +58,7 @@ struct DataProbe {
     Q_UNREACHABLE();
   }
 
-  static const QHash<QString, DataProbe> kAllProbes;
+  static const QHash<Id, DataProbe> kAllProbes;
 };
 
 #endif // DATAPROBE_H

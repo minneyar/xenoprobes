@@ -8,6 +8,7 @@
 
 #include "RunOptionsWidget.h"
 
+#include <QJsonObject>
 #include <QPushButton>
 #include <QVBoxLayout>
 
@@ -74,12 +75,75 @@ RunOptionsWidget::RunOptionsWidget(QWidget *parent)
   }
 }
 
+QJsonValue RunOptionsWidget::optionsToJson(const Options &options) {
+  QJsonObject json;
+  json["storageWeight"] = options.storageWeight;
+  json["revenueWeight"] = options.revenueWeight;
+  json["productionWeight"] = options.productionWeight;
+  json["iterations"] = options.iterations;
+  json["population"] = options.population;
+  json["offsprings"] = options.offsprings;
+  json["mutation"] = options.mutation;
+
+  return json;
+}
+
+RunOptionsWidget::Options
+RunOptionsWidget::optionsFromJson(const QJsonValue &json) {
+  if (!json.isObject()) {
+    throw std::runtime_error("Bad options format.");
+  }
+  const auto &jsonObj = json.toObject();
+  Options options;
+
+  if (!jsonObj.contains("storageWeight") ||
+      !jsonObj["storageWeight"].isDouble()) {
+    throw std::runtime_error("Bad storageWeight");
+  }
+  options.storageWeight = json["storageWeight"].toInt();
+
+  if (!jsonObj.contains("revenueWeight") ||
+      !jsonObj["revenueWeight"].isDouble()) {
+    throw std::runtime_error("Bad revenueWeight");
+  }
+  options.revenueWeight = json["revenueWeight"].toInt();
+
+  if (!jsonObj.contains("productionWeight") ||
+      !jsonObj["productionWeight"].isDouble()) {
+    throw std::runtime_error("Bad productionWeight");
+  }
+  options.productionWeight = json["productionWeight"].toInt();
+
+  if (!jsonObj.contains("iterations") || !jsonObj["iterations"].isDouble()) {
+    throw std::runtime_error("Bad iterations");
+  }
+  options.iterations = json["iterations"].toInt();
+
+  if (!jsonObj.contains("population") || !jsonObj["population"].isDouble()) {
+    throw std::runtime_error("Bad population");
+  }
+  options.population = json["population"].toInt();
+
+  if (!jsonObj.contains("offsprings") || !jsonObj["offsprings"].isDouble()) {
+    throw std::runtime_error("Bad offsprings");
+  }
+  options.offsprings = json["offsprings"].toInt();
+
+  if (!jsonObj.contains("mutation") || !jsonObj["mutation"].isDouble()) {
+    throw std::runtime_error("Bad mutation");
+  }
+  options.mutation = json["mutation"].toInt();
+
+  return options;
+}
+
 void RunOptionsWidget::applyDefaultValues() {
-  storageWeight_->setValue(1000);
-  revenueWeight_->setValue(10);
-  productionWeight_->setValue(1);
-  iterations_->setValue(2000);
-  population_->setValue(200);
-  offsprings_->setValue(100);
-  mutation_->setValue(std::round((1.0 / 32) * 100));
+  const Options defaults;
+  storageWeight_->setValue(defaults.storageWeight);
+  revenueWeight_->setValue(defaults.revenueWeight);
+  productionWeight_->setValue(defaults.productionWeight);
+  iterations_->setValue(defaults.iterations);
+  population_->setValue(defaults.population);
+  offsprings_->setValue(defaults.offsprings);
+  mutation_->setValue(defaults.mutation);
 }

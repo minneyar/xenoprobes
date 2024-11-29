@@ -47,6 +47,14 @@ void FnSiteWidget::setVisited(const bool visited) {
   dataProbeWidget_->setVisited(visited);
 }
 
+void FnSiteWidget::setDataProbe(const DataProbe::Id &dataProbeId) {
+  const auto dataProbe = DataProbe::kAllProbes.find(dataProbeId);
+  if (dataProbe == DataProbe::kAllProbes.end()) {
+    throw std::runtime_error("Data probe not found.");
+  }
+  setDataProbe(&dataProbe.value());
+}
+
 namespace detail {
 VisitedWidget::VisitedWidget(const FnSite &site, FnSiteWidget *parent)
     : QWidget(parent), site_(site) {

@@ -10,13 +10,17 @@
 #include <QFileDialog>
 #include <QHBoxLayout>
 #include <QHeaderView>
+#include <QJsonDocument>
 #include <QMenuBar>
 #include <QMessageBox>
 #include <QTabBar>
 
 #include "FnSite.h"
+#include "FnSiteWidget.h"
 #include "InventoryLoader.h"
 #include "SiteListLoader.h"
+
+#include <QJsonObject>
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent), inventoryModel_(new InventoryModel(this)) {
@@ -34,6 +38,10 @@ void MainWindow::initUi() {
   // Menubar
   auto *menuFile = menuBar()->addMenu(tr("&File"));
   // File menu
+  menuFile->addAction(actions.fileOpen);
+  menuFile->addAction(actions.fileSave);
+  menuFile->addAction(actions.fileSaveAs);
+  menuFile->addSeparator();
   menuFile->addAction(actions.fileImportSites);
   menuFile->addAction(actions.fileExportSites);
   menuFile->addAction(actions.fileImportInventory);
@@ -41,16 +49,15 @@ void MainWindow::initUi() {
   menuFile->addSeparator();
   menuFile->addAction(actions.fileExit);
 
-  // Start with all sites enabled.
-  sitesVisited_.clear();
-  sitesVisited_.insert(FnSite::kAllSites.keyBegin(),
-                       FnSite::kAllSites.keyEnd());
-
   // Map
   auto mapLayout = new QVBoxLayout();
   layout->addLayout(mapLayout);
-  widgets_.miraMap = new MiraMap(&sitesVisited_, central);
+  widgets_.miraMap = new MiraMap(central);
   mapLayout->addWidget(widgets_.miraMap);
+  // Start with all sites enabled.
+  FnSite::IdList sitesVisited(FnSite::kAllSites.keyBegin(),
+                              FnSite::kAllSites.keyEnd());
+  widgets_.miraMap->setSitesVisited(sitesVisited);
   widgets_.miraMap->show();
 
   // Tabs
@@ -88,6 +95,22 @@ void MainWindow::initUi() {
 
 void MainWindow::initActions() {
   // File
+  // Open
+  actions.fileOpen =
+      new QAction(QIcon::fromTheme("document-open"), tr("Open"), this);
+  actions.fileOpen->setShortcut(QKeySequence::Open);
+  connect(actions.fileOpen, &QAction::triggered, this, &MainWindow::fileOpen);
+  // Save
+  actions.fileSave =
+      new QAction(QIcon::fromTheme("document-save"), tr("Save"), this);
+  actions.fileSave->setShortcut(QKeySequence::Save);
+  connect(actions.fileSave, &QAction::triggered, this, &MainWindow::fileSave);
+  // Save As
+  actions.fileSaveAs =
+      new QAction(QIcon::fromTheme("document-save-as"), tr("Save As"), this);
+  actions.fileSaveAs->setShortcut(QKeySequence::SaveAs);
+  connect(actions.fileSaveAs, &QAction::triggered, this,
+          &MainWindow::fileSaveAs);
   // Import Sites
   actions.fileImportSites =
       new QAction(QIcon::fromTheme("document-import"), "Import Sites", this);
@@ -114,6 +137,90 @@ void MainWindow::initActions() {
   connect(actions.fileExit, &QAction::triggered, this, &MainWindow::close);
 }
 
+void MainWindow::fileOpen() {
+  QFileDialog dialog(this, tr("Open Simulation..."));
+  dialog.setAcceptMode(QFileDialog::AcceptOpen);
+  dialog.setFileMode(QFileDialog::ExistingFile);
+  dialog.setNameFilter(tr("Simulations (*.json)"));
+  if (dialog.exec() != QDialog::Accepted) {
+    return;
+  }
+  const auto filenames = dialog.selectedFiles();
+  try {
+    QFile file(filenames.at(0));
+    if (!file.open(QIODevice::ReadOnly)) {
+      QMessageBox::critical(this, tr("Error opening file"),
+                            tr("Could not open %1").arg(filenames.first()));
+      return;
+    }
+    const QByteArray data = file.readAll();
+    const auto json = QJsonDocument::fromJson(data);
+    if (json.isNull() || !json.isObject()) {
+      QMessageBox::critical(this, tr("Error opening file"),
+                            tr("%1 is not valid.").arg(filenames.first()));
+      return;
+    }
+    const auto jsonObj = json.object();
+    if (!jsonObj.contains("sites") || !jsonObj.contains("inventory") ||
+        !jsonObj.contains("probeMap") || !jsonObj.contains("options")) {
+      QMessageBox::critical(this, tr("Error opening file"),
+                            tr("%1 is not valid.").arg(filenames.first()));
+      return;
+    }
+    const auto sites = SiteListLoader::readSiteListFromJson(jsonObj["sites"]);
+    const auto probeMap = MiraMap::siteProbesFromJson(jsonObj["probeMap"]);
+    const auto inventory =
+        InventoryLoader::readInventoryFromJson(jsonObj["inventory"]);
+    const auto options = RunOptionsWidget::optionsFromJson(jsonObj["options"]);
+
+    // Defer saving until everything is loaded in case of errors.
+    widgets_.miraMap->setSitesVisited(sites);
+    widgets_.miraMap->setSiteProbeMap(probeMap);
+    inventoryModel_->setProbeInventory(inventory);
+    widgets_.runOptions->setOptions(options);
+  } catch (std::runtime_error &) {
+    QMessageBox::critical(this, tr("Error opening file"),
+                          tr("%1 is not valid.").arg(filenames.first()));
+  }
+}
+void MainWindow::fileSave() {
+  if (windowFilePath().isEmpty()) {
+    fileSaveAs();
+  } else {
+    saveToPath(windowFilePath());
+  }
+}
+void MainWindow::fileSaveAs() {
+  QFileDialog dialog(this, tr("Export Simulation..."));
+  dialog.setAcceptMode(QFileDialog::AcceptSave);
+  dialog.setFileMode(QFileDialog::AnyFile);
+  dialog.setNameFilter(tr("Simulations (*.json)"));
+  if (dialog.exec() != QDialog::Accepted) {
+    return;
+  }
+  const auto filenames = dialog.selectedFiles();
+  saveToPath(filenames.at(0));
+}
+
+void MainWindow::saveToPath(const QString &path) {
+  QFile file(path);
+  if (!file.open(QIODevice::WriteOnly)) {
+    QMessageBox::critical(this, tr("Error saving file"),
+                          tr("The file could not be opened for writing."));
+    return;
+  }
+  QJsonObject json;
+  json["sites"] =
+      SiteListLoader::writeSiteListToJson(widgets_.miraMap->sitesVisited());
+  json["probeMap"] =
+      MiraMap::siteProbesToJson(widgets_.miraMap->siteProbeMap());
+  json["inventory"] =
+      InventoryLoader::writeInventoryToJson(inventoryModel_->probeInventory());
+  json["options"] =
+      RunOptionsWidget::optionsToJson(widgets_.runOptions->options());
+  file.write(QJsonDocument(json).toJson());
+}
+
 void MainWindow::fileImportSites() {
   QFileDialog dialog(this, tr("Import Sites..."));
   dialog.setAcceptMode(QFileDialog::AcceptOpen);
@@ -124,9 +231,8 @@ void MainWindow::fileImportSites() {
   }
   const auto filenames = dialog.selectedFiles();
   try {
-    const auto newIds = SiteListLoader::readSiteList(filenames.first());
-    sitesVisited_ = newIds;
-    widgets_.miraMap->setSitesVisited(&sitesVisited_);
+    const auto newIds = SiteListLoader::readSiteListFromFile(filenames.first());
+    widgets_.miraMap->setSitesVisited(newIds);
   } catch (const std::exception &) {
     QMessageBox::critical(this, tr("Failed to open file"),
                           tr("Could not open %1").arg(filenames.first()));
@@ -143,7 +249,8 @@ void MainWindow::fileExportSites() {
   }
   const auto filenames = dialog.selectedFiles();
   try {
-    SiteListLoader::writeSiteList(sitesVisited_, filenames.first());
+    SiteListLoader::writeSiteListToFile(widgets_.miraMap->sitesVisited(),
+                                        filenames.first());
   } catch (const std::exception &) {
     QMessageBox::critical(this, tr("Failed to save file"),
                           tr("Could not save %1").arg(filenames.first()));
@@ -160,7 +267,8 @@ void MainWindow::fileImportInventory() {
   }
   const auto filenames = dialog.selectedFiles();
   try {
-    const auto newInventory = InventoryLoader::readInventory(filenames.first());
+    const auto newInventory =
+        InventoryLoader::readInventoryFromFile(filenames.first());
     inventoryModel_->setProbeInventory(newInventory);
   } catch (const std::exception &) {
     QMessageBox::critical(this, tr("Failed to open file"),
@@ -178,8 +286,8 @@ void MainWindow::fileExportInventory() {
   }
   const auto filenames = dialog.selectedFiles();
   try {
-    InventoryLoader::writeInventory(inventoryModel_->probeInventory(),
-                                    filenames.first());
+    InventoryLoader::writeInventoryToFile(inventoryModel_->probeInventory(),
+                                          filenames.first());
   } catch (const std::exception &) {
     QMessageBox::critical(this, tr("Failed to save file"),
                           tr("Could not save %1").arg(filenames.first()));

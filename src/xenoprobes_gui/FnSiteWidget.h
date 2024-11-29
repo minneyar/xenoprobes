@@ -107,8 +107,9 @@ public:
   [[nodiscard]] const DataProbe *dataProbe() const {
     return dataProbeWidget_->dataProbe();
   }
-  void setDataProbe(const DataProbe *data_probe) {
-    dataProbeWidget_->setDataProbe(data_probe);
+  void setDataProbe(const DataProbe::Id& dataProbeId);
+  void setDataProbe(const DataProbe *dataProbe) {
+    dataProbeWidget_->setDataProbe(dataProbe);
   }
 
 Q_SIGNALS:

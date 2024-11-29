@@ -8,7 +8,7 @@
 
 #include "DataProbe.h"
 
-const QHash<QString, DataProbe> DataProbe::kAllProbes{
+const QHash<DataProbe::Id, DataProbe> DataProbe::kAllProbes{
     {"M1", {.id = "M1", .category = DataProbe::Category::Mining, .level = 1, .name = "Mining Probe G1"}},
     {"M2", {.id = "M2", .category = DataProbe::Category::Mining, .level = 2, .name = "Mining Probe G2"}},
     {"M3", {.id = "M3", .category = DataProbe::Category::Mining, .level = 3, .name = "Mining Probe G3"}},

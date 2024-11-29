@@ -38,6 +38,7 @@ public:
 
 private:
   DataProbe::ProbeInventory probeInventory_;
+  void sortProbeInventory();
 };
 
 #endif // INVENTORYMODEL_H

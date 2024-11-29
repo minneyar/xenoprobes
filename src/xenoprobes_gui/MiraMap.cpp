@@ -7,15 +7,14 @@
  */
 
 #include "MiraMap.h"
-#include <QCheckBox>
 #include <QGraphicsPixmapItem>
 #include <QGraphicsProxyWidget>
+#include <QJsonArray>
 
 #include "FnSite.h"
 #include "FnSiteWidget.h"
 
-MiraMap::MiraMap(FnSite::IdList *sitesVisited, QWidget *parent)
-    : QGraphicsView(parent), sitesVisited_(sitesVisited) {
+MiraMap::MiraMap(QWidget *parent) : QGraphicsView(parent) {
   setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
   setDragMode(ScrollHandDrag);
 
@@ -40,13 +39,13 @@ MiraMap::MiraMap(FnSite::IdList *sitesVisited, QWidget *parent)
   // Site widgets.
   for (const auto &node : FnSite::kAllSites) {
     auto siteWidget = new FnSiteWidget(node);
-    siteWidget->setVisited(sitesVisited_->contains(node.id));
+    siteWidget->setVisited(sitesVisited_.contains(node.id));
     connect(siteWidget, &FnSiteWidget::visitedChanged,
             [this, &node](const bool visited) {
               if (visited) {
-                sitesVisited_->insert(node.id);
+                sitesVisited_.insert(node.id);
               } else {
-                sitesVisited_->erase(node.id);
+                sitesVisited_.erase(node.id);
               }
               calculateLinks();
             });
@@ -61,8 +60,13 @@ MiraMap::MiraMap(FnSite::IdList *sitesVisited, QWidget *parent)
   calculateLinks();
 }
 
-void MiraMap::setSitesVisited(FnSite::IdList *sitesVisited) {
+void MiraMap::setSitesVisited(const FnSite::IdList &sitesVisited) {
   sitesVisited_ = sitesVisited;
+  calculateSiteWidgets();
+}
+
+void MiraMap::setSiteProbeMap(const SiteProbeMap &siteProbeMap) {
+  siteProbeMap_ = siteProbeMap;
   calculateSiteWidgets();
 }
 
@@ -72,6 +76,40 @@ void MiraMap::setViewMode(const FnSiteWidget::ViewMode viewMode) {
         dynamic_cast<QGraphicsProxyWidget *>(widget.get())->widget());
     fnSiteWidget->setViewMode(viewMode);
   }
+}
+
+QJsonValue MiraMap::siteProbesToJson(const SiteProbeMap &siteProbeMap) {
+  // Do this as an array of 2-tuples so we don't have to worry about int parsing
+  // when reading.
+  QJsonArray json;
+  for (const auto &[siteId, probeId] : siteProbeMap.asKeyValueRange()) {
+    json.append(QJsonArray({static_cast<int>(siteId), probeId}));
+  }
+
+  return json;
+}
+MiraMap::SiteProbeMap MiraMap::siteProbesFromJson(const QJsonValue &json) {
+  if (!json.isArray()) {
+    throw std::runtime_error("Bad site probes map format.");
+  }
+  SiteProbeMap siteProbeMap;
+  siteProbeMap.reserve(json.toArray().size());
+  for (const auto &siteProbe : json.toArray()) {
+    if (!siteProbe.isArray() || siteProbe.toArray().size() != 2) {
+      throw std::runtime_error("Bad site probe format.");
+    }
+    auto siteId = siteProbe.toArray()[0];
+    if (!siteId.isDouble() || !FnSite::kAllSites.contains(siteId.toInt())) {
+      throw std::runtime_error("Bad site id.");
+    }
+    auto probeId = siteProbe.toArray()[1];
+    if (!probeId.isString() ||
+        !DataProbe::kAllProbes.contains(probeId.toString())) {
+      throw std::runtime_error("Bad probe id.");
+    }
+    siteProbeMap.emplace(siteId.toInt(), probeId.toString());
+  }
+  return siteProbeMap;
 }
 
 void MiraMap::wheelEvent(QWheelEvent *event) {
@@ -93,7 +131,13 @@ void MiraMap::calculateSiteWidgets() {
   for (auto &widget : siteWidgets_) {
     auto *fnSiteWidget = dynamic_cast<FnSiteWidget *>(
         dynamic_cast<QGraphicsProxyWidget *>(widget.get())->widget());
-    fnSiteWidget->setVisited(sitesVisited_->contains(fnSiteWidget->site().id));
+    fnSiteWidget->setVisited(sitesVisited_.contains(fnSiteWidget->site().id));
+    const auto dataProbe = siteProbeMap_.find(fnSiteWidget->site().id);
+    if (dataProbe == siteProbeMap_.end()) {
+      fnSiteWidget->setDataProbe(nullptr);
+    } else {
+      fnSiteWidget->setDataProbe(dataProbe.value());
+    }
   }
 
   calculateLinks();
@@ -106,7 +150,7 @@ void MiraMap::calculateLinks() {
   linkGraphics_.clear();
   for (const auto &link : FnSite::kAllLinks) {
     const auto linkVisited =
-        sitesVisited_->contains(link[0]) && sitesVisited_->contains(link[1]);
+        sitesVisited_.contains(link[0]) && sitesVisited_.contains(link[1]);
     if (linkVisited) {
       const auto linkA = FnSite::kAllSites.value(link[0]);
       const auto linkB = FnSite::kAllSites.value(link[1]);

@@ -10,6 +10,7 @@
 #define INVENTORYLOADER_H
 
 #include "DataProbe.h"
+#include <QJsonValue>
 
 /**
  * Read probe inventory.
@@ -18,9 +19,15 @@
  */
 class InventoryLoader {
 public:
-  static DataProbe::ProbeInventory readInventory(const QString &path);
-  static void writeInventory(const DataProbe::ProbeInventory &probeInventory,
-                             const QString &path);
+  [[nodiscard]] static DataProbe::ProbeInventory
+  readInventoryFromFile(const QString &path);
+  [[nodiscard]] static DataProbe::ProbeInventory
+  readInventoryFromJson(const QJsonValue &json);
+  static void
+  writeInventoryToFile(const DataProbe::ProbeInventory &probeInventory,
+                       const QString &path);
+  [[nodiscard]] static QJsonValue
+  writeInventoryToJson(const DataProbe::ProbeInventory &probeInventory);
 };
 
 #endif // INVENTORYLOADER_H

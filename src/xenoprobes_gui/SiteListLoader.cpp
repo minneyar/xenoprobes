@@ -9,8 +9,9 @@
 #include "SiteListLoader.h"
 #include <QFile>
 #include <QTextStream>
+#include <QJsonArray>
 
-FnSite::IdList SiteListLoader::readSiteList(const QString &path) {
+FnSite::IdList SiteListLoader::readSiteListFromFile(const QString &path) {
   QFile file(path);
   if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
     throw std::runtime_error("Failed to open file.");
@@ -41,8 +42,26 @@ FnSite::IdList SiteListLoader::readSiteList(const QString &path) {
   return ids;
 }
 
-void SiteListLoader::writeSiteList(const FnSite::IdList &ids,
-                                   const QString &path) {
+FnSite::IdList SiteListLoader::readSiteListFromJson(const QJsonValue &json) {
+  if (!json.isArray()) {
+    throw std::runtime_error("Bad site list format.");
+  }
+  FnSite::IdList ids;
+  for (const auto id : json.toArray()) {
+    if (!id.isDouble()) {
+      throw std::runtime_error("Failed to parse id.");
+    }
+    if (!FnSite::kAllSites.contains(id.toInt())) {
+      throw std::runtime_error("Site not found.");
+    }
+    ids.insert(id.toInt());
+  }
+
+  return ids;
+}
+
+void SiteListLoader::writeSiteListToFile(const FnSite::IdList &ids,
+                                         const QString &path) {
   QFile file(path);
   if (!file.open(QIODevice::ReadWrite | QIODevice::Truncate |
                  QIODevice::Text)) {
@@ -81,4 +100,12 @@ void SiteListLoader::writeSiteList(const FnSite::IdList &ids,
     lastId = site.id;
   }
   out.flush();
+}
+
+QJsonValue SiteListLoader::writeSiteListToJson(const FnSite::IdList &ids) {
+  QJsonArray json;
+  for (const auto id : ids) {
+    json.append(static_cast<int>(id));
+  }
+  return json;
 }

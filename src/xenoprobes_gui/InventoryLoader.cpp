@@ -9,15 +9,17 @@
 #include "InventoryLoader.h"
 
 #include <QFile>
+#include <QJsonObject>
 #include <QTextStream>
 
-DataProbe::ProbeInventory InventoryLoader::readInventory(const QString &path) {
+DataProbe::ProbeInventory
+InventoryLoader::readInventoryFromFile(const QString &path) {
   QFile file(path);
   if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
     throw std::runtime_error("Failed to open file.");
   }
   QTextStream in(&file);
-  QHash<QString, unsigned int> inventory;
+  QHash<DataProbe::Id, unsigned int> inventory;
 
   // Read data as ProbeId,quantity
   QString line;
@@ -58,7 +60,37 @@ DataProbe::ProbeInventory InventoryLoader::readInventory(const QString &path) {
   return probeInventory;
 }
 
-void InventoryLoader::writeInventory(
+DataProbe::ProbeInventory
+InventoryLoader::readInventoryFromJson(const QJsonValue &json) {
+  if (!json.isObject()) {
+    throw std::runtime_error("Bad probe inventory format.");
+  }
+  const auto &jsonMap = json.toObject();
+  DataProbe::ProbeInventory probeInventory;
+  probeInventory.reserve(DataProbe::kAllProbes.size());
+  for (const auto &[probeId, probe] : DataProbe::kAllProbes.asKeyValueRange()) {
+    if (probe.category == DataProbe::Category::Basic) {
+      continue;
+    }
+    auto quantity = jsonMap.value(probeId);
+    if (quantity.isUndefined()) {
+      quantity = 0;
+    } else if (!quantity.isDouble()) {
+      throw std::runtime_error("Failed to parse quantity.");
+    }
+    probeInventory.emplace_back(probeId, quantity.toInt());
+  }
+  std::ranges::sort(probeInventory,
+                    [](const decltype(probeInventory)::value_type &lhs,
+                       const decltype(probeInventory)::value_type &rhs) {
+                      return DataProbe::kAllProbes.value(lhs.first) <
+                             DataProbe::kAllProbes.value(rhs.first);
+                    });
+
+  return probeInventory;
+}
+
+void InventoryLoader::writeInventoryToFile(
     const DataProbe::ProbeInventory &probeInventory, const QString &path) {
   QFile file(path);
   if (!file.open(QIODevice::ReadWrite | QIODevice::Truncate |
@@ -104,4 +136,15 @@ void InventoryLoader::writeInventory(
     lastCategory = probe.category;
   }
   out.flush();
+}
+
+QJsonValue InventoryLoader::writeInventoryToJson(
+    const DataProbe::ProbeInventory &probeInventory) {
+  QJsonObject json;
+  for (const auto &[probeId, quantity] : probeInventory) {
+    if (quantity > 0) {
+      json[probeId] = static_cast<int>(quantity);
+    }
+  }
+  return json;
 }

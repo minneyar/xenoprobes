@@ -8,6 +8,8 @@
 
 #include "InventoryModel.h"
 
+#include "InventoryLoader.h"
+
 InventoryModel::InventoryModel(QObject *parent) {
   probeInventory_.reserve(DataProbe::kAllProbes.size());
   for (const auto &probe : DataProbe::kAllProbes) {
@@ -16,18 +18,14 @@ InventoryModel::InventoryModel(QObject *parent) {
     }
     probeInventory_.emplace_back(probe.id, 0);
   }
-  std::ranges::sort(probeInventory_,
-                    [](const decltype(probeInventory_)::value_type &lhs,
-                       const decltype(probeInventory_)::value_type &rhs) {
-                      return DataProbe::kAllProbes.value(lhs.first) <
-                             DataProbe::kAllProbes.value(rhs.first);
-                    });
+  sortProbeInventory();
 }
 
 void InventoryModel::setProbeInventory(
     const DataProbe::ProbeInventory &probeInventory) {
   beginResetModel();
   probeInventory_ = probeInventory;
+  sortProbeInventory();
   endResetModel();
 }
 
@@ -106,4 +104,13 @@ Qt::ItemFlags InventoryModel::flags(const QModelIndex &index) const {
   }
 
   return QAbstractTableModel::flags(index);
+}
+
+void InventoryModel::sortProbeInventory() {
+  std::ranges::sort(probeInventory_,
+                    [](const decltype(probeInventory_)::value_type &lhs,
+                       const decltype(probeInventory_)::value_type &rhs) {
+                      return DataProbe::kAllProbes.value(lhs.first) <
+                             DataProbe::kAllProbes.value(rhs.first);
+                    });
 }
