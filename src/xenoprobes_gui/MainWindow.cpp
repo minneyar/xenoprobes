@@ -70,6 +70,7 @@ void MainWindow::initUi() {
   // Config pane
   auto configLayout = new QVBoxLayout();
   layout->addLayout(configLayout);
+
   // Inventory
   widgets_.inventoryTable = new QTableView(central);
   configLayout->addWidget(widgets_.inventoryTable);
@@ -79,6 +80,10 @@ void MainWindow::initUi() {
   widgets_.inventoryTable->setSizePolicy(QSizePolicy::MinimumExpanding,
                                          QSizePolicy::MinimumExpanding);
   widgets_.inventoryTable->resizeColumnsToContents();
+
+  // Run Options
+  widgets_.runOptions = new RunOptionsWidget(central);
+  configLayout->addWidget(widgets_.runOptions);
 }
 
 void MainWindow::initActions() {

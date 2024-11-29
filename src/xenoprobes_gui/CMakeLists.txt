@@ -20,8 +20,12 @@ qt_add_executable(${PROJECT_NAME}_gui
         MainWindow.h
         MiraMap.cpp
         MiraMap.h
+        RunOptionsWidget.h
+        RunOptionsWidget.cpp
         SiteListLoader.cpp
         SiteListLoader.h
+        SliderWithValWidget.h
+        SliderWithValWidget.cpp
         main.cpp
 )
 

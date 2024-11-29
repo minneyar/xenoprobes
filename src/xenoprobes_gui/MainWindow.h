@@ -12,6 +12,8 @@
 #include "FnSite.h"
 #include "InventoryModel.h"
 #include "MiraMap.h"
+#include "RunOptionsWidget.h"
+
 #include <QMainWindow>
 #include <QTableView>
 
@@ -36,6 +38,7 @@ private:
     MiraMap *miraMap = nullptr;
     QTabBar *tabBar = nullptr;
     QTableView *inventoryTable = nullptr;
+    RunOptionsWidget *runOptions = nullptr;
   };
 
   Widgets widgets_;
