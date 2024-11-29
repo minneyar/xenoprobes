@@ -14,6 +14,7 @@
 #include <QTabBar>
 
 #include "FnSite.h"
+#include "InventoryLoader.h"
 #include "SiteListLoader.h"
 
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) { initUi(); }
@@ -31,6 +32,8 @@ void MainWindow::initUi() {
   // File menu
   menuFile->addAction(actions.fileImportSites);
   menuFile->addAction(actions.fileExportSites);
+  menuFile->addAction(actions.fileImportInventory);
+  menuFile->addAction(actions.fileExportInventory);
   menuFile->addSeparator();
   menuFile->addAction(actions.fileExit);
 
@@ -73,6 +76,16 @@ void MainWindow::initActions() {
       new QAction(QIcon::fromTheme("document-export"), "Export Sites", this);
   connect(actions.fileExportSites, &QAction::triggered, this,
           &MainWindow::fileExportSites);
+  // Import Inventory
+  actions.fileImportInventory = new QAction(QIcon::fromTheme("document-import"),
+                                            "Import Inventory", this);
+  connect(actions.fileImportInventory, &QAction::triggered, this,
+          &MainWindow::fileImportInventory);
+  // Export Inventory
+  actions.fileExportInventory = new QAction(QIcon::fromTheme("document-export"),
+                                            "Export Inventory", this);
+  connect(actions.fileExportInventory, &QAction::triggered, this,
+          &MainWindow::fileExportInventory);
   // Exit
   actions.fileExit =
       new QAction(QIcon::fromTheme("application-exit"), "E&xit", this);
@@ -114,6 +127,43 @@ void MainWindow::fileExportSites() {
                           tr("Could not save %1").arg(filenames.first()));
   }
 }
+
+void MainWindow::fileImportInventory() {
+  QFileDialog dialog(this, tr("Import Inventory..."));
+  dialog.setAcceptMode(QFileDialog::AcceptOpen);
+  dialog.setFileMode(QFileDialog::ExistingFile);
+  dialog.setNameFilter(tr("Inventory (*.csv)"));
+  if (dialog.exec() != QDialog::Accepted) {
+    return;
+  }
+  const auto filenames = dialog.selectedFiles();
+  try {
+    const auto newInventory = InventoryLoader::readInventory(filenames.first());
+    probeInventory_ = newInventory;
+    // TODO: Update something
+  } catch (const std::exception &) {
+    QMessageBox::critical(this, tr("Failed to open file"),
+                          tr("Could not open %1").arg(filenames.first()));
+  }
+}
+
+void MainWindow::fileExportInventory() {
+  QFileDialog dialog(this, tr("Export Inventory..."));
+  dialog.setAcceptMode(QFileDialog::AcceptSave);
+  dialog.setFileMode(QFileDialog::AnyFile);
+  dialog.setNameFilter(tr("Inventory (*.csv)"));
+  if (dialog.exec() != QDialog::Accepted) {
+    return;
+  }
+  const auto filenames = dialog.selectedFiles();
+  try {
+    InventoryLoader::writeInventory(probeInventory_, filenames.first());
+  } catch (const std::exception &) {
+    QMessageBox::critical(this, tr("Failed to save file"),
+                          tr("Could not save %1").arg(filenames.first()));
+  }
+}
+
 void MainWindow::tabChanged(int index) {
   if (index < 0) {
     return;

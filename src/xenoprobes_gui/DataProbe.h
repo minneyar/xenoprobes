@@ -13,6 +13,16 @@
 #include <QString>
 
 struct DataProbe {
+  friend constexpr std::weak_ordering operator<=>(const DataProbe &lhs,
+                                                  const DataProbe &rhs) {
+    if (lhs.category != rhs.category) {
+      return lhs.category <=> rhs.category;
+    }
+    return lhs.level <=> rhs.level;
+  }
+
+  using ProbeInventory = QList<QPair<QString, unsigned int>>;
+
   enum class Category {
     Basic,
     Mining,

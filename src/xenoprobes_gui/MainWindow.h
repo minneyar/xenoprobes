@@ -26,6 +26,8 @@ private:
     {
         QAction* fileImportSites = nullptr;
         QAction* fileExportSites = nullptr;
+        QAction* fileImportInventory = nullptr;
+        QAction* fileExportInventory = nullptr;
         QAction* fileExit = nullptr;
     };
 
@@ -39,6 +41,7 @@ private:
 
     Widgets widgets_;
     FnSite::IdList sitesVisited_;
+    DataProbe::ProbeInventory probeInventory_;
 
     void initUi();
     void initActions();
@@ -46,6 +49,8 @@ private:
 private Q_SLOTS:
     void fileImportSites();
     void fileExportSites();
+    void fileImportInventory();
+    void fileExportInventory();
     void tabChanged(int index);
 };
 

@@ -12,6 +12,8 @@ qt_add_executable(${PROJECT_NAME}_gui
         FnSite.h
         FnSiteWidget.cpp
         FnSiteWidget.h
+        InventoryLoader.h
+        InventoryLoader.cpp
         MainWindow.cpp
         MainWindow.h
         MiraMap.cpp
