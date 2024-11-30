@@ -2,13 +2,15 @@
 // Created by preed on 1/6/16.
 //
 
-#include <iosfwd>
-#include <map>
-#include <iostream>
-#include <fstream>
-#include <spdlog/spdlog.h>
 #include "probeoptimizer/site_list.h"
 #include "probeoptimizer/probe_optimizer.h"
+#include <fstream>
+#include <iosfwd>
+#include <iostream>
+#include <map>
+#include <spdlog/spdlog.h>
+
+#include <probeoptimizer/csv.h>
 
 void SiteList::addNeighborToSite(size_t site_index, size_t neighbor_index) {
     sites_[site_index].addNeighbor(neighbor_index);
@@ -35,7 +37,7 @@ void SiteList::loadSites() {
 
 
     try {
-        auto data = ProbeOptimizer::loadCSV("sites.csv");
+        auto data = loadCSV("sites.csv");
         for (const auto& record : data) {
             Site site(std::stoi(record[0]));
             site.setProduction(prodGrade.at(record[1]));

@@ -23,8 +23,6 @@ public:
     void printSetup() const;
     void printTotals() const;
 
-    static std::vector<std::vector<std::string>> loadCSV(const std::string& fname);
-
     void doHillClimbing() const;
 
     void setStorageWeight(float storageWeight);

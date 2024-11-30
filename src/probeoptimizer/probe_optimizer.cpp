@@ -17,6 +17,8 @@
 #include "probeoptimizer/semaphore.h"
 #include "probeoptimizer/solution.h"
 
+#include <probeoptimizer/csv.h>
+
 std::atomic<bool> ProbeOptimizer::shouldStop_(false);
 ProbeArrangement ProbeOptimizer::setup_;
 SiteList ProbeOptimizer::sites_;
@@ -77,33 +79,6 @@ void ProbeOptimizer::loadSetup()
 
 void ProbeOptimizer::loadSites() {
     sites_.loadSites();
-}
-
-std::vector<std::vector<std::string>> ProbeOptimizer::loadCSV(const std::string& fname)
-{
-    using std::vector;
-    using std::string;
-
-    vector<vector<string>> result;
-
-    std::ifstream file{fname};
-    if (!file) {
-        throw std::runtime_error{"could not open file " + fname};
-    }
-    string line;
-    while (getline(file, line)) {
-        auto commentPos = line.find('#');
-        if (commentPos != string::npos)
-            line.erase(commentPos);
-        boost::trim(line);
-        if (line.empty())
-            continue;
-        vector<string> records;
-        boost::split(records, line, [](char c) {return c==',';});
-        result.push_back(std::move(records));
-    }
-
-    return result;
 }
 
 void ProbeOptimizer::printSetup() const {
