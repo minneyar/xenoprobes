@@ -19,6 +19,17 @@ target_link_libraries(probeoptimizer PRIVATE
         Threads::Threads
         $<IF:$<BOOL:MSVC>,,-static>
 )
+
+# Create site links file.
+add_custom_command(OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/kAllLinks.cpp"
+        COMMAND sitelinks
+        "${PROJECT_SOURCE_DIR}/mira.dot"
+        "${CMAKE_CURRENT_BINARY_DIR}/kAllLinks.cpp"
+        DEPENDS
+        "${PROJECT_SOURCE_DIR}/mira.dot"
+)
+target_sources(probeoptimizer PRIVATE "${CMAKE_CURRENT_BINARY_DIR}/kAllLinks.cpp")
+
 if (MSVC)
     set_target_properties(probeoptimizer PROPERTIES
             MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"

@@ -42,19 +42,9 @@ add_custom_command(OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/kAllSites.cpp"
         "${PROJECT_SOURCE_DIR}/resources/map.svg"
 )
 target_sources(${PROJECT_NAME}_gui PRIVATE "${CMAKE_CURRENT_BINARY_DIR}/kAllSites.cpp")
-add_custom_command(OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/kAllLinks.cpp"
-        COMMAND Python3::Interpreter "${CMAKE_CURRENT_SOURCE_DIR}/fn_links.py"
-        "${PROJECT_SOURCE_DIR}/mira.dot"
-        "${CMAKE_CURRENT_BINARY_DIR}/kAllLinks.cpp"
-        DEPENDS
-        "${CMAKE_CURRENT_SOURCE_DIR}/fn_links.py"
-        "${PROJECT_SOURCE_DIR}/mira.dot"
-)
-target_sources(${PROJECT_NAME}_gui PRIVATE "${CMAKE_CURRENT_BINARY_DIR}/kAllLinks.cpp")
 # This file needs the header from the source directory.
 set_property(SOURCE
         "${CMAKE_CURRENT_BINARY_DIR}/kAllSites.cpp"
-        "${CMAKE_CURRENT_BINARY_DIR}/kAllLinks.cpp"
         APPEND PROPERTY INCLUDE_DIRECTORIES "${CMAKE_CURRENT_SOURCE_DIR}"
 )
 

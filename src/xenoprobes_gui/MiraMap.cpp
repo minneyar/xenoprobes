@@ -10,6 +10,7 @@
 #include <QGraphicsPixmapItem>
 #include <QGraphicsProxyWidget>
 #include <QJsonArray>
+#include <probeoptimizer/site_links.h>
 
 #include "FnSite.h"
 #include "FnSiteWidget.h"
@@ -148,7 +149,7 @@ void MiraMap::calculateLinks() {
   pen.setWidth(4);
   pen.setColor(Qt::white);
   linkGraphics_.clear();
-  for (const auto &link : FnSite::kAllLinks) {
+  for (const auto &link : kAllSiteLinks) {
     const auto linkVisited =
         sitesVisited_.contains(link[0]) && sitesVisited_.contains(link[1]);
     if (linkVisited) {

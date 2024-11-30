@@ -9,8 +9,8 @@
 #include <iostream>
 #include <map>
 #include <spdlog/spdlog.h>
-
-#include <probeoptimizer/csv.h>
+#include "probeoptimizer/csv.h"
+#include "probeoptimizer/site_links.h"
 
 void SiteList::addNeighborToSite(size_t site_index, size_t neighbor_index) {
     sites_[site_index].addNeighbor(neighbor_index);
@@ -63,23 +63,14 @@ void SiteList::loadSites() {
     }
 
     int numConnections = 0;
-
-    {
-        std::ifstream file{"mira.dot"};
-        std::string line;
-        while (getline(file, line)) {
-            int u, v;
-            if (std::sscanf(line.c_str(), "%d -- %d", &u, &v) == 2) {
-                int uidx = findIndexForSiteName(u);
-                int vidx = findIndexForSiteName(v);
-                if (uidx != -1 && vidx != -1) {
-                    addNeighborToSite(uidx, vidx);
-                    ++numConnections;
-                }
-            }
+    for (const auto[u,v] : kAllSiteLinks) {
+        const auto uidx = findIndexForSiteName(u);
+        const auto vidx = findIndexForSiteName(v);
+        if (uidx != -1 && vidx != -1) {
+            addNeighborToSite(uidx, vidx);
+            ++numConnections;
         }
     }
-
 
     spdlog::info("Loaded {} FN sites with {} connections.", sites_.size(),
         numConnections);

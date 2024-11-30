@@ -54,7 +54,6 @@ struct FnSite
     }
 
     static const QHash<Id, FnSite> kAllSites;
-    static const std::vector<std::array<Id, 2>> kAllLinks;
 
     unsigned int id;
     QPoint position;
