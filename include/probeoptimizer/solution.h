@@ -24,6 +24,7 @@ public:
 
     void printTotals() const;
     void printSetup() const;
+    const ProbeArrangement& getSetup() const {return setup_;}
 
     bool hasSameArrangement(const Solution& arr2) const;
 

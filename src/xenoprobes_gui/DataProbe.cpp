@@ -8,6 +8,8 @@
 
 #include "DataProbe.h"
 
+// @formatter:off
+// clang-format off
 const QHash<DataProbe::Id, DataProbe> DataProbe::kAllProbes{
     {"M1", {.id = "M1", .category = DataProbe::Category::Mining, .level = 1, .name = "Mining Probe G1"}},
     {"M2", {.id = "M2", .category = DataProbe::Category::Mining, .level = 2, .name = "Mining Probe G2"}},
@@ -36,3 +38,5 @@ const QHash<DataProbe::Id, DataProbe> DataProbe::kAllProbes{
     {"CD", {.id = "CD", .category = DataProbe::Category::Battle, .level = 0, .name = "EZ Debuff Probe"}},
     {"CA", {.id = "CA", .category = DataProbe::Category::Battle, .level = 0, .name = "Attribute Resistance Probe"}},
 };
+// clang-format on
+// @formatter:on

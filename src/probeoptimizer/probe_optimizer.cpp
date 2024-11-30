@@ -93,7 +93,8 @@ void ProbeOptimizer::printSetup() const { setup_.printSetup(); }
 
 void ProbeOptimizer::printTotals() const { setup_.printTotals(); }
 
-void ProbeOptimizer::doHillClimbing() const {
+void ProbeOptimizer::doHillClimbing(ProgressCallback progressCallback,
+                                    StopCallback stopCallback) const {
   spdlog::info(
       "Starting Hill Climbing with parameters:\n"
       "  storage weight   = {storageWeight: 6}\n"
@@ -115,15 +116,18 @@ void ProbeOptimizer::doHillClimbing() const {
     solution.evaluate();
   }
 
-  Solution globalBest, best, worst;
+  Solution best, worst;
   size_t killed = 0;
-  for (size_t iter = 0; iter < maxIterations_ && !shouldStop_; ++iter) {
+  for (size_t iter = 0; iter < maxIterations_ && !stopCallback(); ++iter) {
     spdlog::info(
         "iteration: {iter}/{maxIterations}  best: {best:.9}  worst: {worst:.9} "
         " killed {killed}",
         fmt::arg("iter", iter + 1), fmt::arg("maxIterations", maxIterations_),
         fmt::arg("best", best.getScore()), fmt::arg("worst", worst.getScore()),
         fmt::arg("killed", killed));
+    if (progressCallback) {
+      progressCallback(iter + 1, best.getScore(), worst.getScore(), killed);
+    }
 
     newGen.clear();
     killed = 0;
@@ -143,7 +147,7 @@ void ProbeOptimizer::doHillClimbing() const {
         // this generation's a flop.  Reset it from scratch if it's old
         // Don't reset it if it's the best one we've gotten so far, though.
         if (bestChild.getScore() == ancestor.getScore() && maxAge_ > 0 &&
-            bestChild.getScore() != globalBest.getScore()) {
+            bestChild.getScore() != solution_.getScore()) {
           bestChild.setAge(bestChild.getAge() + 1);
           if (bestChild.getAge() > maxAge_) {
             bestChild.randomize();
@@ -170,16 +174,16 @@ void ProbeOptimizer::doHillClimbing() const {
     worst = *extremes.first;
     best = *extremes.second;
 
-    if (best > globalBest) {
-      globalBest = best;
+    if (best > solution_) {
+      solution_ = best;
     }
 
     swap(population, newGen);
   }
 
-  globalBest.printSetup();
-  globalBest.printTotals();
-  spdlog::info("# Best score: {: 9}", globalBest.getScore());
+  solution_.printSetup();
+  solution_.printTotals();
+  spdlog::info("# Best score: {: 9}", solution_.getScore());
 }
 
 void ProbeOptimizer::setStorageWeight(float storageWeight) {
@@ -214,7 +218,9 @@ void ProbeOptimizer::setMaxAge(int maxAge) { maxAge_ = maxAge; }
 
 void ProbeOptimizer::setMaxThreads(size_t threads) { max_threads_ = threads; }
 
-void ProbeOptimizer::handleSIGINT(int) { shouldStop_ = true; }
+void ProbeOptimizer::handleSIGINT(int) { requestStop(); }
+
+void ProbeOptimizer::requestStop() { shouldStop_ = true; }
 
 const ProbeArrangement &ProbeOptimizer::getDefaultArrangement() {
   return setup_;

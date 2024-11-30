@@ -21,6 +21,7 @@
 #include "SiteListLoader.h"
 
 #include <QJsonObject>
+#include <QPushButton>
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent), inventoryModel_(new InventoryModel(this)) {
@@ -91,6 +92,11 @@ void MainWindow::initUi() {
   // Run Options
   widgets_.runOptions = new RunOptionsWidget(central);
   configLayout->addWidget(widgets_.runOptions);
+
+  // Solve button
+  auto *solveBtn = new QPushButton(tr("Solve"), central);
+  configLayout->addWidget(solveBtn);
+  connect(solveBtn, &QPushButton::clicked, this, &MainWindow::solve);
 }
 
 void MainWindow::initActions() {
@@ -301,4 +307,74 @@ void MainWindow::tabChanged(int index) {
   const auto viewMode =
       widgets_.tabBar->tabData(index).value<FnSiteWidget::ViewMode>();
   widgets_.miraMap->setViewMode(viewMode);
+}
+
+void MainWindow::solve() {
+  progressDialog_ = new QProgressDialog(this);
+  progressDialog_->setWindowTitle(tr("Calculating..."));
+  progressDialog_->setCancelButtonText(tr("Cancel"));
+  progressDialog_->setMinimumDuration(0);
+  progressDialog_->setMinimum(0);
+  progressDialog_->setMaximum(widgets_.runOptions->options().iterations);
+  // Can't use autoreset because progress is reported *before* the calculation,
+  // not after.
+  progressDialog_->setAutoReset(false);
+  solverRunner_ = new SolverRunner(
+      widgets_.miraMap->sitesVisited(), widgets_.miraMap->siteProbeMap(),
+      inventoryModel_->probeInventory(), widgets_.runOptions->options(), this);
+  connect(solverRunner_, &SolverRunner::progress, this, &MainWindow::progress);
+  connect(progressDialog_, &QProgressDialog::canceled, solverRunner_,
+          &SolverRunner::requestInterruption);
+  connect(solverRunner_, &SolverRunner::finished, this, &MainWindow::solved);
+  solverRunner_->start();
+}
+
+void MainWindow::progress(unsigned long iter, double bestScore,
+                          double worstScore, unsigned long killed) {
+  if (!progressDialog_) {
+    return;
+  }
+  progressDialog_->setValue(iter);
+  progressDialog_->setLabelText(tr("Best: %1\nWorst: %2\nKilled: %3")
+                                    .arg(std::lround(bestScore))
+                                    .arg(std::lround(worstScore))
+                                    .arg(killed));
+}
+
+void MainWindow::solved(unsigned int mining, unsigned int revenue,
+                        unsigned int storage, QStringList ores,
+                        MiraMap::SiteProbeMap siteProbeMap) {
+  progressDialog_->close();
+  progressDialog_->deleteLater();
+  progressDialog_ = nullptr;
+
+  widgets_.miraMap->setSiteProbeMap(siteProbeMap);
+
+  QMessageBox resultDialog(this);
+  resultDialog.setText(tr("Completed solving!"));
+  QStringList oresList;
+  for (const auto &ore : ores) {
+    oresList.append(
+        QString("<li>%1</li>").arg(ore));
+  }
+  // @formatter:off
+  // clang-format off
+  resultDialog.setInformativeText(
+      tr(
+          "<table>"
+            "<tr><th align=\"right\">Production</th><td align=\"left\">%1</td></tr>"
+            "<tr><th align=\"right\">Revenue</th><td align=\"left\">%2</td></tr>"
+            "<tr><th align=\"right\">Storage</th><td align=\"left\">%3</td></tr>"
+            "<tr><th align=\"right\">Ores</th><td align=\"left\"><ul>%4</ul></td></tr>"
+          "</table>"
+          )
+          .arg(mining)
+          .arg(revenue)
+          .arg(storage)
+          .arg(oresList.join("")));
+  // @formatter:on
+  // clang-format on
+  resultDialog.exec();
+  solverRunner_->deleteLater();
+  solverRunner_ = nullptr;
 }

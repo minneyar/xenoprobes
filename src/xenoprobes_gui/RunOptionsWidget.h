@@ -12,25 +12,17 @@
 #include "SliderWithValWidget.h"
 #include <QJsonValue>
 #include <QWidget>
+#include "RunOptions.h"
 
 class RunOptionsWidget : public QWidget {
   Q_OBJECT
 public:
-  struct Options {
-    int storageWeight = 1000;
-    int revenueWeight = 10;
-    int productionWeight = 1;
-    int iterations = 2000;
-    int population = 200;
-    int offsprings = 100;
-    int mutation = std::round(1.0 / 32 * 100);
-  };
 
-  [[nodiscard]] static QJsonValue optionsToJson(const Options &options);
-  static Options optionsFromJson(const QJsonValue &json);
+  [[nodiscard]] static QJsonValue optionsToJson(const RunOptions &options);
+  static RunOptions optionsFromJson(const QJsonValue &json);
 
   explicit RunOptionsWidget(QWidget *parent = nullptr);
-  [[nodiscard]] Options options() const {
+  [[nodiscard]] RunOptions options() const {
     return {
         .storageWeight = storageWeight_->value(),
         .revenueWeight = revenueWeight_->value(),
@@ -41,7 +33,7 @@ public:
         .mutation = mutation_->value(),
     };
   }
-  void setOptions(const Options &options) {
+  void setOptions(const RunOptions &options) {
     storageWeight_->setValue(options.storageWeight);
     revenueWeight_->setValue(options.revenueWeight);
     productionWeight_->setValue(options.productionWeight);

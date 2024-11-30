@@ -75,7 +75,7 @@ RunOptionsWidget::RunOptionsWidget(QWidget *parent)
   }
 }
 
-QJsonValue RunOptionsWidget::optionsToJson(const Options &options) {
+QJsonValue RunOptionsWidget::optionsToJson(const RunOptions &options) {
   QJsonObject json;
   json["storageWeight"] = options.storageWeight;
   json["revenueWeight"] = options.revenueWeight;
@@ -88,13 +88,12 @@ QJsonValue RunOptionsWidget::optionsToJson(const Options &options) {
   return json;
 }
 
-RunOptionsWidget::Options
-RunOptionsWidget::optionsFromJson(const QJsonValue &json) {
+RunOptions RunOptionsWidget::optionsFromJson(const QJsonValue &json) {
   if (!json.isObject()) {
     throw std::runtime_error("Bad options format.");
   }
   const auto &jsonObj = json.toObject();
-  Options options;
+  RunOptions options;
 
   if (!jsonObj.contains("storageWeight") ||
       !jsonObj["storageWeight"].isDouble()) {
@@ -138,7 +137,7 @@ RunOptionsWidget::optionsFromJson(const QJsonValue &json) {
 }
 
 void RunOptionsWidget::applyDefaultValues() {
-  const Options defaults;
+  const RunOptions defaults;
   storageWeight_->setValue(defaults.storageWeight);
   revenueWeight_->setValue(defaults.revenueWeight);
   productionWeight_->setValue(defaults.productionWeight);

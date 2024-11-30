@@ -5,10 +5,12 @@
 #ifndef XENOPROBES_PROBE_ARRANGEMENT_H
 #define XENOPROBES_PROBE_ARRANGEMENT_H
 
-#include <random>
-#include <vector>
 #include "probe.h"
 #include "site_list.h"
+#include <random>
+#include <vector>
+
+#include <map>
 
 class ProbeArrangement {
 public:
@@ -24,6 +26,7 @@ public:
 
     void printTotals() const;
     void printSetup() const;
+    std::map<int, Probe::Type> getSetup() const;
 
     double getStorageWeight() const;
     void setStorageWeight(double storage_weight);
@@ -31,6 +34,10 @@ public:
     void setProductionWeight(double production_weight);
     double getRevenueWeight() const;
     void setRevenueWeight(double revenue_weight);
+    double getTotalProduction() const;
+    double getTotalRevenue() const;
+    double getTotalStorage() const;
+    std::vector<std::string> getOres() const;
 
     size_t getSize() const;
 

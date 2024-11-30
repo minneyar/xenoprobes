@@ -26,6 +26,8 @@ qt_add_executable(${PROJECT_NAME}_gui
         SiteListLoader.h
         SliderWithValWidget.h
         SliderWithValWidget.cpp
+        SolverRunner.h
+        SolverRunner.cpp
         main.cpp
 )
 

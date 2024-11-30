@@ -5,74 +5,84 @@
 #ifndef XENOPROBES_PROBE_OPTIMIZER_H
 #define XENOPROBES_PROBE_OPTIMIZER_H
 
-#include <vector>
-#include <atomic>
-#include <map>
-#include "site_list.h"
 #include "probe.h"
 #include "probe_arrangement.h"
+#include "site_list.h"
 #include "solution.h"
+#include <atomic>
+#include <functional>
+#include <map>
+#include <vector>
 
 class ProbeOptimizer {
 public:
-    void loadInventory(const std::string& filename);
-    void loadInventory(const std::vector<std::vector<CsvRecordVal>>& records);
-    void loadSetup(const std::string& filename);
-    void loadSites(const std::string& filename);
-    void loadSites(const std::vector<std::vector<CsvRecordVal>>& records);
+  using ProgressCallback =
+      std::function<void(unsigned long iter, double bestScore,
+                         double worstScore, unsigned long killed)>;
+  using StopCallback = std::function<bool()>;
 
-    void printInventory() const;
-    void printSetup() const;
-    void printTotals() const;
+  void loadInventory(const std::string &filename);
+  void loadInventory(const std::vector<std::vector<CsvRecordVal>> &records);
+  void loadSetup(const std::string &filename);
+  void loadSites(const std::string &filename);
+  void loadSites(const std::vector<std::vector<CsvRecordVal>> &records);
 
-    void doHillClimbing() const;
+  void printInventory() const;
+  void printSetup() const;
+  void printTotals() const;
 
-    void setStorageWeight(float storageWeight);
-    void setRevenueWeight(float revenueWeight);
-    void setProductionWeight(float productionWeight);
-    void setMutationRate(float mutationRate);
-    void setMaxPopSize(size_t maxPopSize);
-    void setNumOffsprings(size_t numOffsprings);
-    void setMaxIterations(size_t maxIterations);
-    void setMaxAge(int maxAge);
-    void setMaxThreads(size_t threads);
+  void
+  doHillClimbing(ProgressCallback progressCallback = {},
+                 StopCallback stopCallback = &ProbeOptimizer::shouldStop) const;
 
-    static void handleSIGINT(int);
+  void setStorageWeight(float storageWeight);
+  void setRevenueWeight(float revenueWeight);
+  void setProductionWeight(float productionWeight);
+  void setMutationRate(float mutationRate);
+  void setMaxPopSize(size_t maxPopSize);
+  void setNumOffsprings(size_t numOffsprings);
+  void setMaxIterations(size_t maxIterations);
+  void setMaxAge(int maxAge);
+  void setMaxThreads(size_t threads);
 
-    static const ProbeArrangement& getDefaultArrangement();
-    static const SiteList& getSites();
-    static std::vector<Probe::Type> getInventory();
+  static void handleSIGINT(int);
+  static void requestStop();
+  static bool shouldStop() { return shouldStop_; }
 
-    bool isValid() const
-    {
-        std::map< Probe::Type,int> histoInv;
-        std::map< Probe::Type,int> histoSetup;
+  static const ProbeArrangement &getDefaultArrangement();
+  static const SiteList &getSites();
+  static std::vector<Probe::Type> getInventory();
+  [[nodiscard]] const Solution &solution() const { return solution_; }
 
-        for (const auto& item : inventory_) {
-            ++histoInv[item];
-        }
-        for (size_t i = 0; i < setup_.getSize(); i++) {
-            ++histoSetup[setup_.getProbeAt(i)];
-        }
-        return histoInv == histoSetup;
+  bool isValid() const {
+    std::map<Probe::Type, int> histoInv;
+    std::map<Probe::Type, int> histoSetup;
+
+    for (const auto &item : inventory_) {
+      ++histoInv[item];
     }
+    for (size_t i = 0; i < setup_.getSize(); i++) {
+      ++histoSetup[setup_.getProbeAt(i)];
+    }
+    return histoInv == histoSetup;
+  }
 
 private:
-    static std::vector<Probe::Type> inventory_;
-    static SiteList sites_;
-    static ProbeArrangement setup_;
+  static std::vector<Probe::Type> inventory_;
+  static SiteList sites_;
+  static ProbeArrangement setup_;
 
-    float mutationRate_;
-    float eliteRatio_;
-    size_t maxPopSize_;
-    size_t tournamentRank_;
-    size_t numOffsprings_;
-    size_t maxIterations_;
-    int maxAge_;
-    size_t max_threads_;
+  float mutationRate_;
+  float eliteRatio_;
+  size_t maxPopSize_;
+  size_t tournamentRank_;
+  size_t numOffsprings_;
+  size_t maxIterations_;
+  int maxAge_;
+  size_t max_threads_;
+  mutable Solution solution_;
 
-    static std::atomic<bool> shouldStop_;
+  static std::atomic<bool> shouldStop_;
 };
 
-
-#endif //XENOPROBES_PROBE_OPTIMIZER_H
+#endif // XENOPROBES_PROBE_OPTIMIZER_H

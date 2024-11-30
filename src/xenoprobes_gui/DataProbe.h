@@ -11,6 +11,7 @@
 
 #include <QHash>
 #include <QString>
+#include <probeoptimizer/probe.h>
 
 struct DataProbe {
   using Id = QString;

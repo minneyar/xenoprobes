@@ -13,8 +13,10 @@
 #include "InventoryModel.h"
 #include "MiraMap.h"
 #include "RunOptionsWidget.h"
+#include "SolverRunner.h"
 
 #include <QMainWindow>
+#include <QProgressDialog>
 #include <QTableView>
 
 class MainWindow : public QMainWindow {
@@ -46,6 +48,8 @@ private:
 
   Widgets widgets_;
   InventoryModel *inventoryModel_;
+  QProgressDialog *progressDialog_ = nullptr;
+  SolverRunner *solverRunner_ = nullptr;
 
   void initUi();
   void initActions();
@@ -60,6 +64,11 @@ private Q_SLOTS:
   void fileImportInventory();
   void fileExportInventory();
   void tabChanged(int index);
+  void solve();
+  void progress(unsigned long iter, double bestScore, double worstScore,
+                unsigned long killed);
+  void solved(unsigned int mining, unsigned int revenue, unsigned int storage,
+              QStringList ores, MiraMap::SiteProbeMap siteProbeMap);
 };
 
 #endif // MAINWINDOW_H
