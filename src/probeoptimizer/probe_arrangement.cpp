@@ -11,6 +11,9 @@
 #include "probeoptimizer/probe_arrangement.h"
 #include "probeoptimizer/probe_optimizer.h"
 
+#include <spdlog/spdlog.h>
+#include <fmt/ranges.h>
+
 #ifdef __MINGW32__
 std::mt19937 ProbeArrangement::mt; // note it wasn't seeded properly
 #else
@@ -42,12 +45,12 @@ const std::vector<Probe> ProbeArrangement::PROBE_VALUES = {
 };
 
 void ProbeArrangement::resize(size_t size) {
-    std::cout << "Resizing to " << size << std::endl;
+    spdlog::debug("Resizing to {}", size);
     probes_.resize(size);
 }
 
 void ProbeArrangement::setProbeAt(size_t index, const Probe::Type &type) {
-    std::cout << "Setting probe at " << index << " to " << type << std::endl;
+    spdlog::debug("Setting probe at {} to {}", index, Probe::toString(type));
     probes_[index] = type;
 }
 
@@ -109,10 +112,7 @@ void ProbeArrangement::printSetup() const {
     int prevName = 100;
     for (size_t idx=0; idx<ProbeOptimizer::getSites().size(); ++idx) {
         if (probes_[idx] != Probe::Type::Basic) {
-            if (ProbeOptimizer::getSites().getSite(idx).getName() / 100 != prevName / 100) {
-                std::cout << std::endl;
-            }
-            std::cout << ProbeOptimizer::getSites().getSite(idx).getName() << "," << Probe::toString(probes_[idx]) << std::endl;
+            spdlog::info("{},{}", ProbeOptimizer::getSites().getSite(idx).getName(), Probe::toString(probes_[idx]));
             prevName = ProbeOptimizer::getSites().getSite(idx).getName();
         }
     }
@@ -165,16 +165,23 @@ void ProbeArrangement::printTotals() const {
                 minedOres.insert(oreId);
         }
     }
-    std::cout << "# Miranium: " << std::setw(6) << totalProd << "\n"
-    << "# Revenue:  " << std::setw(6) << totalRev << "\n"
-    << "# Storage:  " << std::setw(6) << totalStorage << "\n"
-    << "# Ores (" << minedOres.size() << "/" << ProbeOptimizer::getSites().getOreCount() << "):\n";
     std::vector<std::string> oreNames;
     for (const auto& oreId : minedOres)
         oreNames.push_back(ProbeOptimizer::getSites().getOreByIndex(oreId).getName());
     std::sort(oreNames.begin(), oreNames.end());
-    for (const auto& name : oreNames)
-        std::cout << "#  " << name << std::endl;
+    spdlog::info(
+        "# Miranium: {totalProd: 6}\n"
+        "# Revenue:  {totalRev: 6}\n"
+        "# Storage:  {totalStorage: 6}\n"
+        "# Ores ({minedOresSize}/{oreCount}):\n"
+        "#  {oreNames}",
+        fmt::arg("totalProd", totalProd),
+        fmt::arg("totalRev", totalRev),
+        fmt::arg("totalStorage", totalStorage),
+        fmt::arg("minedOresSize", minedOres.size()),
+        fmt::arg("oreCount", ProbeOptimizer::getSites().getOreCount()),
+        fmt::arg("oreNames", fmt::join(oreNames, "\n#  "))
+    );
 }
 
 int ProbeArrangement::getComboSize(size_t source) const

@@ -9,12 +9,13 @@
 #include <boost/algorithm/string/split.hpp>
 #include <boost/algorithm/string/trim.hpp>
 #include <iomanip>
-#include <thread>
 #include <mutex>
+#include <spdlog/spdlog.h>
+#include <thread>
 
 #include "probeoptimizer/probe_optimizer.h"
-#include "probeoptimizer/solution.h"
 #include "probeoptimizer/semaphore.h"
+#include "probeoptimizer/solution.h"
 
 std::atomic<bool> ProbeOptimizer::shouldStop_(false);
 ProbeArrangement ProbeOptimizer::setup_;
@@ -37,12 +38,10 @@ void ProbeOptimizer::loadInventory()
         while (inventory_.size() < sites_.size())
             inventory_.push_back(Probe::Type::Basic);
 
-        std::clog << "Inventory has " << inventory_.size() << " probes";
+        spdlog::info("Inventory has {} probes.", inventory_.size());
         auto numBasic = std::count(inventory_.begin(), inventory_.end(), Probe::Type::Basic);
         if (numBasic > 0)
-            std::clog << ", and " << numBasic << " are Probe::Type::Basic Probes." << std::endl;
-        else
-            std::clog << "." << std::endl;
+            spdlog::info("{} are Basic Probes.", numBasic);
     }
     catch (std::exception& e) {
         throw std::runtime_error{"Loading " + inventoryInput_ + std::string(" inventory: ") + e.what()};
@@ -57,12 +56,12 @@ void ProbeOptimizer::printInventory() const
         ++histo[item];
     for (auto& entry : histo)
         if (entry.first != Probe::Type::Basic)
-            std::cout << Probe::toString(entry.first) << "," << entry.second << std::endl;
+            spdlog::info("{},{}", Probe::toString(entry.first), entry.second);
 }
 
 void ProbeOptimizer::loadSetup()
 {
-    std::cout << "Loading setup." << std::endl;
+    spdlog::info("Loading setup.");
     setup_.resize(sites_.size());
 
     auto data = loadCSV(setupInput_);
@@ -115,16 +114,23 @@ void ProbeOptimizer::printTotals() const {
     setup_.printTotals();
 }
 
-void ProbeOptimizer::doHillClimbing() const
-{
-    std::clog << "Starting Hill Climbing with parameters:" << std::endl;
-    std::clog << "  storage weight   = " << std::setw(6) << setup_.getStorageWeight() << std::endl
-    << "  revenue weight   = " << std::setw(6) << setup_.getRevenueWeight() << std::endl
-    << "  production weight= " << std::setw(6) << setup_.getProductionWeight() << std::endl;
-    std::clog << "  iterations=" << maxIterations_ << "  offsprings=" << numOffsprings_
-    << "  mutation=" << mutationRate_ << "  age=" << maxAge_
-    << "  population=" << maxPopSize_ << std::endl;
-
+void ProbeOptimizer::doHillClimbing() const {
+    spdlog::info(
+        "Starting Hill Climbing with parameters:\n"
+        "  storage weight   = {storageWeight: 6}\n"
+        "  revenue weight   = {revenueWeight: 6}\n"
+        "  production weight= {productionWeight: 6}\n"
+        "  iterations={maxIterations}  offsprings={numOffsprings}"
+        "  mutation={mutationRate}  age={maxAge}  population={maxPopSize}",
+        fmt::arg("storageWeight", setup_.getStorageWeight()),
+        fmt::arg("revenueWeight", setup_.getRevenueWeight()),
+        fmt::arg("productionWeight", setup_.getProductionWeight()),
+        fmt::arg("maxIterations", maxIterations_),
+        fmt::arg("numOffsprings", numOffsprings_),
+        fmt::arg("mutationRate", mutationRate_),
+        fmt::arg("maxAge", maxAge_),
+        fmt::arg("maxPopSize", maxPopSize_)
+    );
 
     std::vector<Solution> population(maxPopSize_), newGen;
     for (auto& solution : population) {
@@ -135,12 +141,13 @@ void ProbeOptimizer::doHillClimbing() const
     Solution globalBest, best, worst;
     size_t killed = 0;
     for (size_t iter=0; iter<maxIterations_ && !shouldStop_; ++iter) {
-
-        std::clog << "iteration: " << (iter+1) << "/" << maxIterations_
-        << "  best: " << std::setprecision(9) << best.getScore()
-        << "  worst: " << std::setprecision(9) << worst.getScore()
-        << "  killed: " << killed
-        << std::endl;
+        spdlog::info("iteration: {iter}/{maxIterations}  best: {best:.9}  worst: {worst:.9}  killed {killed}",
+            fmt::arg("iter", iter+1),
+            fmt::arg("maxIterations", maxIterations_),
+            fmt::arg("best", best.getScore()),
+            fmt::arg("worst", worst.getScore()),
+            fmt::arg("killed", killed)
+        );
 
         newGen.clear();
         killed = 0;
@@ -194,13 +201,10 @@ void ProbeOptimizer::doHillClimbing() const
 
         swap(population, newGen);
     }
-    if (shouldStop_) {
-        std::clog << std::endl; // break line with ^C character
-    }
 
     globalBest.printSetup();
     globalBest.printTotals();
-    std::cout << "# Best score: " << std::setprecision(9) << globalBest.getScore() << std::endl;
+    spdlog::info("# Best score: {: 9}", globalBest.getScore());
 }
 
 void ProbeOptimizer::setStorageWeight(float storageWeight) {

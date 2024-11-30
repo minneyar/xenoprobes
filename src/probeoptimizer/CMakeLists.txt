@@ -1,5 +1,6 @@
 find_package (Threads)
 find_package (Boost COMPONENTS system REQUIRED)
+find_package(spdlog REQUIRED)
 
 add_library(probeoptimizer
         ore.cpp
@@ -13,6 +14,7 @@ add_library(probeoptimizer
 )
 target_link_libraries(probeoptimizer PRIVATE
         Boost::system
+        spdlog::spdlog
         Threads::Threads
         $<IF:$<BOOL:MSVC>,,-static>
 )

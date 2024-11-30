@@ -6,6 +6,7 @@
 #include <map>
 #include <iostream>
 #include <fstream>
+#include <spdlog/spdlog.h>
 #include "probeoptimizer/site_list.h"
 #include "probeoptimizer/probe_optimizer.h"
 
@@ -41,9 +42,7 @@ void SiteList::loadSites() {
             site.setRevenue(revGrade.at(record[2]));
             site.setSightseeing(std::stoi(record[4]));
             if (site.getSightseeing() < 0 || site.getSightseeing() > 2)
-                std::cerr << "\n**WARNING**: site " << record[0]
-                << " looks wrong: sightseeing spots should be in [0..2], but is "
-                << record[4] << std::endl << std::endl;
+                spdlog::warn("site {} looks wrong: sightseeing spots should be in [0..2], but is {}.", record[0], record[4]);
             for (size_t i=5; i<record.size(); ++i) {
                 const auto& oreName = record[i];
                 int oreIdx = findIndexForOreName(oreName);
@@ -57,7 +56,7 @@ void SiteList::loadSites() {
         }
     }
     catch (std::exception& e) {
-        std::cerr << "Error while loading 'sites.csv': " << e.what() << std::endl;
+        spdlog::error("Error while loading 'sites.csv': {}", e.what());
         throw;
     }
 
@@ -79,8 +78,9 @@ void SiteList::loadSites() {
         }
     }
 
-    std::clog << "Loaded " << sites_.size() << " FN sites with " <<
-            numConnections << " connections." << std::endl;
+
+    spdlog::info("Loaded {} FN sites with {} connections.", sites_.size(),
+        numConnections);
 
 }
 

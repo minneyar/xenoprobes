@@ -14,5 +14,8 @@
   }, {
     "name" : "boost-algorithm",
     "version>=" : "1.85.0#1"
+  }, {
+    "name" : "spdlog",
+    "version>=" : "1.15.0"
   } ]
 }
