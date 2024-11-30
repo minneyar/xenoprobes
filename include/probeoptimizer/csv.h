@@ -9,9 +9,12 @@
 #ifndef XENOPROBES_CSV_H
 #define XENOPROBES_CSV_H
 
-#include <vector>
 #include <string>
+#include <variant>
+#include <vector>
 
-std::vector<std::vector<std::string>> loadCSV(std::string fname);
+using CsvRecordVal = std::variant<std::string, int>;
+int csvRecordValToInt(const CsvRecordVal& val);
+std::vector<std::vector<CsvRecordVal>> loadCSV(std::string fname);
 
 #endif //XENOPROBES_CSV_H

@@ -15,9 +15,11 @@
 
 class ProbeOptimizer {
 public:
-    void loadInventory();
-    void loadSetup();
-    void loadSites();
+    void loadInventory(const std::string& filename);
+    void loadInventory(const std::vector<std::vector<CsvRecordVal>>& records);
+    void loadSetup(const std::string& filename);
+    void loadSites(const std::string& filename);
+    void loadSites(const std::vector<std::vector<CsvRecordVal>>& records);
 
     void printInventory() const;
     void printSetup() const;
@@ -33,8 +35,6 @@ public:
     void setNumOffsprings(size_t numOffsprings);
     void setMaxIterations(size_t maxIterations);
     void setMaxAge(int maxAge);
-    void setSetupInput(const std::string &setupInput);
-    void setInventoryInput(const std::string &inventoryInput);
     void setMaxThreads(size_t threads);
 
     static void handleSIGINT(int);
@@ -69,8 +69,6 @@ private:
     size_t numOffsprings_;
     size_t maxIterations_;
     int maxAge_;
-    std::string setupInput_;
-    std::string inventoryInput_;
     size_t max_threads_;
 
     static std::atomic<bool> shouldStop_;

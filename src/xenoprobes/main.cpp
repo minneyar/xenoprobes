@@ -16,32 +16,29 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <csignal>
-#include <iostream>
-#include <boost/program_options.hpp>
 #include <boost/filesystem.hpp>
+#include <boost/program_options.hpp>
+#include <csignal>
 #include <expat_config.h>
+#include <iostream>
 
 #include "probeoptimizer/probe_optimizer.h"
 
 #ifdef __MINGW32__
 #define WIN32_LEAN_AND_MEAN
-#include <windows.h>
 #include <wincrypt.h>
+#include <windows.h>
 #endif
 
-using std::size_t;
-using std::cout;
-using std::clog;
+namespace po = boost::program_options;
+
 using std::cerr;
+using std::clog;
+using std::cout;
 using std::endl;
+using std::size_t;
 
-enum RunMode {
-    HelpMode,
-    PrintMode,
-    OptimizeMode
-};
-
+enum RunMode { HelpMode, PrintMode, OptimizeMode };
 
 #ifdef __MINGW32__
 std::mt19937 mt; // note it wasn't seeded properly
@@ -49,147 +46,122 @@ std::mt19937 mt; // note it wasn't seeded properly
 std::mt19937_64 mt{std::random_device{}()};
 #endif
 
+po::variables_map parseOptions(int argc, const char **argv,
+                               ProbeOptimizer &optimizer) {
 
-RunMode parseOptions(int argc, const char** argv, ProbeOptimizer& optimizer)
-{
-    namespace po = boost::program_options;
+  po::options_description desc("Allowed options");
+  desc.add_options()("help,h", "prints help message")(
+      "print",
+      "Just print estimated output for a given setup file (in CSV format.)")(
+      "storageweight", po::value<float>()->default_value(1000),
+      "How important is Storage (maximum Miranium that can be held at once.)")(
+      "revenueweight", po::value<float>()->default_value(10),
+      "How important is Revenue (cash output.)")(
+      "productionweight", po::value<float>()->default_value(1),
+      "How important is Production (Miranium output.)")(
+      "iterations", po::value<size_t>()->default_value(2000),
+      "How many iterations to run.")(
+      "offsprings,o", po::value<size_t>()->default_value(100),
+      "How many random variations to generate from each solution.")(
+      "mutation,m", po::value<float>()->default_value(1.0 / 32),
+      "Mutation rate (probability of any probe swapping places with another.)")(
+      "setup,s", po::value<std::string>()->default_value("sites.csv"),
+      "Probe setup file, in CSV format.")(
+      "inventory,i", po::value<std::string>()->default_value("inventory.csv"),
+      "The inventory file, in CSV format.")(
+      "population,p", po::value<size_t>()->default_value(200),
+      "Maximum population size.")(
+      "age,a", po::value<int>()->default_value(50),
+      "Maximum age for a stuck solution; after this many generations, replace "
+      "this solution by a new, random one. Set to zero to disable discarding "
+      "stuck solutions.")("threads,t", po::value<size_t>()->default_value(8),
+                          "Number of concurrent solutions to evaluate.");
+  po::variables_map vm;
+  po::store(po::parse_command_line(argc, argv, desc), vm);
+  po::notify(vm);
+  optimizer.setStorageWeight(vm["storageweight"].as<float>());
+  optimizer.setRevenueWeight(vm["revenueweight"].as<float>());
+  optimizer.setProductionWeight(vm["revenueweight"].as<float>());
+  optimizer.setMaxIterations(vm["iterations"].as<size_t>());
+  optimizer.setNumOffsprings(vm["offsprings"].as<size_t>());
+  optimizer.setMutationRate(vm["mutation"].as<float>());
+  optimizer.setMaxPopSize(vm["population"].as<size_t>());
+  optimizer.setMaxAge(vm["age"].as<int>());
+  optimizer.setMaxThreads(vm["threads"].as<size_t>());
 
-    po::options_description desc("Allowed options");
-    desc.add_options()
-            ("help,h", "prints help message")
-            ("print",
-             "Just print estimated output for a given setup file (in CSV format.)")
-            ("storageweight",
-             po::value<float>()->default_value(1000),
-             "How important is Storage (maximum Miranium that can be held at once.)")
-            ("revenueweight",
-             po::value<float>()->default_value(10),
-             "How important is Revenue (cash output.)")
-            ("productionweight",
-             po::value<float>()->default_value(1),
-             "How important is Production (Miranium output.)")
-            ("iterations",
-             po::value<size_t>()->default_value(2000),
-             "How many iterations to run.")
-            ("offsprings,o",
-             po::value<size_t>()->default_value(100),
-             "How many random variations to generate from each solution.")
-            ("mutation,m",
-             po::value<float>()->default_value(1.0/32),
-             "Mutation rate (probability of any probe swapping places with another.)")
-            ("setup,s",
-             po::value<std::string>()->default_value("sites.csv"),
-             "Probe setup file, in CSV format.")
-            ("inventory,i",
-             po::value<std::string>()->default_value("inventory.csv"),
-             "The inventory file, in CSV format.")
-            ("population,p",
-             po::value<size_t>()->default_value(200),
-             "Maximum population size.")
-            ("age,a",
-             po::value<int>()->default_value(50),
-             "Maximum age for a stuck solution; after this many generations, replace this solution by a new, random one. Set to zero to disable discarding stuck solutions.")
-            ("threads,t",
-             po::value<size_t>()->default_value(8),
-             "Number of concurrent solutions to evaluate.")
-            ;
-    po::variables_map vm;
-    po::store(po::parse_command_line(argc, argv, desc), vm);
-    po::notify(vm);
-    optimizer.setSetupInput(vm["setup"].as<std::string>());
-    optimizer.setStorageWeight(vm["storageweight"].as<float>());
-    optimizer.setRevenueWeight(vm["revenueweight"].as<float>());
-    optimizer.setProductionWeight(vm["revenueweight"].as<float>());
-    optimizer.setMaxIterations(vm["iterations"].as<size_t>());
-    optimizer.setNumOffsprings(vm["offsprings"].as<size_t>());
-    optimizer.setMutationRate(vm["mutation"].as<float>());
-    optimizer.setInventoryInput(vm["inventory"].as<std::string>());
-    optimizer.setMaxPopSize(vm["population"].as<size_t>());
-    optimizer.setMaxAge(vm["age"].as<int>());
-    optimizer.setMaxThreads(vm["threads"].as<size_t>());
+  if (vm.count("help")) {
+    cerr << desc << endl;
+  }
 
-    if (vm.count("help")) {
-        cerr << desc << endl;
-        return HelpMode;
-    }
-
-    if (vm.count("print")) {
-        return PrintMode;
-    }
-
-    return OptimizeMode;
+  return vm;
 }
 
 #ifdef __MINGW32__
-void doWin32Init()
-{
-    // make sure the RNG is properly seeded
-    {
-        HCRYPTPROV provider = 0;
+void doWin32Init() {
+  // make sure the RNG is properly seeded
+  {
+    HCRYPTPROV provider = 0;
 
-        if (!::CryptAcquireContextW(&provider, 0, 0, PROV_RSA_FULL, CRYPT_VERIFYCONTEXT | CRYPT_SILENT))
-            throw std::runtime_error{"could not acquire crypto context"};
+    if (!::CryptAcquireContextW(&provider, 0, 0, PROV_RSA_FULL,
+                                CRYPT_VERIFYCONTEXT | CRYPT_SILENT))
+      throw std::runtime_error{"could not acquire crypto context"};
 
-        const DWORD length = 256;
-        BYTE buffer[length];
+    const DWORD length = 256;
+    BYTE buffer[length];
 
-        if (!::CryptGenRandom(provider, length, buffer)) {
-            ::CryptReleaseContext(provider, 0);
-            throw std::runtime_error{"could not generate random numbers!"};
-        }
-
-        std::seed_seq seq(buffer, buffer+length);
-        ProbeArrangement::seedMT(seq);
-
-        if (!::CryptReleaseContext(provider, 0))
-            throw std::runtime_error{"could not release crypto context"};
+    if (!::CryptGenRandom(provider, length, buffer)) {
+      ::CryptReleaseContext(provider, 0);
+      throw std::runtime_error{"could not generate random numbers!"};
     }
 
+    std::seed_seq seq(buffer, buffer + length);
+    ProbeArrangement::seedMT(seq);
 
-    {
-        // set the current working directory
-        namespace fs = boost::filesystem;
+    if (!::CryptReleaseContext(provider, 0))
+      throw std::runtime_error{"could not release crypto context"};
+  }
 
-        std::vector<char> buffer(1024);
-        int length = ::GetModuleFileNameA(nullptr, &buffer[0], buffer.size());
-        if (::GetLastError() != ERROR_INSUFFICIENT_BUFFER) {
-            std::string exeFilename(buffer.begin(), buffer.begin()+length);
-            fs::path exePath = fs::path(exeFilename).parent_path();
-            clog << "setting working directory to " << exePath << endl;
-            fs::current_path(exePath);
-        }
+  {
+    // set the current working directory
+    namespace fs = boost::filesystem;
+
+    std::vector<char> buffer(1024);
+    int length = ::GetModuleFileNameA(nullptr, &buffer[0], buffer.size());
+    if (::GetLastError() != ERROR_INSUFFICIENT_BUFFER) {
+      std::string exeFilename(buffer.begin(), buffer.begin() + length);
+      fs::path exePath = fs::path(exeFilename).parent_path();
+      clog << "setting working directory to " << exePath << endl;
+      fs::current_path(exePath);
     }
-
+  }
 }
 #endif
 
-
-int main(int argc, const char** argv)
-{
+int main(int argc, const char **argv) {
 #ifdef __MINGW32__
-    doWin32Init();
+  doWin32Init();
 #endif
 
-    ProbeOptimizer optimizer;
+  ProbeOptimizer optimizer;
 
-    auto mode = parseOptions(argc, argv, optimizer);
+  auto vm = parseOptions(argc, argv, optimizer);
 
-    if (mode == HelpMode) {
-        return 0;
-    }
+  if (vm.count("help")) {
+    return 0;
+  }
 
-    optimizer.loadSites();
+  optimizer.loadSites(vm["setup"].as<std::string>());
 
-    if (mode == PrintMode) {
-        optimizer.loadSetup();
-        optimizer.printSetup();
-        optimizer.printTotals();
-        return 0;
-    }
+  if (vm.count("print")) {
+    optimizer.loadSetup(vm["setup"].as<std::string>());
+    optimizer.printSetup();
+    optimizer.printTotals();
+    return 0;
+  }
 
-    optimizer.loadInventory();
+  optimizer.loadInventory(vm["inventory"].as<std::string>());
 
-    std::signal(SIGINT, ProbeOptimizer::handleSIGINT);
+  std::signal(SIGINT, ProbeOptimizer::handleSIGINT);
 
-    optimizer.doHillClimbing();
+  optimizer.doHillClimbing();
 }
