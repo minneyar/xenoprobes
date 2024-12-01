@@ -1,4 +1,5 @@
 add_subdirectory(sitelinks)
+add_subdirectory(sitelist)
 add_subdirectory(probeoptimizer)
 add_subdirectory(xenoprobes)
 add_subdirectory(xenoprobes_gui)

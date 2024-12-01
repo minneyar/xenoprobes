@@ -1,9 +1,3 @@
-find_package(Qt6 6.5 REQUIRED COMPONENTS
-        Core
-        Widgets
-)
-qt_standard_project_setup(REQUIRES 6.5)
-
 qt_add_executable(${PROJECT_NAME}_gui
         ${PROJECT_SOURCE_DIR}/resources/resources.qrc
         DataProbe.cpp
@@ -32,14 +26,12 @@ qt_add_executable(${PROJECT_NAME}_gui
 )
 
 # Create FN Site data file
-find_package(Python3 COMPONENTS Interpreter REQUIRED)
 add_custom_command(OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/kAllSites.cpp"
-        COMMAND Python3::Interpreter "${CMAKE_CURRENT_SOURCE_DIR}/fn_sites.py"
+        COMMAND sitelist
         "${PROJECT_SOURCE_DIR}/sites.csv"
         "${PROJECT_SOURCE_DIR}/resources/map.svg"
         "${CMAKE_CURRENT_BINARY_DIR}/kAllSites.cpp"
         DEPENDS
-        "${CMAKE_CURRENT_SOURCE_DIR}/fn_sites.py"
         "${PROJECT_SOURCE_DIR}/sites.csv"
         "${PROJECT_SOURCE_DIR}/resources/map.svg"
 )

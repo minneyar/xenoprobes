@@ -36,7 +36,7 @@ int main(int argc, char *argv[]) {
          "const std::vector<std::array<unsigned int, 2>> kAllSiteLinks {\n";
 
   std::string line;
-  while (getline(infile, line)) {
+  while (std::getline(infile, line)) {
     int u, v;
     if (std::sscanf(line.c_str(), "%d -- %d", &u, &v) == 2) {
       outfile << "  {" << u << " ," << v << "},\n";
