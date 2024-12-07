@@ -7,15 +7,16 @@
  */
 
 #include <QApplication>
-#include <QFontDatabase>
+#include "xenoprobes_config.h"
 
 #include "MainWindow.h"
 
 int main(int argc, char *argv[]) {
   QApplication app(argc, argv);
-  app.setApplicationName("xenoprobes");
-  app.setApplicationDisplayName(app.translate("main", "Xenoprobes"));
-  app.setApplicationVersion("1.0.0");
+  app.setOrganizationName(config::kProjectOrganizationName);
+  app.setApplicationName(config::kProjectName);
+  app.setApplicationDisplayName(config::kProjectDisplayName);
+  app.setApplicationVersion(config::kProjectVersion);
   app.setWindowIcon(QIcon(":/dataprobe.png"));
 
   MainWindow main_window;

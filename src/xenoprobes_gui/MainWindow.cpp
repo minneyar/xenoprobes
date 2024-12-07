@@ -19,6 +19,7 @@
 #include "FnSiteWidget.h"
 #include "InventoryLoader.h"
 #include "SiteListLoader.h"
+#include "settings.h"
 
 #include <QJsonObject>
 #include <QPushButton>
@@ -29,7 +30,9 @@ MainWindow::MainWindow(QWidget *parent)
 }
 
 void MainWindow::initUi() {
-  resize(1024, 768);
+  if (!restoreGeometry(settings::getMainWindowGeometry())) {
+    resize(1024, 768);
+  }
   initActions();
 
   auto central = new QWidget(this);
@@ -143,17 +146,24 @@ void MainWindow::initActions() {
   connect(actions.fileExit, &QAction::triggered, this, &MainWindow::close);
 }
 
+void MainWindow::closeEvent(QCloseEvent *event) {
+  settings::setMainWindowGeometry(saveGeometry());
+  QMainWindow::closeEvent(event);
+}
+
 void MainWindow::fileOpen() {
   QFileDialog dialog(this, tr("Open Simulation..."));
   dialog.setAcceptMode(QFileDialog::AcceptOpen);
   dialog.setFileMode(QFileDialog::ExistingFile);
   dialog.setNameFilter(tr("Simulations (*.json)"));
+  dialog.setDirectory(settings::getLastFileDialogPath());
   if (dialog.exec() != QDialog::Accepted) {
     return;
   }
   const auto filenames = dialog.selectedFiles();
+  const QFileInfo fileInfo(filenames.at(0));
   try {
-    QFile file(filenames.at(0));
+    QFile file(fileInfo.filePath());
     if (!file.open(QIODevice::ReadOnly)) {
       QMessageBox::critical(this, tr("Error opening file"),
                             tr("Could not open %1").arg(filenames.first()));
@@ -184,6 +194,8 @@ void MainWindow::fileOpen() {
     widgets_.miraMap->setSiteProbeMap(probeMap);
     inventoryModel_->setProbeInventory(inventory);
     widgets_.runOptions->setOptions(options);
+
+    settings::setLastFileDialogPath(fileInfo.absoluteDir().path());
   } catch (std::runtime_error &) {
     QMessageBox::critical(this, tr("Error opening file"),
                           tr("%1 is not valid.").arg(filenames.first()));
@@ -201,11 +213,18 @@ void MainWindow::fileSaveAs() {
   dialog.setAcceptMode(QFileDialog::AcceptSave);
   dialog.setFileMode(QFileDialog::AnyFile);
   dialog.setNameFilter(tr("Simulations (*.json)"));
+  if (!windowFilePath().isEmpty()) {
+    dialog.selectFile(windowFilePath());
+  } else {
+    dialog.setDirectory(settings::getLastFileDialogPath());
+  }
   if (dialog.exec() != QDialog::Accepted) {
     return;
   }
   const auto filenames = dialog.selectedFiles();
-  saveToPath(filenames.at(0));
+  const QFileInfo fileInfo(filenames.at(0));
+  saveToPath(fileInfo.filePath());
+  settings::setLastFileDialogPath(fileInfo.absoluteDir().path());
 }
 
 void MainWindow::saveToPath(const QString &path) {
@@ -354,8 +373,7 @@ void MainWindow::solved(unsigned int mining, unsigned int revenue,
   resultDialog.setText(tr("Completed solving!"));
   QStringList oresList;
   for (const auto &ore : ores) {
-    oresList.append(
-        QString("<li>%1</li>").arg(ore));
+    oresList.append(QString("<li>%1</li>").arg(ore));
   }
   // @formatter:off
   // clang-format off
