@@ -30,11 +30,11 @@ set(Boost_USE_MULTITHREADED ON)
 add_compile_definitions(QT_NO_KEYWORDS)
 include_directories("${PROJECT_SOURCE_DIR}/include" "${PROJECT_BINARY_DIR}/include")
 
-find_package(Qt6 6.5 REQUIRED COMPONENTS
+find_package(Qt6 6.7 REQUIRED COMPONENTS
         Core
         Svg
         Widgets
 )
-qt_standard_project_setup(REQUIRES 6.5)
+qt_standard_project_setup(REQUIRES 6.7)
 
 add_subdirectory(src)

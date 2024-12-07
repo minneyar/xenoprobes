@@ -118,48 +118,45 @@ void MainWindow::initUi() {
 void MainWindow::initActions() {
   // File
   // Open
-  actions.fileOpen =
-      new QAction(QIcon::fromTheme("document-open"), tr("Open"), this);
+  actions.fileOpen = new QAction(
+      QIcon::fromTheme(QIcon::ThemeIcon::DocumentOpen), tr("&Open"), this);
   actions.fileOpen->setShortcut(QKeySequence::Open);
   connect(actions.fileOpen, &QAction::triggered, this, &MainWindow::fileOpen);
   // Recent
   actions.fileRecent = new QMenu(tr("Recent Documents"), this);
-  actions.fileRecent->setIcon(QIcon::fromTheme("folder-open-recent"));
+  actions.fileRecent->setIcon(
+      QIcon::fromTheme(QIcon::ThemeIcon::DocumentOpenRecent));
   updateRecentDocuments();
   // Save
-  actions.fileSave =
-      new QAction(QIcon::fromTheme("document-save"), tr("Save"), this);
+  actions.fileSave = new QAction(
+      QIcon::fromTheme(QIcon::ThemeIcon::DocumentSave), tr("&Save"), this);
   actions.fileSave->setShortcut(QKeySequence::Save);
   connect(actions.fileSave, &QAction::triggered, this, &MainWindow::fileSave);
   // Save As
-  actions.fileSaveAs =
-      new QAction(QIcon::fromTheme("document-save-as"), tr("Save As"), this);
+  actions.fileSaveAs = new QAction(
+      QIcon::fromTheme(QIcon::ThemeIcon::DocumentSaveAs), tr("Save &As"), this);
   actions.fileSaveAs->setShortcut(QKeySequence::SaveAs);
   connect(actions.fileSaveAs, &QAction::triggered, this,
           &MainWindow::fileSaveAs);
   // Import Sites
-  actions.fileImportSites =
-      new QAction(QIcon::fromTheme("document-import"), "Import Sites", this);
+  actions.fileImportSites = new QAction("Import Sites", this);
   connect(actions.fileImportSites, &QAction::triggered, this,
           &MainWindow::fileImportSites);
   // Export Sites
-  actions.fileExportSites =
-      new QAction(QIcon::fromTheme("document-export"), "Export Sites", this);
+  actions.fileExportSites = new QAction("Export Sites", this);
   connect(actions.fileExportSites, &QAction::triggered, this,
           &MainWindow::fileExportSites);
   // Import Inventory
-  actions.fileImportInventory = new QAction(QIcon::fromTheme("document-import"),
-                                            "Import Inventory", this);
+  actions.fileImportInventory = new QAction("Import Inventory", this);
   connect(actions.fileImportInventory, &QAction::triggered, this,
           &MainWindow::fileImportInventory);
   // Export Inventory
-  actions.fileExportInventory = new QAction(QIcon::fromTheme("document-export"),
-                                            "Export Inventory", this);
+  actions.fileExportInventory = new QAction("Export Inventory", this);
   connect(actions.fileExportInventory, &QAction::triggered, this,
           &MainWindow::fileExportInventory);
   // Exit
-  actions.fileExit =
-      new QAction(QIcon::fromTheme("application-exit"), "E&xit", this);
+  actions.fileExit = new QAction(
+      QIcon::fromTheme(QIcon::ThemeIcon::ApplicationExit), "E&xit", this);
   connect(actions.fileExit, &QAction::triggered, this, &MainWindow::close);
 }
 
@@ -192,8 +189,7 @@ void MainWindow::updateRecentDocuments() {
   actions.fileRecent->setEnabled(!recentPaths.empty());
   actions.fileRecent->clear();
   for (const auto &recentPath : recentPaths) {
-    auto *actRecentPath = new QAction(QIcon::fromTheme("document-open-recent"),
-                                      recentPath, actions.fileRecent);
+    auto *actRecentPath = new QAction(recentPath, actions.fileRecent);
     connect(actRecentPath, &QAction::triggered, [this, recentPath]() {
       if (safeToCloseFile()) {
         openFromPath(recentPath);
