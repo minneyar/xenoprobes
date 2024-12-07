@@ -453,6 +453,7 @@ void MainWindow::solve() {
   connect(progressDialog_, &QProgressDialog::canceled, solverRunner_,
           &SolverRunner::requestInterruption);
   connect(solverRunner_, &SolverRunner::finished, this, &MainWindow::solved);
+  solverStopwatch_.start();
   solverRunner_->start();
 }
 
@@ -462,10 +463,29 @@ void MainWindow::progress(unsigned long iter, double bestScore,
     return;
   }
   progressDialog_->setValue(iter);
-  progressDialog_->setLabelText(tr("Best: %1\nWorst: %2\nKilled: %3")
-                                    .arg(std::lround(bestScore))
-                                    .arg(std::lround(worstScore))
-                                    .arg(killed));
+  const long long msElapsed = solverStopwatch_.elapsed();
+  const long long totalMsRequired =
+      ((solverStopwatch_.elapsed() / iter) * widgets_.runOptions->iterations());
+  const auto hoursRequired = totalMsRequired / 1000 / 60 / 60;
+  const auto minutesRequired = (totalMsRequired / 1000 / 60) % 60;
+  const auto secondsRequired = totalMsRequired / 1000 % 60;
+  const auto totalSecsRemaining =
+      std::max(static_cast<long long>(0), totalMsRequired - msElapsed) / 1000;
+  const auto hoursRemaining = totalSecsRemaining / 60 / 60;
+  const auto minutesRemaining = (totalSecsRemaining / 60) % 60;
+  const auto secondsRemaining = totalSecsRemaining % 60;
+  progressDialog_->setLabelText(
+      tr("Best: %1\nWorst: %2\nKilled: %3\n\nRequired: %4:%5:%6\nRemaining: "
+         "%7:%8:%9")
+          .arg(std::lround(bestScore))
+          .arg(std::lround(worstScore))
+          .arg(killed)
+          .arg(hoursRequired)
+          .arg(minutesRequired, 2, 10, QChar('0'))
+          .arg(secondsRequired, 2, 10, QChar('0'))
+          .arg(hoursRemaining)
+          .arg(minutesRemaining, 2, 10, QChar('0'))
+          .arg(secondsRemaining, 2, 10, QChar('0')));
 }
 
 void MainWindow::solved(unsigned int mining, unsigned int revenue,
@@ -474,6 +494,7 @@ void MainWindow::solved(unsigned int mining, unsigned int revenue,
   progressDialog_->close();
   progressDialog_->deleteLater();
   progressDialog_ = nullptr;
+  solverStopwatch_.invalidate();
 
   widgets_.miraMap->setSiteProbeMap(siteProbeMap);
 

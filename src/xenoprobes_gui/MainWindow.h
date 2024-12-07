@@ -53,6 +53,7 @@ private:
   Widgets widgets_;
   InventoryModel *inventoryModel_;
   QProgressDialog *progressDialog_ = nullptr;
+  QElapsedTimer solverStopwatch_;
   SolverRunner *solverRunner_ = nullptr;
 
   void initUi();
