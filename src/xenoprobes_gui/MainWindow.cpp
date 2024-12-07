@@ -49,6 +49,7 @@ void MainWindow::initUi() {
   auto *menuFile = menuBar()->addMenu(tr("&File"));
   // File menu
   menuFile->addAction(actions.fileOpen);
+  menuFile->addMenu(actions.fileRecent);
   menuFile->addAction(actions.fileSave);
   menuFile->addAction(actions.fileSaveAs);
   menuFile->addSeparator();
@@ -121,6 +122,10 @@ void MainWindow::initActions() {
       new QAction(QIcon::fromTheme("document-open"), tr("Open"), this);
   actions.fileOpen->setShortcut(QKeySequence::Open);
   connect(actions.fileOpen, &QAction::triggered, this, &MainWindow::fileOpen);
+  // Recent
+  actions.fileRecent = new QMenu(tr("Recent Documents"), this);
+  actions.fileRecent->setIcon(QIcon::fromTheme("folder-open-recent"));
+  updateRecentDocuments();
   // Save
   actions.fileSave =
       new QAction(QIcon::fromTheme("document-save"), tr("Save"), this);
@@ -166,6 +171,37 @@ void MainWindow::updateWindowTitle() {
   } else {
     setWindowTitle({});
   }
+}
+
+void MainWindow::addRecentDocument(const QString &path) {
+  auto recentPaths = settings::getRecentDocuments();
+  recentPaths.prepend(path);
+  settings::setRecentDocuments(recentPaths);
+  updateRecentDocuments();
+}
+
+void MainWindow::updateRecentDocuments() {
+  auto recentPaths = settings::getRecentDocuments();
+  recentPaths.removeDuplicates();
+  recentPaths.removeIf([](const QString &path) {
+    QFileInfo fileInfo(path);
+    return !fileInfo.exists();
+  });
+  recentPaths.resize(
+      std::min(recentPaths.size(), settings::getMaxRecentDocuments()));
+  actions.fileRecent->setEnabled(!recentPaths.empty());
+  actions.fileRecent->clear();
+  for (const auto &recentPath : recentPaths) {
+    auto *actRecentPath = new QAction(QIcon::fromTheme("document-open-recent"),
+                                      recentPath, actions.fileRecent);
+    connect(actRecentPath, &QAction::triggered, [this, recentPath]() {
+      if (safeToCloseFile()) {
+        openFromPath(recentPath);
+      }
+    });
+    actions.fileRecent->addAction(actRecentPath);
+  }
+  settings::setRecentDocuments(recentPaths);
 }
 
 void MainWindow::closeEvent(QCloseEvent *event) {
@@ -219,47 +255,8 @@ void MainWindow::fileOpen() {
   }
   const auto filenames = dialog.selectedFiles();
   const QFileInfo fileInfo(filenames.at(0));
-  try {
-    QFile file(fileInfo.filePath());
-    if (!file.open(QIODevice::ReadOnly)) {
-      QMessageBox::critical(this, tr("Error opening file"),
-                            tr("Could not open %1").arg(filenames.first()));
-      return;
-    }
-    const QByteArray data = file.readAll();
-    const auto json = QJsonDocument::fromJson(data);
-    if (json.isNull() || !json.isObject()) {
-      QMessageBox::critical(this, tr("Error opening file"),
-                            tr("%1 is not valid.").arg(filenames.first()));
-      return;
-    }
-    const auto jsonObj = json.object();
-    if (!jsonObj.contains("sites") || !jsonObj.contains("inventory") ||
-        !jsonObj.contains("probeMap") || !jsonObj.contains("options")) {
-      QMessageBox::critical(this, tr("Error opening file"),
-                            tr("%1 is not valid.").arg(filenames.first()));
-      return;
-    }
-    const auto sites = SiteListLoader::readSiteListFromJson(jsonObj["sites"]);
-    const auto probeMap = MiraMap::siteProbesFromJson(jsonObj["probeMap"]);
-    const auto inventory =
-        InventoryLoader::readInventoryFromJson(jsonObj["inventory"]);
-    const auto options = RunOptionsWidget::optionsFromJson(jsonObj["options"]);
-
-    // Defer saving until everything is loaded in case of errors.
-    widgets_.miraMap->setSitesVisited(sites);
-    widgets_.miraMap->setSiteProbeMap(probeMap);
-    inventoryModel_->setProbeInventory(inventory);
-    widgets_.runOptions->setOptions(options);
-
-    settings::setLastFileDialogPath(fileInfo.absoluteDir().path());
-    setWindowFilePath(fileInfo.filePath());
-    setWindowModified(false);
-    updateWindowTitle();
-  } catch (std::runtime_error &) {
-    QMessageBox::critical(this, tr("Error opening file"),
-                          tr("%1 is not valid.").arg(filenames.first()));
-  }
+  openFromPath(fileInfo.filePath());
+  settings::setLastFileDialogPath(fileInfo.absoluteDir().path());
 }
 void MainWindow::fileSave() {
   if (windowFilePath().isEmpty()) {
@@ -287,6 +284,50 @@ void MainWindow::fileSaveAs() {
   settings::setLastFileDialogPath(fileInfo.absoluteDir().path());
 }
 
+void MainWindow::openFromPath(const QString &path) {
+  try {
+    QFile file(path);
+    if (!file.open(QIODevice::ReadOnly)) {
+      QMessageBox::critical(this, tr("Error opening file"),
+                            tr("Could not open %1").arg(path));
+      return;
+    }
+    const QByteArray data = file.readAll();
+    const auto json = QJsonDocument::fromJson(data);
+    if (json.isNull() || !json.isObject()) {
+      QMessageBox::critical(this, tr("Error opening file"),
+                            tr("%1 is not valid.").arg(path));
+      return;
+    }
+    const auto jsonObj = json.object();
+    if (!jsonObj.contains("sites") || !jsonObj.contains("inventory") ||
+        !jsonObj.contains("probeMap") || !jsonObj.contains("options")) {
+      QMessageBox::critical(this, tr("Error opening file"),
+                            tr("%1 is not valid.").arg(path));
+      return;
+    }
+    const auto sites = SiteListLoader::readSiteListFromJson(jsonObj["sites"]);
+    const auto probeMap = MiraMap::siteProbesFromJson(jsonObj["probeMap"]);
+    const auto inventory =
+        InventoryLoader::readInventoryFromJson(jsonObj["inventory"]);
+    const auto options = RunOptionsWidget::optionsFromJson(jsonObj["options"]);
+
+    // Defer saving until everything is loaded in case of errors.
+    widgets_.miraMap->setSitesVisited(sites);
+    widgets_.miraMap->setSiteProbeMap(probeMap);
+    inventoryModel_->setProbeInventory(inventory);
+    widgets_.runOptions->setOptions(options);
+
+    setWindowFilePath(path);
+    setWindowModified(false);
+    updateWindowTitle();
+    addRecentDocument(path);
+  } catch (std::runtime_error &) {
+    QMessageBox::critical(this, tr("Error opening file"),
+                          tr("%1 is not valid.").arg(path));
+  }
+}
+
 void MainWindow::saveToPath(const QString &path) {
   QFile file(path);
   if (!file.open(QIODevice::WriteOnly)) {
@@ -307,6 +348,7 @@ void MainWindow::saveToPath(const QString &path) {
   setWindowFilePath(path);
   setWindowModified(false);
   updateWindowTitle();
+  addRecentDocument(path);
 }
 
 void MainWindow::fileImportSites() {

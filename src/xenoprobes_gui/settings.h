@@ -39,6 +39,7 @@ template <typename T> void setSetting(const char *name, T value) {
 XP_SETTING(QByteArray, MainWindowGeometry, {});
 XP_SETTING(QString, LastFileDialogPath,
            QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation));
+XP_SETTING(qsizetype, MaxRecentDocuments, 4);
 XP_SETTING(QStringList, RecentDocuments, {});
 
 } // namespace settings

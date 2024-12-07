@@ -31,6 +31,7 @@ protected:
 private:
   struct Actions {
     QAction *fileOpen = nullptr;
+    QMenu *fileRecent = nullptr;
     QAction *fileSave = nullptr;
     QAction *fileSaveAs = nullptr;
     QAction *fileImportSites = nullptr;
@@ -57,6 +58,9 @@ private:
   void initUi();
   void initActions();
   void updateWindowTitle();
+  void addRecentDocument(const QString &path);
+  void updateRecentDocuments();
+  void openFromPath(const QString &path);
   void saveToPath(const QString &path);
   bool safeToCloseFile();
 
