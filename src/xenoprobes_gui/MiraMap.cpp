@@ -50,6 +50,10 @@ MiraMap::MiraMap(QWidget *parent) : QGraphicsView(parent) {
               }
               calculateLinks();
             });
+    connect(siteWidget, &FnSiteWidget::visitedChanged, this,
+            &MiraMap::sitesVisitedChanged);
+    connect(siteWidget, &FnSiteWidget::dataProbeChanged, this,
+            &MiraMap::siteProbeMapChanged);
     auto &siteButton =
         siteWidgets_.emplace_back(mapScene_.addWidget(siteWidget));
     // Site data stores the center point, so we need to half it to get the

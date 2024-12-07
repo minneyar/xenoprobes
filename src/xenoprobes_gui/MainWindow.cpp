@@ -7,6 +7,7 @@
  */
 
 #include "MainWindow.h"
+#include <QCloseEvent>
 #include <QFileDialog>
 #include <QHBoxLayout>
 #include <QHeaderView>
@@ -23,16 +24,21 @@
 
 #include <QJsonObject>
 #include <QPushButton>
+#include <qguiapplication.h>
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent), inventoryModel_(new InventoryModel(this)) {
   initUi();
+  connect(inventoryModel_, &InventoryModel::dataChanged, this,
+          &MainWindow::dataChanged);
 }
 
 void MainWindow::initUi() {
   if (!restoreGeometry(settings::getMainWindowGeometry())) {
     resize(1024, 768);
   }
+  setWindowTitle(QString("%1[*]").arg(qApp->applicationDisplayName()));
+
   initActions();
 
   auto central = new QWidget(this);
@@ -63,6 +69,10 @@ void MainWindow::initUi() {
                               FnSite::kAllSites.keyEnd());
   widgets_.miraMap->setSitesVisited(sitesVisited);
   widgets_.miraMap->show();
+  connect(widgets_.miraMap, &MiraMap::sitesVisitedChanged, this,
+          &MainWindow::dataChanged);
+  connect(widgets_.miraMap, &MiraMap::siteProbeMapChanged, this,
+          &MainWindow::dataChanged);
 
   // Tabs
   widgets_.tabBar = new QTabBar(central);
@@ -95,6 +105,8 @@ void MainWindow::initUi() {
   // Run Options
   widgets_.runOptions = new RunOptionsWidget(central);
   configLayout->addWidget(widgets_.runOptions);
+  connect(widgets_.runOptions, &RunOptionsWidget::settingsChanged, this,
+          &MainWindow::dataChanged);
 
   // Solve button
   auto *solveBtn = new QPushButton(tr("Solve"), central);
@@ -146,12 +158,57 @@ void MainWindow::initActions() {
   connect(actions.fileExit, &QAction::triggered, this, &MainWindow::close);
 }
 
+void MainWindow::updateWindowTitle() {
+  if (!windowFilePath().isEmpty()) {
+    setWindowTitle(QString("%1[*]").arg(windowFilePath()));
+  } else if (isWindowModified()) {
+    setWindowTitle(tr("Unsaved file[*]"));
+  } else {
+    setWindowTitle({});
+  }
+}
+
 void MainWindow::closeEvent(QCloseEvent *event) {
+  if (!safeToCloseFile()) {
+    event->ignore();
+    return;
+  }
   settings::setMainWindowGeometry(saveGeometry());
-  QMainWindow::closeEvent(event);
+  event->accept();
+}
+
+bool MainWindow::safeToCloseFile() {
+  if (isWindowModified()) {
+    QMessageBox dialog(this);
+    dialog.setIcon(QMessageBox::Question);
+    dialog.setText(tr("This layout has been modified."));
+    dialog.setInformativeText(tr("Would you like to save your changes?"));
+    dialog.setStandardButtons(QMessageBox::Save | QMessageBox::Discard |
+                              QMessageBox::Cancel);
+    dialog.setDefaultButton(QMessageBox::Save);
+    const auto ret = dialog.exec();
+    if (ret == QMessageBox::Save) {
+      // Save, then close.
+      fileSave();
+      if (isWindowModified()) {
+        // User cancelled save box.
+        return false;
+      }
+    } else if (ret == QMessageBox::Cancel) {
+      // Don't close.
+      return false;
+    }
+  }
+  // Either no need to save or discard changes and close.
+
+  return true;
 }
 
 void MainWindow::fileOpen() {
+  if (!safeToCloseFile()) {
+    return;
+  }
+
   QFileDialog dialog(this, tr("Open Simulation..."));
   dialog.setAcceptMode(QFileDialog::AcceptOpen);
   dialog.setFileMode(QFileDialog::ExistingFile);
@@ -196,6 +253,9 @@ void MainWindow::fileOpen() {
     widgets_.runOptions->setOptions(options);
 
     settings::setLastFileDialogPath(fileInfo.absoluteDir().path());
+    setWindowFilePath(fileInfo.filePath());
+    setWindowModified(false);
+    updateWindowTitle();
   } catch (std::runtime_error &) {
     QMessageBox::critical(this, tr("Error opening file"),
                           tr("%1 is not valid.").arg(filenames.first()));
@@ -244,6 +304,9 @@ void MainWindow::saveToPath(const QString &path) {
   json["options"] =
       RunOptionsWidget::optionsToJson(widgets_.runOptions->options());
   file.write(QJsonDocument(json).toJson());
+  setWindowFilePath(path);
+  setWindowModified(false);
+  updateWindowTitle();
 }
 
 void MainWindow::fileImportSites() {
@@ -258,6 +321,7 @@ void MainWindow::fileImportSites() {
   try {
     const auto newIds = SiteListLoader::readSiteListFromFile(filenames.first());
     widgets_.miraMap->setSitesVisited(newIds);
+    dataChanged();
   } catch (const std::exception &) {
     QMessageBox::critical(this, tr("Failed to open file"),
                           tr("Could not open %1").arg(filenames.first()));
@@ -295,6 +359,7 @@ void MainWindow::fileImportInventory() {
     const auto newInventory =
         InventoryLoader::readInventoryFromFile(filenames.first());
     inventoryModel_->setProbeInventory(newInventory);
+    dataChanged();
   } catch (const std::exception &) {
     QMessageBox::critical(this, tr("Failed to open file"),
                           tr("Could not open %1").arg(filenames.first()));
@@ -326,6 +391,11 @@ void MainWindow::tabChanged(int index) {
   const auto viewMode =
       widgets_.tabBar->tabData(index).value<FnSiteWidget::ViewMode>();
   widgets_.miraMap->setViewMode(viewMode);
+}
+
+void MainWindow::dataChanged() {
+  setWindowModified(true);
+  updateWindowTitle();
 }
 
 void MainWindow::solve() {
@@ -395,4 +465,5 @@ void MainWindow::solved(unsigned int mining, unsigned int revenue,
   resultDialog.exec();
   solverRunner_->deleteLater();
   solverRunner_ = nullptr;
+  dataChanged();
 }

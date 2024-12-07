@@ -65,6 +65,9 @@ public:
   [[nodiscard]] unsigned int mutation() { return mutation_->value(); }
   void setMutation(int mutation) { mutation_->setValue(mutation); }
 
+Q_SIGNALS:
+  void settingsChanged();
+
 public Q_SLOTS:
   void applyDefaultValues();
 

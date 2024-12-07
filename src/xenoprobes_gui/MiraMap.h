@@ -36,6 +36,10 @@ public:
   void setSiteProbeMap(const SiteProbeMap &siteProbeMap);
   void setViewMode(const FnSiteWidget::ViewMode viewMode);
 
+Q_SIGNALS:
+  void sitesVisitedChanged();
+  void siteProbeMapChanged();
+
 protected:
   void wheelEvent(QWheelEvent *event) override;
 

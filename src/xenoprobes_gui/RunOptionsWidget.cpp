@@ -25,31 +25,45 @@ RunOptionsWidget::RunOptionsWidget(QWidget *parent)
   layout->addWidget(storageWeight_);
   storageWeight_->setMinimum(0);
   storageWeight_->setMaximum(1000);
+  connect(storageWeight_, &SliderWithValWidget::valueChanged, this,
+          &RunOptionsWidget::settingsChanged);
   layout->addWidget(new QLabel(tr("Revenue Weight:"), this));
   layout->addWidget(revenueWeight_);
   revenueWeight_->setMinimum(0);
   revenueWeight_->setMaximum(1000);
+  connect(revenueWeight_, &SliderWithValWidget::valueChanged, this,
+          &RunOptionsWidget::settingsChanged);
   layout->addWidget(new QLabel(tr("Production Weight:"), this));
   layout->addWidget(productionWeight_);
   productionWeight_->setMinimum(0);
   productionWeight_->setMaximum(1000);
+  connect(productionWeight_, &SliderWithValWidget::valueChanged, this,
+          &RunOptionsWidget::settingsChanged);
   layout->addWidget(new QLabel(tr("Iterations:"), this));
   layout->addWidget(iterations_);
   iterations_->setMinimum(1);
   iterations_->setMaximum(5000);
+  connect(iterations_, &SliderWithValWidget::valueChanged, this,
+          &RunOptionsWidget::settingsChanged);
   layout->addWidget(new QLabel(tr("Population:"), this));
   layout->addWidget(population_);
   population_->setMinimum(100);
   population_->setMaximum(500);
+  connect(population_, &SliderWithValWidget::valueChanged, this,
+          &RunOptionsWidget::settingsChanged);
   layout->addWidget(new QLabel(tr("Offspring:"), this));
   layout->addWidget(offsprings_);
   offsprings_->setMinimum(10);
   offsprings_->setMaximum(200);
+  connect(offsprings_, &SliderWithValWidget::valueChanged, this,
+          &RunOptionsWidget::settingsChanged);
   layout->addWidget(new QLabel(tr("Mutation:"), this));
   layout->addWidget(mutation_);
   mutation_->setMinimum(1);
   mutation_->setMaximum(100);
   mutation_->spinBox()->setSuffix(tr("%"));
+  connect(mutation_, &SliderWithValWidget::valueChanged, this,
+          &RunOptionsWidget::settingsChanged);
   applyDefaultValues();
 
   auto applyDefaultsBtn = new QPushButton(tr("Restore Defaults"), this);

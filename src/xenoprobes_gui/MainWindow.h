@@ -56,7 +56,9 @@ private:
 
   void initUi();
   void initActions();
+  void updateWindowTitle();
   void saveToPath(const QString &path);
+  bool safeToCloseFile();
 
 private Q_SLOTS:
   void fileOpen();
@@ -67,6 +69,7 @@ private Q_SLOTS:
   void fileImportInventory();
   void fileExportInventory();
   void tabChanged(int index);
+  void dataChanged();
   void solve();
   void progress(unsigned long iter, double bestScore, double worstScore,
                 unsigned long killed);
