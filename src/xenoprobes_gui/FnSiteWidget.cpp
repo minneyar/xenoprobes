@@ -11,7 +11,6 @@
 #include <QFile>
 #include <QPaintEvent>
 #include <QPainter>
-#include <QSvgRenderer>
 #include <QVBoxLayout>
 
 FnSiteWidget::FnSiteWidget(const FnSite &site, QWidget *parent)
@@ -108,7 +107,7 @@ FnSiteWidget *VisitedWidget::parentFnSiteWidget() const {
 
 DataProbeWidget::DataProbeWidget(const FnSite &site, FnSiteWidget *parent)
     : QWidget(parent), site_(site), probeImageWidget_(new QLabel(this)),
-      probeLevelWidget_(new QSvgWidget(this)) {
+      probeLevelWidget_(new QLabel(this)) {
   setAttribute(Qt::WA_NoSystemBackground, true);
   setVisited(visited_);
   setDataProbe(dataProbe_);
@@ -122,13 +121,7 @@ void DataProbeWidget::setVisited(const bool visited) { visited_ = visited; }
 void DataProbeWidget::setDataProbe(const DataProbe *dataProbe) {
   dataProbe_ = dataProbe;
   probeImageWidget_->setPixmap(probeImage());
-  if (dataProbe_ != nullptr) {
-    const auto levelImagePath =
-        QString(":/probe_levels/%1.svg").arg(dataProbe->level);
-    if (QFile::exists(levelImagePath)) {
-      probeLevelWidget_->load(levelImagePath);
-    }
-  }
+
   // Recalculate size and positioning.
   recalcDimensions();
 }
@@ -153,11 +146,22 @@ void DataProbeWidget::recalcDimensions() {
   probeImageWidget_->setFixedSize(size());
 
   // Put the level in the top-right corner.
-  // TODO: These render *very* blurry, like it's a raster image.
-  auto probeLevelSize = probeLevelWidget_->sizeHint();
-  probeLevelSize.scale(size() * 0.3, Qt::KeepAspectRatio);
-  probeLevelWidget_->resize(probeLevelSize);
-  probeLevelWidget_->move(width() - probeLevelWidget_->width(), 0);
+  bool levelIconSet = false;
+  if (dataProbe_ != nullptr) {
+    const auto probeLevelIconPath =
+        QString(":/probe_levels/%1.svg").arg(dataProbe_->level);
+    if (QFile::exists(probeLevelIconPath)) {
+      QIcon probeLevelIcon(probeLevelIconPath);
+      const auto probeLevelSize = size() * 0.3;
+      probeLevelWidget_->setFixedSize(probeLevelSize);
+      probeLevelWidget_->move(width() - probeLevelWidget_->width(), 0);
+      probeLevelWidget_->setPixmap(probeLevelIcon.pixmap(probeLevelSize));
+      levelIconSet = true;
+    }
+  }
+  if (!levelIconSet) {
+    probeLevelWidget_->clear();
+  }
 }
 
 } // namespace detail

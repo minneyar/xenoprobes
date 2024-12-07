@@ -16,7 +16,6 @@
 #include <QLabel>
 #include <QStackedWidget>
 #include <QWidget>
-#include <QSvgWidget>
 
 class FnSiteWidget;
 
@@ -74,7 +73,7 @@ private:
   bool visited_ = false;
   const DataProbe *dataProbe_ = nullptr;
   QLabel* probeImageWidget_;
-  QSvgWidget* probeLevelWidget_;
+  QLabel* probeLevelWidget_;
 
   [[nodiscard]] FnSiteWidget *parentFnSiteWidget() const;
   [[nodiscard]] QPixmap probeImage() const;
