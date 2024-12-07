@@ -7,9 +7,12 @@
  */
 
 #include "FnSiteWidget.h"
+
+#include <QFile>
 #include <QPaintEvent>
 #include <QPainter>
-#include <qboxlayout.h>
+#include <QSvgRenderer>
+#include <QVBoxLayout>
 
 FnSiteWidget::FnSiteWidget(const FnSite &site, QWidget *parent)
     : QStackedWidget(parent), site_(site),
@@ -104,20 +107,34 @@ FnSiteWidget *VisitedWidget::parentFnSiteWidget() const {
 }
 
 DataProbeWidget::DataProbeWidget(const FnSite &site, FnSiteWidget *parent)
-    : QWidget(parent), site_(site) {
+    : QWidget(parent), site_(site), probeImageWidget_(new QLabel(this)),
+      probeLevelWidget_(new QSvgWidget(this)) {
   setAttribute(Qt::WA_NoSystemBackground, true);
+  setVisited(visited_);
+  setDataProbe(dataProbe_);
 }
 
 FnSiteWidget *DataProbeWidget::parentFnSiteWidget() const {
   return static_cast<FnSiteWidget *>(parent());
 }
 
-void DataProbeWidget::paintEvent(QPaintEvent *event) {
-  const auto image = probeImage();
-  QPainter painter(this);
-  painter.setRenderHint(QPainter::Antialiasing);
-  painter.setRenderHint(QPainter::SmoothPixmapTransform);
-  painter.drawPixmap(rect(), image);
+void DataProbeWidget::setVisited(const bool visited) { visited_ = visited; }
+void DataProbeWidget::setDataProbe(const DataProbe *dataProbe) {
+  dataProbe_ = dataProbe;
+  probeImageWidget_->setPixmap(probeImage());
+  if (dataProbe_ != nullptr) {
+    const auto levelImagePath =
+        QString(":/probe_levels/%1.svg").arg(dataProbe->level);
+    if (QFile::exists(levelImagePath)) {
+      probeLevelWidget_->load(levelImagePath);
+    }
+  }
+  // Recalculate size and positioning.
+  recalcDimensions();
+}
+
+void DataProbeWidget::resizeEvent(QResizeEvent *event) {
+  recalcDimensions();
   event->accept();
 }
 
@@ -130,4 +147,17 @@ QPixmap DataProbeWidget::probeImage() const {
   }
   return QPixmap(dataProbe_->icon());
 }
+
+void DataProbeWidget::recalcDimensions() {
+  // Fill entire area with probe icon.
+  probeImageWidget_->setFixedSize(size());
+
+  // Put the level in the top-right corner.
+  // TODO: These render *very* blurry, like it's a raster image.
+  auto probeLevelSize = probeLevelWidget_->sizeHint();
+  probeLevelSize.scale(size() * 0.3, Qt::KeepAspectRatio);
+  probeLevelWidget_->resize(probeLevelSize);
+  probeLevelWidget_->move(width() - probeLevelWidget_->width(), 0);
+}
+
 } // namespace detail

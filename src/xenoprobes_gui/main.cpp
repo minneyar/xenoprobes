@@ -7,19 +7,19 @@
  */
 
 #include <QApplication>
+#include <QFontDatabase>
 
 #include "MainWindow.h"
 
-int main(int argc, char* argv[])
-{
-    QApplication app(argc, argv);
-    app.setApplicationName("xenoprobes");
-    app.setApplicationDisplayName(app.translate("main", "Xenoprobes"));
-    app.setApplicationVersion("1.0.0");
-    app.setWindowIcon(QIcon(":/dataprobe.png"));
+int main(int argc, char *argv[]) {
+  QApplication app(argc, argv);
+  app.setApplicationName("xenoprobes");
+  app.setApplicationDisplayName(app.translate("main", "Xenoprobes"));
+  app.setApplicationVersion("1.0.0");
+  app.setWindowIcon(QIcon(":/dataprobe.png"));
 
-    MainWindow main_window;
-    main_window.show();
+  MainWindow main_window;
+  main_window.show();
 
-    return app.exec();
+  return app.exec();
 }

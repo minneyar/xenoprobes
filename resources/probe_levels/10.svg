@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+<svg width="19.414" height="42.191" version="1.1" viewBox="0 0 19.414 42.191" xmlns="http://www.w3.org/2000/svg">
+ <defs>
+  <filter id="filter514" x="-.05856" y="-.052818" width="1.1842" height="1.1607" color-interpolation-filters="sRGB">
+   <feFlood flood-color="rgb(0,0,0)" flood-opacity=".49804" result="flood"/>
+   <feComposite in="flood" in2="SourceGraphic" operator="in" result="composite1"/>
+   <feGaussianBlur in="composite1" result="blur" stdDeviation="0.4"/>
+   <feOffset dx="1.1" dy="1" result="offset"/>
+   <feComposite in="SourceGraphic" in2="offset" result="fbSourceGraphic"/>
+   <feColorMatrix in="fbSourceGraphic" result="fbSourceGraphicAlpha" values="0 0 0 -1 0 0 0 0 -1 0 0 0 0 -1 0 0 0 0 1 0"/>
+   <feFlood flood-color="rgb(0,0,0)" flood-opacity=".49804" in="fbSourceGraphic" result="flood"/>
+   <feComposite in="flood" in2="fbSourceGraphic" operator="in" result="composite1"/>
+   <feGaussianBlur in="composite1" result="blur" stdDeviation="0.4"/>
+   <feOffset dx="1.1" dy="1" result="offset"/>
+   <feComposite in="fbSourceGraphic" in2="offset" result="composite2"/>
+  </filter>
+ </defs>
+ <g transform="translate(17.557 38.271)">
+  <g transform="scale(.5 1)" fill="#fff" filter="url(#filter514)" stroke-width="2.8445" aria-label="X">
+   <path d="m-33.194 0v-2.1383h0.30547q1.8328 0 2.8511-0.76368 1.0691-0.81459 2.4438-2.8001l8.5023-12.168-8.4004-13.644q-0.91641-1.4764-2.0874-2.0874-1.1201-0.61094-2.291-0.61094h-0.66185v-2.1383h13.797v2.1383h-0.15274q-1.731 0-2.3419 0.4582-0.56003 0.40729-0.56003 1.0182 0 0.50912 0.20365 1.1201 0.20365 0.56003 1.0182 1.8837l4.5821 7.4331 4.8366-7.3313q0.56003-0.8655 0.91641-1.6292 0.35638-0.81459 0.35638-1.4764 0-0.91641-0.81459-1.171-0.76368-0.30547-1.9346-0.30547h-0.15274v-2.1383h11.15v2.1383h-0.45821q-1.4764 0-2.5456 0.81459-1.0182 0.76368-2.4947 2.8511l-7.3822 10.641 9.3678 15.07q1.1201 1.4764 2.0874 2.0874 1.0182 0.61094 1.9856 0.61094h0.66185v2.1383h-13.746v-2.1383h0.25456q3.0547 0 3.0547-1.6801 0-0.56003-0.30547-1.171-0.30547-0.66185-1.3746-2.3419l-5.0403-8.095-5.6512 8.3495q-0.40729 0.66185-0.8655 1.6292-0.4582 0.91641-0.4582 1.731 0 1.5783 3.3093 1.5783h0.15274v2.1383z"/>
+  </g>
+ </g>
+</svg>

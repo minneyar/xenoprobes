@@ -99,11 +99,12 @@ MiraMap::SiteProbeMap MiraMap::siteProbesFromJson(const QJsonValue &json) {
     if (!siteProbe.isArray() || siteProbe.toArray().size() != 2) {
       throw std::runtime_error("Bad site probe format.");
     }
-    auto siteId = siteProbe.toArray()[0];
+    const auto siteProbeInfo = siteProbe.toArray();
+    const auto siteId = siteProbeInfo[0];
     if (!siteId.isDouble() || !FnSite::kAllSites.contains(siteId.toInt())) {
       throw std::runtime_error("Bad site id.");
     }
-    auto probeId = siteProbe.toArray()[1];
+    const auto probeId = siteProbeInfo[1];
     if (!probeId.isString() ||
         !DataProbe::kAllProbes.contains(probeId.toString())) {
       throw std::runtime_error("Bad probe id.");

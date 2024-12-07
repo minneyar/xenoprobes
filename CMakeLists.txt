@@ -15,6 +15,8 @@ include_directories("${PROJECT_SOURCE_DIR}/include" "${PROJECT_BINARY_DIR}/inclu
 
 find_package(Qt6 6.5 REQUIRED COMPONENTS
         Core
+        Svg
+        SvgWidgets
         Widgets
 )
 qt_standard_project_setup(REQUIRES 6.5)

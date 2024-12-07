@@ -44,6 +44,8 @@ set_property(SOURCE
 
 target_link_libraries(${PROJECT_NAME}_gui PRIVATE
         probeoptimizer
+        Qt::Svg
+        Qt::SvgWidgets
         Qt::Widgets
 )
 

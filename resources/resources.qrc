@@ -185,5 +185,15 @@
 <file>./probe_icons/notvisited.png</file>
 <file>./probe_icons/research.png</file>
 <file>./probe_icons/storage.png</file>
+<file>./probe_levels/1.svg</file>
+<file>./probe_levels/2.svg</file>
+<file>./probe_levels/3.svg</file>
+<file>./probe_levels/4.svg</file>
+<file>./probe_levels/5.svg</file>
+<file>./probe_levels/6.svg</file>
+<file>./probe_levels/7.svg</file>
+<file>./probe_levels/8.svg</file>
+<file>./probe_levels/9.svg</file>
+<file>./probe_levels/10.svg</file>
 </qresource>
 </RCC>

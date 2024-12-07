@@ -16,6 +16,7 @@
 #include <QLabel>
 #include <QStackedWidget>
 #include <QWidget>
+#include <QSvgWidget>
 
 class FnSiteWidget;
 
@@ -61,26 +62,23 @@ public:
 
   [[nodiscard]] FnSite site() const { return site_; }
   [[nodiscard]] bool visited() const { return visited_; }
-  void setVisited(const bool visited) {
-    visited_ = visited;
-    update();
-  }
+  void setVisited(const bool visited);
   [[nodiscard]] const DataProbe *dataProbe() const { return dataProbe_; }
-  void setDataProbe(const DataProbe *data_probe) {
-    dataProbe_ = data_probe;
-    update();
-  }
+  void setDataProbe(const DataProbe *dataProbe);
 
 protected:
-  void paintEvent(QPaintEvent *event) override;
+  void resizeEvent(QResizeEvent *event) override;
 
 private:
   const FnSite &site_;
   bool visited_ = false;
   const DataProbe *dataProbe_ = nullptr;
+  QLabel* probeImageWidget_;
+  QSvgWidget* probeLevelWidget_;
 
   [[nodiscard]] FnSiteWidget *parentFnSiteWidget() const;
   [[nodiscard]] QPixmap probeImage() const;
+  void recalcDimensions();
 };
 } // namespace detail
 
@@ -107,7 +105,7 @@ public:
   [[nodiscard]] const DataProbe *dataProbe() const {
     return dataProbeWidget_->dataProbe();
   }
-  void setDataProbe(const DataProbe::Id& dataProbeId);
+  void setDataProbe(const DataProbe::Id &dataProbeId);
   void setDataProbe(const DataProbe *dataProbe) {
     dataProbeWidget_->setDataProbe(dataProbe);
   }
