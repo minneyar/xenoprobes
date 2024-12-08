@@ -13,6 +13,7 @@
 #include "InventoryModel.h"
 #include "MiraMap.h"
 #include "RunOptionsWidget.h"
+#include "SolutionWidget.h"
 #include "SolverRunner.h"
 
 #include <QMainWindow>
@@ -48,6 +49,7 @@ private:
     QTabBar *tabBar = nullptr;
     QTableView *inventoryTable = nullptr;
     RunOptionsWidget *runOptions = nullptr;
+    SolutionWidget *solutionWidget = nullptr;
   };
 
   Widgets widgets_;

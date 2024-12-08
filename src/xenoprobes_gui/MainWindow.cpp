@@ -104,10 +104,19 @@ void MainWindow::initUi() {
   widgets_.inventoryTable->resizeColumnsToContents();
 
   // Run Options
+  auto *optionsScrollArea = new QScrollArea(central);
   widgets_.runOptions = new RunOptionsWidget(central);
-  configLayout->addWidget(widgets_.runOptions);
+  optionsScrollArea->setWidget(widgets_.runOptions);
+  configLayout->addWidget(optionsScrollArea);
   connect(widgets_.runOptions, &RunOptionsWidget::settingsChanged, this,
           &MainWindow::dataChanged);
+
+  // Current solution
+  auto *solutionScrollArea = new QScrollArea(central);
+  widgets_.solutionWidget = new SolutionWidget(central);
+  solutionScrollArea->setWidget(widgets_.solutionWidget);
+  solutionScrollArea->setWidgetResizable(true);
+  configLayout->addWidget(solutionScrollArea);
 
   // Solve button
   auto *solveBtn = new QPushButton(tr("Solve"), central);
@@ -434,6 +443,7 @@ void MainWindow::tabChanged(int index) {
 void MainWindow::dataChanged() {
   setWindowModified(true);
   updateWindowTitle();
+  // TODO: Update solution widget.
 }
 
 void MainWindow::solve() {
@@ -498,12 +508,13 @@ void MainWindow::solved(unsigned int mining, unsigned int revenue,
 
   widgets_.miraMap->setSiteProbeMap(siteProbeMap);
 
+  widgets_.solutionWidget->setProduction(mining);
+  widgets_.solutionWidget->setRevenue(revenue);
+  widgets_.solutionWidget->setStorage(storage);
+  widgets_.solutionWidget->setOres(ores);
+
   QMessageBox resultDialog(this);
   resultDialog.setText(tr("Completed solving!"));
-  QStringList oresList;
-  for (const auto &ore : ores) {
-    oresList.append(QString("<li>%1</li>").arg(ore));
-  }
   // @formatter:off
   // clang-format off
   resultDialog.setInformativeText(
@@ -512,13 +523,13 @@ void MainWindow::solved(unsigned int mining, unsigned int revenue,
             "<tr><th align=\"right\">Production</th><td align=\"left\">%1</td></tr>"
             "<tr><th align=\"right\">Revenue</th><td align=\"left\">%2</td></tr>"
             "<tr><th align=\"right\">Storage</th><td align=\"left\">%3</td></tr>"
-            "<tr><th align=\"right\">Ores</th><td align=\"left\"><ul>%4</ul></td></tr>"
+            "<tr><th align=\"right\">Ores</th><td align=\"left\">%4</td></tr>"
           "</table>"
           )
           .arg(mining)
           .arg(revenue)
           .arg(storage)
-          .arg(oresList.join("")));
+          .arg(ores.join("<br>")));
   // @formatter:on
   // clang-format on
   resultDialog.exec();
