@@ -28,6 +28,7 @@ FnSiteWidget::FnSiteWidget(const FnSite &site, QWidget *parent)
   dataProbeWidget_->setVisited(visited_);
 
   setViewMode(viewMode_);
+  updateTooltipText();
 }
 
 void FnSiteWidget::setViewMode(const ViewMode viewMode) {
@@ -48,6 +49,7 @@ void FnSiteWidget::setVisited(const bool visited) {
   visited_ = visited;
   visitedWidget_->setVisited(visited);
   dataProbeWidget_->setVisited(visited);
+  updateTooltipText();
 }
 
 void FnSiteWidget::setDataProbe(const DataProbe::Id &dataProbeId) {
@@ -56,6 +58,24 @@ void FnSiteWidget::setDataProbe(const DataProbe::Id &dataProbeId) {
     throw std::runtime_error("Data probe not found.");
   }
   setDataProbe(&dataProbe.value());
+}
+
+void FnSiteWidget::updateTooltipText() {
+  setToolTip(
+      tr("<strong>FN%1</strong><br>"
+         "%2<br>"
+         "<table>"
+         "<tr><th align=\"right\">Production:</th><td align=\"left\">%3</td></tr>"
+         "<tr><th align=\"right\">Revenue:</th><td align=\"left\">%4</td></tr>"
+         "<tr><th align=\"right\">Combat:</th><td align=\"left\">%5</td></tr>"
+         "<tr><th align=\"right\">Ore:</th><td align=\"left\">%6</td></tr>"
+         "</table>")
+          .arg(site_.id)
+          .arg(dataProbe() == nullptr ? tr("No probe") : dataProbe()->name)
+          .arg(FnSite::gradeToChar(site_.miningGrade))
+          .arg(FnSite::gradeToChar(site_.revenueGrade))
+          .arg(FnSite::gradeToChar(site_.combatGrade))
+          .arg(QLocale().createSeparatedList(site_.ore)));
 }
 
 namespace detail {

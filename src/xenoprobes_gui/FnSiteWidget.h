@@ -106,6 +106,7 @@ public:
   void setDataProbe(const DataProbe::Id &dataProbeId);
   void setDataProbe(const DataProbe *dataProbe) {
     dataProbeWidget_->setDataProbe(dataProbe);
+    updateTooltipText();
   }
 
 Q_SIGNALS:
@@ -116,9 +117,11 @@ private:
   ViewMode viewMode_ = ViewMode::DataProbe;
   const FnSite &site_;
   bool visited_ = false;
-
   detail::VisitedWidget *visitedWidget_;
   detail::DataProbeWidget *dataProbeWidget_;
+  bool tooltipShown_ = false;
+
+  void updateTooltipText();
 };
 
 #endif // FNSITEWIDGET_H

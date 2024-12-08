@@ -18,6 +18,7 @@
 MiraMap::MiraMap(QWidget *parent) : QGraphicsView(parent) {
   setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
   setDragMode(ScrollHandDrag);
+  setMouseTracking(true);
 
   // Add map tiles.
   const auto tileSize = 256; // 256x256 pixels
