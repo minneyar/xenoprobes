@@ -11,8 +11,6 @@
 
 class semaphore {
 public:
-    using native_handle_type = std::condition_variable::native_handle_type;
-
     explicit semaphore(size_t n = 0);
     semaphore(const semaphore&) = delete;
     semaphore& operator=(const semaphore&) = delete;
@@ -24,8 +22,6 @@ public:
     bool wait_for(const std::chrono::duration<Rep, Period>& d);
     template<class Clock, class Duration>
     bool wait_until(const std::chrono::time_point<Clock, Duration>& t);
-
-    native_handle_type native_handle();
 
 private:
     size_t                  count;

@@ -25,6 +25,11 @@ qt_add_executable(${PROJECT_NAME}_gui
         main.cpp
 )
 
+# Application icon
+if (CMAKE_SYSTEM_NAME STREQUAL "Windows")
+    target_sources(${PROJECT_NAME}_gui PRIVATE xenoprobes.rc)
+endif ()
+
 # Create FN Site data file
 add_custom_command(OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/kAllSites.cpp"
         COMMAND sitelist
@@ -54,3 +59,14 @@ install(TARGETS ${PROJECT_NAME}_gui
         LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
         RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
+install(FILES "$<TARGET_RUNTIME_DLLS:${PROJECT_NAME}_gui>"
+        TYPE BIN
+)
+if (NOT CMAKE_SYSTEM_NAME STREQUAL "Linux")
+    qt_generate_deploy_app_script(
+            TARGET "${PROJECT_NAME}_gui"
+            OUTPUT_SCRIPT DEPLOY_SCRIPT
+            NO_UNSUPPORTED_PLATFORM_ERROR
+    )
+    install(SCRIPT ${DEPLOY_SCRIPT})
+endif ()

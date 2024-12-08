@@ -17,7 +17,6 @@ target_link_libraries(probeoptimizer PRIVATE
         Boost::system
         spdlog::spdlog
         Threads::Threads
-        $<IF:$<BOOL:MSVC>,,-static>
 )
 
 # Create site links file.
@@ -29,14 +28,3 @@ add_custom_command(OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/kAllLinks.cpp"
         "${PROJECT_SOURCE_DIR}/mira.dot"
 )
 target_sources(probeoptimizer PRIVATE "${CMAKE_CURRENT_BINARY_DIR}/kAllLinks.cpp")
-
-if (MSVC)
-    set_target_properties(probeoptimizer PROPERTIES
-            MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
-    )
-    target_compile_options(probeoptimizer PRIVATE
-            $<$<CONFIG:>:/MT> #---------|
-            $<$<CONFIG:Debug>:/MTd> #---|-- Statically link the runtime libraries
-            $<$<CONFIG:Release>:/MT> #--|
-    )
-endif()

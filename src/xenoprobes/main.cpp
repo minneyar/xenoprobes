@@ -19,7 +19,6 @@
 #include <boost/filesystem.hpp>
 #include <boost/program_options.hpp>
 #include <csignal>
-#include <expat_config.h>
 #include <iostream>
 
 #include "probeoptimizer/probe_optimizer.h"

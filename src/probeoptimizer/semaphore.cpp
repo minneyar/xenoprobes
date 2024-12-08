@@ -51,7 +51,3 @@ bool semaphore::wait_until(const std::chrono::time_point<Clock, Duration>& t) {
 
   return finished;
 }
-
-semaphore::native_handle_type semaphore::native_handle() {
-  return cv.native_handle();
-}

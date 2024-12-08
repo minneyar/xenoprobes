@@ -7,7 +7,6 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
         probeoptimizer
         Boost::filesystem
         Boost::program_options
-        $<IF:$<BOOL:MSVC>,,-static>
 )
 
 include(GNUInstallDirs)

@@ -7,6 +7,7 @@
  */
 
 #include <QApplication>
+#include <QStyleFactory>
 #include "xenoprobes_config.h"
 
 #include "MainWindow.h"
@@ -18,6 +19,14 @@ int main(int argc, char *argv[]) {
   app.setApplicationDisplayName(config::kProjectDisplayName);
   app.setApplicationVersion(config::kProjectVersion);
   app.setWindowIcon(QIcon(":/dataprobe.png"));
+
+#ifdef Q_OS_WINDOWS
+    // Using fusion style enables dark-mode detection on Windows.
+    auto *style = QStyleFactory::create("fusion");
+    if (style != nullptr) {
+        app.setStyle(style);
+    }
+#endif
 
   MainWindow main_window;
   main_window.show();
