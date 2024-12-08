@@ -66,18 +66,15 @@ public:
   void setDataProbe(const DataProbe *dataProbe);
 
 protected:
-  void resizeEvent(QResizeEvent *event) override;
+  void paintEvent(QPaintEvent *event) override;
 
 private:
   const FnSite &site_;
   bool visited_ = false;
   const DataProbe *dataProbe_ = nullptr;
-  QLabel* probeImageWidget_;
-  QLabel* probeLevelWidget_;
 
   [[nodiscard]] FnSiteWidget *parentFnSiteWidget() const;
   [[nodiscard]] QPixmap probeImage() const;
-  void recalcDimensions();
 };
 } // namespace detail
 
@@ -93,6 +90,8 @@ public:
     DataProbe,
   };
   Q_ENUM(ViewMode)
+
+  static constexpr auto kSize = 64;
 
   explicit FnSiteWidget(const FnSite &site, QWidget *parent = nullptr);
 
@@ -114,7 +113,6 @@ Q_SIGNALS:
   void dataProbeChanged(const DataProbe *data_probe);
 
 private:
-  static constexpr auto kSize = 64;
   ViewMode viewMode_ = ViewMode::DataProbe;
   const FnSite &site_;
   bool visited_ = false;

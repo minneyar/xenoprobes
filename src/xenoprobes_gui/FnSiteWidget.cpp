@@ -11,6 +11,7 @@
 #include <QFile>
 #include <QPaintEvent>
 #include <QPainter>
+#include <QSvgRenderer>
 #include <QVBoxLayout>
 
 FnSiteWidget::FnSiteWidget(const FnSite &site, QWidget *parent)
@@ -106,28 +107,40 @@ FnSiteWidget *VisitedWidget::parentFnSiteWidget() const {
 }
 
 DataProbeWidget::DataProbeWidget(const FnSite &site, FnSiteWidget *parent)
-    : QWidget(parent), site_(site), probeImageWidget_(new QLabel(this)),
-      probeLevelWidget_(new QLabel(this)) {
+    : QWidget(parent), site_(site) {
   setAttribute(Qt::WA_NoSystemBackground, true);
-  setVisited(visited_);
-  setDataProbe(dataProbe_);
 }
 
 FnSiteWidget *DataProbeWidget::parentFnSiteWidget() const {
   return static_cast<FnSiteWidget *>(parent());
 }
 
-void DataProbeWidget::setVisited(const bool visited) { visited_ = visited; }
+void DataProbeWidget::setVisited(const bool visited) {
+  visited_ = visited;
+  update();
+}
 void DataProbeWidget::setDataProbe(const DataProbe *dataProbe) {
   dataProbe_ = dataProbe;
-  probeImageWidget_->setPixmap(probeImage());
-
-  // Recalculate size and positioning.
-  recalcDimensions();
+  update();
 }
 
-void DataProbeWidget::resizeEvent(QResizeEvent *event) {
-  recalcDimensions();
+void DataProbeWidget::paintEvent(QPaintEvent *event) {
+  const auto image = probeImage();
+  QPainter painter(this);
+  painter.setRenderHint(QPainter::Antialiasing);
+  painter.setRenderHint(QPainter::SmoothPixmapTransform);
+
+  // Probe image.
+  painter.drawPixmap(rect(), image);
+
+  // Probe level.
+  if (dataProbe_ != nullptr && dataProbe_->level > 0) {
+    QSvgRenderer svgRenderer(
+        QString(":/probe_levels/%1.svg").arg(dataProbe_->level));
+    svgRenderer.setAspectRatioMode(Qt::KeepAspectRatio);
+    svgRenderer.render(&painter);
+  }
+
   event->accept();
 }
 
@@ -139,29 +152,6 @@ QPixmap DataProbeWidget::probeImage() const {
     return QPixmap(":/probe_icons/none.png");
   }
   return QPixmap(dataProbe_->icon());
-}
-
-void DataProbeWidget::recalcDimensions() {
-  // Fill entire area with probe icon.
-  probeImageWidget_->setFixedSize(size());
-
-  // Put the level in the top-right corner.
-  bool levelIconSet = false;
-  if (dataProbe_ != nullptr) {
-    const auto probeLevelIconPath =
-        QString(":/probe_levels/%1.svg").arg(dataProbe_->level);
-    if (QFile::exists(probeLevelIconPath)) {
-      QIcon probeLevelIcon(probeLevelIconPath);
-      const auto probeLevelSize = size() * 0.3;
-      probeLevelWidget_->setFixedSize(probeLevelSize);
-      probeLevelWidget_->move(width() - probeLevelWidget_->width(), 0);
-      probeLevelWidget_->setPixmap(probeLevelIcon.pixmap(probeLevelSize));
-      levelIconSet = true;
-    }
-  }
-  if (!levelIconSet) {
-    probeLevelWidget_->clear();
-  }
 }
 
 } // namespace detail

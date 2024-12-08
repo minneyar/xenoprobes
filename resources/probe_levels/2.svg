@@ -1,25 +1,21 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<!-- Created with Inkscape (http://www.inkscape.org/) -->
-<svg width="19.77" height="42.191" version="1.1" viewBox="0 0 19.77 42.191" xmlns="http://www.w3.org/2000/svg">
+<?xml version='1.0' encoding='utf-8'?>
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" preserveAspectRatio="xMaxYMin" version="1.1" viewBox="0 0 64 64">
  <defs>
-  <filter id="filter514" x="-.057314" y="-.052818" width="1.1803" height="1.1607" color-interpolation-filters="sRGB">
-   <feFlood flood-color="rgb(0,0,0)" flood-opacity=".49804" result="flood"/>
-   <feComposite in="flood" in2="SourceGraphic" operator="in" result="composite1"/>
-   <feGaussianBlur in="composite1" result="blur" stdDeviation="0.4"/>
-   <feOffset dx="1.1" dy="1" result="offset"/>
-   <feComposite in="SourceGraphic" in2="offset" result="fbSourceGraphic"/>
-   <feColorMatrix in="fbSourceGraphic" result="fbSourceGraphicAlpha" values="0 0 0 -1 0 0 0 0 -1 0 0 0 0 -1 0 0 0 0 1 0"/>
-   <feFlood flood-color="rgb(0,0,0)" flood-opacity=".49804" in="fbSourceGraphic" result="flood"/>
-   <feComposite in="flood" in2="fbSourceGraphic" operator="in" result="composite1"/>
-   <feGaussianBlur in="composite1" result="blur" stdDeviation="0.4"/>
-   <feOffset dx="1.1" dy="1" result="offset"/>
-   <feComposite in="fbSourceGraphic" in2="offset" result="composite2"/>
+  <filter id="filter514" x="-.058559" y="-.052817" width="1.1842" height="1.1607" color-interpolation-filters="sRGB">
+   <feFlood flood-color="rgb(0,0,0)" flood-opacity=".49804" result="flood" />
+   <feComposite in="flood" in2="SourceGraphic" operator="in" result="composite1" />
+   <feGaussianBlur in="composite1" result="blur" stdDeviation="0.4" />
+   <feOffset dx="1.1" dy="1" result="offset" />
+   <feComposite in="SourceGraphic" in2="offset" result="fbSourceGraphic" />
+   <feColorMatrix in="fbSourceGraphic" result="fbSourceGraphicAlpha" values="0 0 0 -1 0 0 0 0 -1 0 0 0 0 -1 0 0 0 0 1 0" />
+   <feFlood flood-color="rgb(0,0,0)" flood-opacity=".49804" in="fbSourceGraphic" result="flood" />
+   <feComposite in="flood" in2="fbSourceGraphic" operator="in" result="composite1" />
+   <feGaussianBlur in="composite1" result="blur" stdDeviation="0.4" />
+   <feOffset dx="1.1" dy="1" result="offset" />
+   <feComposite in="fbSourceGraphic" in2="offset" result="composite2" />
   </filter>
  </defs>
- <g transform="translate(18.677 38.271)">
-  <g transform="scale(.5 1)" fill="#fff" filter="url(#filter514)" stroke-width="2.8445" aria-label="II">
-   <path d="m-35.435 0v-2.1383h0.66185q1.731 0 2.9529-0.61094 1.2219-0.66185 1.2219-3.0547v-24.743q0-2.3928-1.2219-3.0038-1.2219-0.66185-2.9529-0.66185h-0.66185v-2.1383h14.815v2.1383h-0.66185q-1.731 0-2.9529 0.66185-1.2219 0.61094-1.2219 3.0038v24.743q0 2.3928 1.2219 3.0547 1.2219 0.61094 2.9529 0.61094h0.66185v2.1383z"/>
-   <path d="m-16.75 0v-2.1383h0.66185q1.731 0 2.9529-0.61094 1.2219-0.66185 1.2219-3.0547v-24.743q0-2.3928-1.2219-3.0038-1.2219-0.66185-2.9529-0.66185h-0.66185v-2.1383h14.815v2.1383h-0.66185q-1.731 0-2.9529 0.66185-1.2219 0.61094-1.2219 3.0038v24.743q0 2.3928 1.2219 3.0547 1.2219 0.61094 2.9529 0.61094h0.66185v2.1383z"/>
-  </g>
+ <g filter="url(#filter514)">
+  <text id="val" fill="#ffffff" font-family="serif" font-size="22px" x="64" y="16" text-anchor="end">II</text>
  </g>
 </svg>
