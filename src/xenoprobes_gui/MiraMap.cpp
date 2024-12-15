@@ -171,7 +171,16 @@ void MiraMap::calculateLinks() {
   // are stored.
   std::vector<std::unordered_set<Site::Id>> drawnLinks;
   for (const auto &site : Site::ALL | std::views::values) {
+    if (!sitesVisited_.contains(site.name)) {
+      // Do not draw links between sites not visited.
+      continue;
+    }
     for (const auto neighbor : site.getNeighbors()) {
+      if (!sitesVisited_.contains(neighbor->name)) {
+      // Do not draw links between sites not visited.
+        continue;
+      }
+
       const std::unordered_set linkPair{site.name, neighbor->name};
       if (std::find(drawnLinks.cbegin(), drawnLinks.cend(), linkPair) !=
           drawnLinks.cend()) {
