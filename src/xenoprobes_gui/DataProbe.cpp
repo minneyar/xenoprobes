@@ -1,5 +1,5 @@
 /**
- * @file FnProbe.cpp
+ * @file DataProbe.cpp
  *
  * @author Dan Keenan
  * @date 11/24/24
@@ -7,36 +7,62 @@
  */
 
 #include "DataProbe.h"
+#include <QApplication>
 
-// @formatter:off
-// clang-format off
-const QHash<DataProbe::Id, DataProbe> DataProbe::kAllProbes{
-    {"M1", {.id = "M1", .category = DataProbe::Category::Mining, .level = 1, .name = "Mining Probe G1"}},
-    {"M2", {.id = "M2", .category = DataProbe::Category::Mining, .level = 2, .name = "Mining Probe G2"}},
-    {"M3", {.id = "M3", .category = DataProbe::Category::Mining, .level = 3, .name = "Mining Probe G3"}},
-    {"M4", {.id = "M4", .category = DataProbe::Category::Mining, .level = 4, .name = "Mining Probe G4"}},
-    {"M5", {.id = "M5", .category = DataProbe::Category::Mining, .level = 5, .name = "Mining Probe G5"}},
-    {"M6", {.id = "M6", .category = DataProbe::Category::Mining, .level = 6, .name = "Mining Probe G6"}},
-    {"M7", {.id = "M7", .category = DataProbe::Category::Mining, .level = 7, .name = "Mining Probe G7"}},
-    {"M8", {.id = "M8", .category = DataProbe::Category::Mining, .level = 8, .name = "Mining Probe G8"}},
-    {"M9", {.id = "M9", .category = DataProbe::Category::Mining, .level = 9, .name = "Mining Probe G9"}},
-    {"M10", {.id = "M10", .category = DataProbe::Category::Mining, .level = 10, .name = "Mining Probe G10"}},
-    {"R1", {.id = "R1", .category = DataProbe::Category::Research, .level = 1, .name = "Research Probe G1"}},
-    {"R2", {.id = "R2", .category = DataProbe::Category::Research, .level = 2, .name = "Research Probe G2"}},
-    {"R3", {.id = "R3", .category = DataProbe::Category::Research, .level = 3, .name = "Research Probe G3"}},
-    {"R4", {.id = "R4", .category = DataProbe::Category::Research, .level = 4, .name = "Research Probe G4"}},
-    {"R5", {.id = "R5", .category = DataProbe::Category::Research, .level = 5, .name = "Research Probe G5"}},
-    {"R6", {.id = "R6", .category = DataProbe::Category::Research, .level = 6, .name = "Research Probe G6"}},
-    {"B1", {.id = "B1", .category = DataProbe::Category::Booster, .level = 1, .name = "Booster Probe G1"}},
-    {"B2", {.id = "B2", .category = DataProbe::Category::Booster, .level = 2, .name = "Booster Probe G2"}},
-    {"S", {.id = "S", .category = DataProbe::Category::Storage, .level = 0, .name = "Storage Probe"}},
-    {"D", {.id = "D", .category = DataProbe::Category::Duplicator, .level = 0, .name = "Duplicator Probe"}},
-    {"B", {.id = "B", .category = DataProbe::Category::Basic, .level = 0, .name = "Basic Probe"}},
-    {"CF", {.id = "CF", .category = DataProbe::Category::Battle, .level = 0, .name = "Fuel Recovery Probe"}},
-    {"CM", {.id = "CM", .category = DataProbe::Category::Battle, .level = 0, .name = "Melee Attack Probe"}},
-    {"CR", {.id = "CR", .category = DataProbe::Category::Battle, .level = 0, .name = "Ranged Attack Probe"}},
-    {"CD", {.id = "CD", .category = DataProbe::Category::Battle, .level = 0, .name = "EZ Debuff Probe"}},
-    {"CA", {.id = "CA", .category = DataProbe::Category::Battle, .level = 0, .name = "Attribute Resistance Probe"}},
+QString dataProbeIcon(Probe::Ptr probe) {
+  switch (probe->category) {
+  case Probe::Category::Basic:
+    return QStringLiteral(":/probe_icons/basic.png");
+  case Probe::Category::Mining:
+    return QStringLiteral(":/probe_icons/mining.png");
+  case Probe::Category::Research:
+    return QStringLiteral(":/probe_icons/research.png");
+  case Probe::Category::Booster:
+    return QStringLiteral(":/probe_icons/booster.png");
+  case Probe::Category::Storage:
+    return QStringLiteral(":/probe_icons/storage.png");
+  case Probe::Category::Duplicator:
+    return QStringLiteral(":/probe_icons/duplicator.png");
+  case Probe::Category::Battle:
+    return QStringLiteral(":/probe_icons/battle.png");
+  }
+  Q_UNREACHABLE();
+}
+
+static const QHash<Probe::Id, QString> kProbeNames{
+    {"M1", qApp->translate("DataProbe", "Mining Probe G1")},
+    {"M2", qApp->translate("DataProbe", "Mining Probe G2")},
+    {"M3", qApp->translate("DataProbe", "Mining Probe G3")},
+    {"M4", qApp->translate("DataProbe", "Mining Probe G4")},
+    {"M5", qApp->translate("DataProbe", "Mining Probe G5")},
+    {"M6", qApp->translate("DataProbe", "Mining Probe G6")},
+    {"M7", qApp->translate("DataProbe", "Mining Probe G7")},
+    {"M8", qApp->translate("DataProbe", "Mining Probe G8")},
+    {"M9", qApp->translate("DataProbe", "Mining Probe G9")},
+    {"M10", qApp->translate("DataProbe", "Mining Probe G10")},
+    {"R1", qApp->translate("DataProbe", "Research Probe G1")},
+    {"R2", qApp->translate("DataProbe", "Research Probe G2")},
+    {"R3", qApp->translate("DataProbe", "Research Probe G3")},
+    {"R4", qApp->translate("DataProbe", "Research Probe G4")},
+    {"R5", qApp->translate("DataProbe", "Research Probe G5")},
+    {"R6", qApp->translate("DataProbe", "Research Probe G6")},
+    {"B1", qApp->translate("DataProbe", "Booster Probe G1")},
+    {"B2", qApp->translate("DataProbe", "Booster Probe G2")},
+    {"S", qApp->translate("DataProbe", "Storage Probe")},
+    {"D", qApp->translate("DataProbe", "Duplicator Probe")},
+    {"B", qApp->translate("DataProbe", "Basic Probe")},
+    {"CF", qApp->translate("DataProbe", "Fuel Recovery Probe")},
+    {"CM", qApp->translate("DataProbe", "Melee Attack Probe")},
+    {"CR", qApp->translate("DataProbe", "Ranged Attack Probe")},
+    {"CD", qApp->translate("DataProbe", "EZ Debuff Probe")},
+    {"CA", qApp->translate("DataProbe", "Attribute Resistance Probe")},
 };
-// clang-format on
-// @formatter:on
+
+QString dataProbeName(Probe::Ptr probe) { return kProbeNames.value(probe->id); }
+
+void sortProbeInventory(ProbeInventory &probeInventory) {
+  std::ranges::sort(probeInventory, [](const ProbeInventory::value_type &lhs,
+                                       const ProbeInventory::value_type &rhs) {
+    return Probe::fromString(lhs.first) < Probe::fromString(rhs.first);
+  });
+}

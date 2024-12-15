@@ -9,9 +9,8 @@
 #ifndef FNSITEWIDGET_H
 #define FNSITEWIDGET_H
 
-#include "DataProbe.h"
 #include "FnSite.h"
-
+#include <probeoptimizer/probe.h>
 #include <QCheckBox>
 #include <QLabel>
 #include <QStackedWidget>
@@ -62,8 +61,8 @@ public:
   [[nodiscard]] FnSite site() const { return site_; }
   [[nodiscard]] bool visited() const { return visited_; }
   void setVisited(const bool visited);
-  [[nodiscard]] const DataProbe *dataProbe() const { return dataProbe_; }
-  void setDataProbe(const DataProbe *dataProbe);
+  [[nodiscard]] const Probe *dataProbe() const { return dataProbe_; }
+  void setDataProbe(const Probe *dataProbe);
 
 protected:
   void paintEvent(QPaintEvent *event) override;
@@ -71,7 +70,7 @@ protected:
 private:
   const FnSite &site_;
   bool visited_ = false;
-  const DataProbe *dataProbe_ = nullptr;
+  const Probe *dataProbe_ = nullptr;
 
   [[nodiscard]] FnSiteWidget *parentFnSiteWidget() const;
   [[nodiscard]] QPixmap probeImage() const;
@@ -100,18 +99,18 @@ public:
   [[nodiscard]] FnSite site() const { return site_; }
   [[nodiscard]] bool visited() const { return visited_; }
   void setVisited(const bool visited);
-  [[nodiscard]] const DataProbe *dataProbe() const {
+  [[nodiscard]] const Probe *dataProbe() const {
     return dataProbeWidget_->dataProbe();
   }
-  void setDataProbe(const DataProbe::Id &dataProbeId);
-  void setDataProbe(const DataProbe *dataProbe) {
+  void setDataProbe(const Probe::Id &dataProbeId);
+  void setDataProbe(const Probe *dataProbe) {
     dataProbeWidget_->setDataProbe(dataProbe);
     updateTooltipText();
   }
 
 Q_SIGNALS:
   void visitedChanged(bool visited);
-  void dataProbeChanged(const DataProbe *data_probe);
+  void dataProbeChanged(const Probe *data_probe);
 
 private:
   ViewMode viewMode_ = ViewMode::DataProbe;

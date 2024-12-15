@@ -19,15 +19,14 @@
  */
 class InventoryLoader {
 public:
-  [[nodiscard]] static DataProbe::ProbeInventory
+  [[nodiscard]] static ProbeInventory
   readInventoryFromFile(const QString &path);
-  [[nodiscard]] static DataProbe::ProbeInventory
+  [[nodiscard]] static ProbeInventory
   readInventoryFromJson(const QJsonValue &json);
-  static void
-  writeInventoryToFile(const DataProbe::ProbeInventory &probeInventory,
-                       const QString &path);
+  static void writeInventoryToFile(const ProbeInventory &probeInventory,
+                                   const QString &path);
   [[nodiscard]] static QJsonValue
-  writeInventoryToJson(const DataProbe::ProbeInventory &probeInventory);
+  writeInventoryToJson(const ProbeInventory &probeInventory);
 };
 
 #endif // INVENTORYLOADER_H

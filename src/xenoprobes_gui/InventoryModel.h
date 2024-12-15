@@ -22,10 +22,10 @@ public:
   static constexpr auto kColumnCount = static_cast<int>(Column::Quantity) + 1;
 
   explicit InventoryModel(QObject *parent = nullptr);
-  [[nodiscard]] DataProbe::ProbeInventory probeInventory() const {
+  [[nodiscard]] ProbeInventory probeInventory() const {
     return probeInventory_;
   }
-  void setProbeInventory(const DataProbe::ProbeInventory &probeInventory);
+  void setProbeInventory(const ProbeInventory &probeInventory);
   [[nodiscard]] int columnCount(const QModelIndex &parent) const override;
   [[nodiscard]] QVariant headerData(int section, Qt::Orientation orientation,
                                     int role) const override;
@@ -37,8 +37,7 @@ public:
   [[nodiscard]] Qt::ItemFlags flags(const QModelIndex &index) const override;
 
 private:
-  DataProbe::ProbeInventory probeInventory_;
-  void sortProbeInventory();
+  ProbeInventory probeInventory_;
 };
 
 #endif // INVENTORYMODEL_H

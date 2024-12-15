@@ -88,8 +88,9 @@ QJsonValue MiraMap::siteProbesToJson(const SiteProbeMap &siteProbeMap) {
   // Do this as an array of 2-tuples so we don't have to worry about int parsing
   // when reading.
   QJsonArray json;
-  for (const auto &[siteId, probeId] : siteProbeMap.asKeyValueRange()) {
-    json.append(QJsonArray({static_cast<int>(siteId), probeId}));
+  for (const auto &[siteId, probeId] : siteProbeMap) {
+    json.append(QJsonArray(
+        {static_cast<int>(siteId), QString::fromStdString(probeId)}));
   }
 
   return json;
@@ -110,11 +111,16 @@ MiraMap::SiteProbeMap MiraMap::siteProbesFromJson(const QJsonValue &json) {
       throw std::runtime_error("Bad site id.");
     }
     const auto probeId = siteProbeInfo[1];
-    if (!probeId.isString() ||
-        !DataProbe::kAllProbes.contains(probeId.toString())) {
+    if (!probeId.isString()) {
       throw std::runtime_error("Bad probe id.");
     }
-    siteProbeMap.emplace(siteId.toInt(), probeId.toString());
+    Probe::Ptr probe;
+    try {
+      probe = Probe::fromString(probeId.toString().toStdString());
+    } catch (const std::out_of_range &) {
+      throw std::runtime_error("Bad probe id.");
+    }
+    siteProbeMap.emplace(siteId.toInt(), probe->id);
   }
   return siteProbeMap;
 }
@@ -143,7 +149,7 @@ void MiraMap::calculateSiteWidgets() {
     if (dataProbe == siteProbeMap_.end()) {
       fnSiteWidget->setDataProbe(nullptr);
     } else {
-      fnSiteWidget->setDataProbe(dataProbe.value());
+      fnSiteWidget->setDataProbe(dataProbe->second);
     }
   }
 

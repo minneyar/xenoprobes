@@ -8,6 +8,8 @@
 
 #include "FnSiteWidget.h"
 
+#include "DataProbe.h"
+
 #include <QFile>
 #include <QPaintEvent>
 #include <QPainter>
@@ -52,12 +54,9 @@ void FnSiteWidget::setVisited(const bool visited) {
   updateTooltipText();
 }
 
-void FnSiteWidget::setDataProbe(const DataProbe::Id &dataProbeId) {
-  const auto dataProbe = DataProbe::kAllProbes.find(dataProbeId);
-  if (dataProbe == DataProbe::kAllProbes.end()) {
-    throw std::runtime_error("Data probe not found.");
-  }
-  setDataProbe(&dataProbe.value());
+void FnSiteWidget::setDataProbe(const Probe::Id &dataProbeId) {
+  const auto dataProbe = Probe::fromString(dataProbeId);
+  setDataProbe(dataProbe);
 }
 
 void FnSiteWidget::updateTooltipText() {
@@ -65,13 +64,15 @@ void FnSiteWidget::updateTooltipText() {
       tr("<strong>FN%1</strong><br>"
          "%2<br>"
          "<table>"
-         "<tr><th align=\"right\">Production:</th><td align=\"left\">%3</td></tr>"
+         "<tr><th align=\"right\">Production:</th><td "
+         "align=\"left\">%3</td></tr>"
          "<tr><th align=\"right\">Revenue:</th><td align=\"left\">%4</td></tr>"
          "<tr><th align=\"right\">Combat:</th><td align=\"left\">%5</td></tr>"
          "<tr><th align=\"right\">Ore:</th><td align=\"left\">%6</td></tr>"
          "</table>")
           .arg(site_.id)
-          .arg(dataProbe() == nullptr ? tr("No probe") : dataProbe()->name)
+          .arg(dataProbe() == nullptr ? tr("No probe")
+                                      : dataProbeName(dataProbe()))
           .arg(FnSite::gradeToChar(site_.miningGrade))
           .arg(FnSite::gradeToChar(site_.revenueGrade))
           .arg(FnSite::gradeToChar(site_.combatGrade))
@@ -139,7 +140,7 @@ void DataProbeWidget::setVisited(const bool visited) {
   visited_ = visited;
   update();
 }
-void DataProbeWidget::setDataProbe(const DataProbe *dataProbe) {
+void DataProbeWidget::setDataProbe(const Probe *dataProbe) {
   dataProbe_ = dataProbe;
   update();
 }
@@ -171,7 +172,7 @@ QPixmap DataProbeWidget::probeImage() const {
   if (dataProbe_ == nullptr) {
     return QPixmap(":/probe_icons/none.png");
   }
-  return QPixmap(dataProbe_->icon());
+  return QPixmap(dataProbeIcon(dataProbe_));
 }
 
 } // namespace detail

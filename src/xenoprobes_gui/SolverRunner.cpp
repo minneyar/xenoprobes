@@ -12,7 +12,7 @@
 
 SolverRunner::SolverRunner(const FnSite::IdList &siteList,
                            const MiraMap::SiteProbeMap &siteProbeMap,
-                           const DataProbe::ProbeInventory &probeInventory,
+                           const ProbeInventory &probeInventory,
                            const RunOptions &runOptions, QObject *parent)
     : QThread(parent), siteList_(siteList), siteProbeMap_(siteProbeMap),
       probeInventory_(probeInventory), runOptions_(runOptions) {}
@@ -54,7 +54,7 @@ void SolverRunner::run() {
     }
     auto &record = records.emplace_back();
     record.reserve(2);
-    record.emplace_back(probeId.toStdString());
+    record.emplace_back(probeId);
     record.emplace_back(static_cast<int>(quantity));
   }
   optimizer.loadInventory(records);
@@ -75,7 +75,7 @@ void SolverRunner::run() {
     ores.push_back(QString::fromStdString(ore));
   }
   for (const auto [siteId, probe] : solutionSetup.getSetup()) {
-    siteProbeMap_[siteId] = QString::fromStdString(probe->id);
+    siteProbeMap_[siteId] = probe->id;
   }
   Q_EMIT(finished(solutionSetup.getTotalProduction(),
                   solutionSetup.getTotalRevenue(),

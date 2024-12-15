@@ -11,68 +11,65 @@
 #include <QFile>
 #include <QJsonObject>
 #include <QTextStream>
+#include <probeoptimizer/csv.h>
 
-DataProbe::ProbeInventory
-InventoryLoader::readInventoryFromFile(const QString &path) {
+ProbeInventory InventoryLoader::readInventoryFromFile(const QString &path) {
   QFile file(path);
   if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
     throw std::runtime_error("Failed to open file.");
   }
   QTextStream in(&file);
-  QHash<DataProbe::Id, unsigned int> inventory;
+  QHash<Probe::Id, unsigned int> inventory;
 
   // Read data as ProbeId,quantity
-  QString line;
-  bool ok;
-  while (in.readLineInto(&line)) {
-    line = line.trimmed();
-    if (line.isEmpty() || line.startsWith('#')) {
-      // Comment or blank line.
-      continue;
-    }
-    const auto probeId = line.first(line.indexOf(','));
-    if (!DataProbe::kAllProbes.contains(probeId)) {
+  const auto rows = loadCSV(path.toStdString());
+  for (const auto &row : rows) {
+    const auto probeId = std::get<std::string>(row.at(0));
+    Probe::Ptr probe;
+    try {
+      probe = Probe::fromString(probeId);
+    } catch (const std::out_of_range &) {
       throw std::runtime_error("Probe not found.");
     }
-    const auto quantityStr = line.last(line.size() - line.indexOf(',') - 1);
-    const auto quantity = quantityStr.toUInt(&ok, 10);
-    if (!ok) {
+    int quantity;
+    try {
+      quantity = csvRecordValToInt(row.at(1));
+    } catch (const std::out_of_range &) {
+      throw std::runtime_error("Failed to parse quantity.");
+    } catch (const std::invalid_argument &) {
       throw std::runtime_error("Failed to parse quantity.");
     }
-    inventory[probeId] += quantity;
+    if (quantity < 0) {
+      throw std::runtime_error("Failed to parse quantity.");
+    }
+    inventory[probe->id] += quantity;
   }
 
   // Create an inventory that contains all probe types.
-  DataProbe::ProbeInventory probeInventory;
-  probeInventory.reserve(DataProbe::kAllProbes.size());
-  for (const auto &[probeId, probe] : DataProbe::kAllProbes.asKeyValueRange()) {
-    if (probe.category == DataProbe::Category::Basic) {
+  ProbeInventory probeInventory;
+  probeInventory.reserve(Probe::ALL.size());
+  for (const auto &[probeId, probe] : Probe::ALL) {
+    if (probe.category == Probe::Category::Basic) {
       continue;
     }
     probeInventory.emplace_back(probeId, inventory.value(probeId, 0));
   }
-  std::ranges::sort(probeInventory,
-                    [](const decltype(probeInventory)::value_type &lhs,
-                       const decltype(probeInventory)::value_type &rhs) {
-                      return DataProbe::kAllProbes.value(lhs.first) <
-                             DataProbe::kAllProbes.value(rhs.first);
-                    });
+  sortProbeInventory(probeInventory);
   return probeInventory;
 }
 
-DataProbe::ProbeInventory
-InventoryLoader::readInventoryFromJson(const QJsonValue &json) {
+ProbeInventory InventoryLoader::readInventoryFromJson(const QJsonValue &json) {
   if (!json.isObject()) {
     throw std::runtime_error("Bad probe inventory format.");
   }
   const auto &jsonMap = json.toObject();
-  DataProbe::ProbeInventory probeInventory;
-  probeInventory.reserve(DataProbe::kAllProbes.size());
-  for (const auto &[probeId, probe] : DataProbe::kAllProbes.asKeyValueRange()) {
-    if (probe.category == DataProbe::Category::Basic) {
+  ProbeInventory probeInventory;
+  probeInventory.reserve(Probe::ALL.size());
+  for (const auto &[probeId, probe] : Probe::ALL) {
+    if (probe.category == Probe::Category::Basic) {
       continue;
     }
-    auto quantity = jsonMap.value(probeId);
+    auto quantity = jsonMap.value(QString::fromStdString(probeId));
     if (quantity.isUndefined()) {
       quantity = 0;
     } else if (!quantity.isDouble()) {
@@ -80,18 +77,13 @@ InventoryLoader::readInventoryFromJson(const QJsonValue &json) {
     }
     probeInventory.emplace_back(probeId, quantity.toInt());
   }
-  std::ranges::sort(probeInventory,
-                    [](const decltype(probeInventory)::value_type &lhs,
-                       const decltype(probeInventory)::value_type &rhs) {
-                      return DataProbe::kAllProbes.value(lhs.first) <
-                             DataProbe::kAllProbes.value(rhs.first);
-                    });
+  sortProbeInventory(probeInventory);
 
   return probeInventory;
 }
 
-void InventoryLoader::writeInventoryToFile(
-    const DataProbe::ProbeInventory &probeInventory, const QString &path) {
+void InventoryLoader::writeInventoryToFile(const ProbeInventory &probeInventory,
+                                           const QString &path) {
   QFile file(path);
   if (!file.open(QIODevice::ReadWrite | QIODevice::Truncate |
                  QIODevice::Text)) {
@@ -123,27 +115,27 @@ void InventoryLoader::writeInventoryToFile(
          "# infinite amount of them.\n";
 
   // Write all probes, commenting out those with quantity 0.
-  DataProbe::Category lastCategory = DataProbe::Category::Basic;
+  Probe::Category lastCategory = Probe::Category::Basic;
   for (const auto &[probeId, quantity] : probeInventory) {
-    const auto &probe = DataProbe::kAllProbes.value(probeId);
-    if (probe.category != lastCategory) {
+    const auto &probe = Probe::fromString(probeId);
+    if (probe->category != lastCategory) {
       out << '\n';
     }
     if (quantity == 0) {
       out << '#';
     }
-    out << probeId << ',' << quantity << '\n';
-    lastCategory = probe.category;
+    out << QString::fromStdString(probeId) << ',' << quantity << '\n';
+    lastCategory = probe->category;
   }
   out.flush();
 }
 
-QJsonValue InventoryLoader::writeInventoryToJson(
-    const DataProbe::ProbeInventory &probeInventory) {
+QJsonValue
+InventoryLoader::writeInventoryToJson(const ProbeInventory &probeInventory) {
   QJsonObject json;
   for (const auto &[probeId, quantity] : probeInventory) {
     if (quantity > 0) {
-      json[probeId] = static_cast<int>(quantity);
+      json[QString::fromStdString(probeId)] = static_cast<int>(quantity);
     }
   }
   return json;

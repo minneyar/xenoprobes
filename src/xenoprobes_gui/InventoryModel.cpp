@@ -7,25 +7,24 @@
  */
 
 #include "InventoryModel.h"
-
 #include "InventoryLoader.h"
+#include <ranges>
 
-InventoryModel::InventoryModel(QObject *parent) {
-  probeInventory_.reserve(DataProbe::kAllProbes.size());
-  for (const auto &probe : DataProbe::kAllProbes) {
-    if (probe.category == DataProbe::Category::Basic) {
+InventoryModel::InventoryModel(QObject *parent) : QAbstractTableModel(parent) {
+  probeInventory_.reserve(Probe::ALL.size());
+  for (const auto &probe : Probe::ALL | std::views::values) {
+    if (probe.category == Probe::Category::Basic) {
       continue;
     }
     probeInventory_.emplace_back(probe.id, 0);
   }
-  sortProbeInventory();
+  sortProbeInventory(probeInventory_);
 }
 
-void InventoryModel::setProbeInventory(
-    const DataProbe::ProbeInventory &probeInventory) {
+void InventoryModel::setProbeInventory(const ProbeInventory &probeInventory) {
   beginResetModel();
   probeInventory_ = probeInventory;
-  sortProbeInventory();
+  sortProbeInventory(probeInventory_);
   endResetModel();
 }
 
@@ -56,11 +55,11 @@ int InventoryModel::rowCount(const QModelIndex &parent) const {
 QVariant InventoryModel::data(const QModelIndex &index, int role) const {
   const auto col = static_cast<Column>(index.column());
   const auto [probeId, quantity] = probeInventory().at(index.row());
-  const auto &probe = DataProbe::kAllProbes.value(probeId);
+  const auto probe = Probe::fromString(probeId);
 
   if (role == Qt::DisplayRole) {
     if (col == Column::Name) {
-      return probe.name;
+      return dataProbeName(probe);
     } else if (col == Column::Quantity) {
       return quantity;
     }
@@ -104,13 +103,4 @@ Qt::ItemFlags InventoryModel::flags(const QModelIndex &index) const {
   }
 
   return QAbstractTableModel::flags(index);
-}
-
-void InventoryModel::sortProbeInventory() {
-  std::ranges::sort(probeInventory_,
-                    [](const decltype(probeInventory_)::value_type &lhs,
-                       const decltype(probeInventory_)::value_type &rhs) {
-                      return DataProbe::kAllProbes.value(lhs.first) <
-                             DataProbe::kAllProbes.value(rhs.first);
-                    });
 }

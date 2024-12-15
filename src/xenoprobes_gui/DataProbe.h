@@ -9,57 +9,14 @@
 #ifndef DATAPROBE_H
 #define DATAPROBE_H
 
-#include <QHash>
+#include <vector>
+#include <utility>
 #include <QString>
 #include <probeoptimizer/probe.h>
 
-struct DataProbe {
-  using Id = QString;
-  friend constexpr std::weak_ordering operator<=>(const DataProbe &lhs,
-                                                  const DataProbe &rhs) {
-    if (lhs.category != rhs.category) {
-      return lhs.category <=> rhs.category;
-    }
-    return lhs.level <=> rhs.level;
-  }
-
-  using ProbeInventory = QList<QPair<QString, unsigned int>>;
-
-  enum class Category {
-    Basic,
-    Mining,
-    Research,
-    Booster,
-    Storage,
-    Duplicator,
-    Battle,
-  };
-
-  Id id;
-  Category category;
-  unsigned int level;
-  QString name;
-  [[nodiscard]] QString icon() const {
-    switch (category) {
-    case Category::Basic:
-      return ":/probe_icons/basic.png";
-    case Category::Mining:
-      return ":/probe_icons/mining.png";
-    case Category::Research:
-      return ":/probe_icons/research.png";
-    case Category::Booster:
-      return ":/probe_icons/booster.png";
-    case Category::Storage:
-      return ":/probe_icons/storage.png";
-    case Category::Duplicator:
-      return ":/probe_icons/duplicator.png";
-    case Category::Battle:
-      return ":/probe_icons/battle.png";
-    }
-    Q_UNREACHABLE();
-  }
-
-  static const QHash<Id, DataProbe> kAllProbes;
-};
+QString dataProbeIcon(Probe::Ptr probe);
+QString dataProbeName(Probe::Ptr probe);
+using ProbeInventory = std::vector<std::pair<Probe::Id, unsigned int>>;
+void sortProbeInventory(ProbeInventory &probeInventory);
 
 #endif // DATAPROBE_H

@@ -19,7 +19,7 @@ class MiraMap : public QGraphicsView {
   Q_OBJECT
 
 public:
-  using SiteProbeMap = QHash<FnSite::Id, DataProbe::Id>;
+  using SiteProbeMap = std::unordered_map<FnSite::Id, Probe::Id>;
 
   [[nodiscard]] static QJsonValue
   siteProbesToJson(const SiteProbeMap &siteProbeMap);

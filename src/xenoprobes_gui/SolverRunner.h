@@ -9,6 +9,7 @@
 #ifndef SOLVERRUNNER_H
 #define SOLVERRUNNER_H
 
+#include "DataProbe.h"
 #include "FnSite.h"
 #include "MiraMap.h"
 #include "RunOptions.h"
@@ -20,7 +21,7 @@ class SolverRunner : public QThread {
 public:
   explicit SolverRunner(const FnSite::IdList &siteList,
                         const MiraMap::SiteProbeMap &siteProbeMap,
-                        const DataProbe::ProbeInventory &probeInventory,
+                        const ProbeInventory &probeInventory,
                         const RunOptions &runOptions,
                         QObject *parent = nullptr);
 
@@ -36,7 +37,7 @@ protected:
 private:
   FnSite::IdList siteList_;
   MiraMap::SiteProbeMap siteProbeMap_;
-  DataProbe::ProbeInventory probeInventory_;
+  ProbeInventory probeInventory_;
   RunOptions runOptions_;
 };
 
