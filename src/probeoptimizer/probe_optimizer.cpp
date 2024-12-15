@@ -20,9 +20,6 @@
 #include <probeoptimizer/csv.h>
 
 std::atomic<bool> ProbeOptimizer::shouldStop_(false);
-ProbeArrangement ProbeOptimizer::setup_;
-SiteList ProbeOptimizer::sites_;
-std::vector<Probe::Type> ProbeOptimizer::inventory_;
 
 void ProbeOptimizer::loadInventory(const std::string &filename) {
   try {
@@ -44,23 +41,26 @@ void ProbeOptimizer::loadInventory(
   }
 
   // ensure inventory is as big as needed to fill the entire map
+  inventory_.reserve(sites_.size());
   while (inventory_.size() < sites_.size())
-    inventory_.push_back(Probe::Type::Basic);
+    inventory_.push_back(Probe::fromString("B"));
 
   spdlog::info("Inventory has {} probes.", inventory_.size());
-  auto numBasic =
-      std::count(inventory_.begin(), inventory_.end(), Probe::Type::Basic);
+  auto numBasic = std::count_if(
+      inventory_.begin(), inventory_.end(), [](const Probe::Ptr probe) {
+        return probe->category == Probe::Category::Basic;
+      });
   if (numBasic > 0)
     spdlog::info("{} are Basic Probes.", numBasic);
 }
 
 void ProbeOptimizer::printInventory() const {
-  std::map<Probe::Type, int> histo;
+  std::map<Probe::Ptr, int> histo;
   for (auto item : inventory_)
     ++histo[item];
   for (auto &entry : histo)
-    if (entry.first != Probe::Type::Basic)
-      spdlog::info("{},{}", Probe::toString(entry.first), entry.second);
+    if (entry.first->category != Probe::Category::Basic)
+      spdlog::info("{},{}", entry.first->id, entry.second);
 }
 
 void ProbeOptimizer::loadSetup(const std::string &filename) {
@@ -228,4 +228,4 @@ const ProbeArrangement &ProbeOptimizer::getDefaultArrangement() {
 
 const SiteList &ProbeOptimizer::getSites() { return sites_; }
 
-std::vector<Probe::Type> ProbeOptimizer::getInventory() { return inventory_; }
+std::vector<Probe::Ptr> ProbeOptimizer::getInventory() { return inventory_; }

@@ -15,8 +15,8 @@
 class ProbeArrangement {
 public:
     void resize(size_t size);
-    void setProbeAt(size_t index, const Probe::Type& type);
-    Probe::Type getProbeAt(size_t index) const;
+    void setProbeAt(size_t index, const Probe::Ptr& type);
+    Probe::Ptr getProbeAt(size_t index) const;
     
     void mutate(double probability);
     
@@ -26,7 +26,7 @@ public:
 
     void printTotals() const;
     void printSetup() const;
-    std::map<int, Probe::Type> getSetup() const;
+    std::map<int, Probe::Ptr> getSetup() const;
 
     double getStorageWeight() const;
     void setStorageWeight(double storage_weight);
@@ -55,9 +55,7 @@ private:
     double getRevenue(size_t idx) const noexcept;
     double getStorage(size_t idx) const noexcept;
 
-    static const std::vector<Probe> PROBE_VALUES;
-
-    std::vector<Probe::Type> probes_;
+    std::vector<Probe::Ptr> probes_;
 
 #ifdef __MINGW32__
     static std::mt19937 mt; // note it wasn't seeded properly

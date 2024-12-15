@@ -5,88 +5,66 @@
 #ifndef XENOPROBES_PROBE_H
 #define XENOPROBES_PROBE_H
 
+#include <map>
 #include <string>
 
-class Probe {
-public:
-    enum Type {
-        Basic     = 0,
-        Mining1   = 1,
-        Mining2   = 2,
-        Mining3   = 3,
-        Mining4   = 4,
-        Mining5   = 5,
-        Mining6   = 6,
-        Mining7   = 7,
-        Mining8   = 8,
-        Mining9   = 9,
-        Mining10  = 10,
-        Research1 = 11,
-        Research2 = 12,
-        Research3 = 13,
-        Research4 = 14,
-        Research5 = 15,
-        Research6 = 16,
-        Booster1  = 17,
-        Booster2  = 18,
-        Dupe      = 19,
-        Storage   = 20,
-        Invalid   = 21
-    };
-
-    Probe(Type type, double production, double revenue, double boost);
-
-    bool isBasic() const noexcept
-    {
-        return type_ == Basic;
+struct Probe {
+  friend constexpr std::weak_ordering operator<=>(const Probe &lhs,
+                                                  const Probe &rhs) {
+    if (lhs.category != rhs.category) {
+      return lhs.category <=> rhs.category;
     }
+    return lhs.level <=> rhs.level;
+  }
 
-    bool isMining() const noexcept
-    {
-        return type_ >= Mining1 && type_ <= Mining10;
-    }
+  using Id = std::string;
+  using Ptr = const Probe *;
 
-    bool isResearch() const noexcept
-    {
-        return type_ >= Research1 && type_ <= Research6;
-    }
-    
-    bool isBooster() const noexcept
-    {
-        return type_ >= Booster1 && type_ <= Booster2;
-    }
+  // enum Type {
+  //   Basic = 0,
+  //   Mining1 = 1,
+  //   Mining2 = 2,
+  //   Mining3 = 3,
+  //   Mining4 = 4,
+  //   Mining5 = 5,
+  //   Mining6 = 6,
+  //   Mining7 = 7,
+  //   Mining8 = 8,
+  //   Mining9 = 9,
+  //   Mining10 = 10,
+  //   Research1 = 11,
+  //   Research2 = 12,
+  //   Research3 = 13,
+  //   Research4 = 14,
+  //   Research5 = 15,
+  //   Research6 = 16,
+  //   Booster1 = 17,
+  //   Booster2 = 18,
+  //   Dupe = 19,
+  //   Storage = 20,
+  //   Invalid = 21
+  // };
 
-    bool isDupe() const noexcept
-    {
-        return type_ == Dupe;
-    }
+  enum class Category {
+    Basic,
+    Mining,
+    Research,
+    Booster,
+    Storage,
+    Duplicator,
+    Battle,
+  };
 
-    bool isStorage() const noexcept
-    {
-        return type_ == Storage;
-    }
+  static const std::map<Id, Probe> ALL;
 
-    static Type fromString(const std::string& str);
-    std::string toString() const;
-    static std::string toString(const Type& type);
+  static Ptr fromString(const std::string &str);
 
-
-    const Type &getType() const;
-    void setType(const Type &type);
-    double getProduction() const;
-    void setProduction(double production);
-    double getRevenue() const;
-    void setRevenue(double revenue);
-    double getBoost() const;
-    void setBoost(double boost);
-
-private:
-    Type type_;
-    double production_;
-    double revenue_;
-    double boost_;
-
+  Id id;
+  Category category;
+  unsigned int level;
+  double production;
+  double revenue;
+  double boost;
 };
 
-
-#endif //XENOPROBES_PROBE_H
+#endif // XENOPROBES_PROBE_H

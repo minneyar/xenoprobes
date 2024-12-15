@@ -20,36 +20,13 @@ std::mt19937 ProbeArrangement::mt; // note it wasn't seeded properly
 std::mt19937_64 ProbeArrangement::mt{std::random_device{}()};
 #endif
 
-const std::vector<Probe> ProbeArrangement::PROBE_VALUES = {
-    Probe(Probe::Type::Basic, 0.5, 0.5, 1.0),
-    Probe(Probe::Type::Mining1, 1.0, 0.3, 1.0),
-    Probe(Probe::Type::Mining2, 1.2, 0.3, 1.0),
-    Probe(Probe::Type::Mining3, 1.4, 0.3, 1.0),
-    Probe(Probe::Type::Mining4, 1.6, 0.3, 1.0),
-    Probe(Probe::Type::Mining5, 1.8, 0.3, 1.0),
-    Probe(Probe::Type::Mining6, 2.0, 0.3, 1.0),
-    Probe(Probe::Type::Mining7, 2.2, 0.3, 1.0),
-    Probe(Probe::Type::Mining8, 2.4, 0.3, 1.0),
-    Probe(Probe::Type::Mining9, 2.7, 0.3, 1.0),
-    Probe(Probe::Type::Mining10, 3.0, 0.3, 1.0),
-    Probe(Probe::Type::Research1, 0.3, 2.0, 1.0),
-    Probe(Probe::Type::Research2, 0.3, 2.5, 1.0),
-    Probe(Probe::Type::Research3, 0.3, 3.0, 1.0),
-    Probe(Probe::Type::Research4, 0.3, 3.5, 1.0),
-    Probe(Probe::Type::Research5, 0.3, 4.0, 1.0),
-    Probe(Probe::Type::Research6, 0.3, 4.5, 1.0),
-    Probe(Probe::Type::Booster1, 0.1, 0.1, 1.5),
-    Probe(Probe::Type::Booster2, 0.1, 0.1, 2.0),
-    Probe(Probe::Type::Dupe, 0.0, 0.0, 1.0),
-    Probe(Probe::Type::Storage, 0.1, 0.1, 1.0)};
-
 void ProbeArrangement::resize(size_t size) {
   spdlog::debug("Resizing to {}", size);
   probes_.resize(size);
 }
 
-void ProbeArrangement::setProbeAt(size_t index, const Probe::Type &type) {
-  spdlog::debug("Setting probe at {} to {}", index, Probe::toString(type));
+void ProbeArrangement::setProbeAt(size_t index, const Probe::Ptr &type) {
+  spdlog::debug("Setting probe at {} to {}", index, type->id);
   probes_[index] = type;
 }
 
@@ -67,8 +44,8 @@ bool operator==(const ProbeArrangement &l, const ProbeArrangement &r) {
 
 void ProbeArrangement::seedMT(std::seed_seq &seed) { mt.seed(seed); }
 
-Probe::Type ProbeArrangement::getProbeAt(size_t index) const {
-  return Probe::Type::Mining3;
+Probe::Ptr ProbeArrangement::getProbeAt(size_t index) const {
+  return probes_.at(index);
 }
 
 void ProbeArrangement::mutate(double probability) {
@@ -105,14 +82,14 @@ void ProbeArrangement::randomize() {
 
 void ProbeArrangement::printSetup() const {
   for (const auto [site, probe] : getSetup()) {
-    if (probe != Probe::Type::Basic) {
-      spdlog::info("{},{}", site, Probe::toString(probe));
+    if (probe->category != Probe::Category::Basic) {
+      spdlog::info("{},{}", site, probe->id);
     }
   }
 }
 
-std::map<int, Probe::Type> ProbeArrangement::getSetup() const {
-  std::map<int, Probe::Type> setup;
+std::map<int, Probe::Ptr> ProbeArrangement::getSetup() const {
+  std::map<int, Probe::Ptr> setup;
   for (size_t idx = 0; idx < ProbeOptimizer::getSites().size(); ++idx) {
     setup.emplace(ProbeOptimizer::getSites().getSite(idx).getName(),
                   probes_[idx]);
@@ -188,8 +165,8 @@ std::vector<std::string> ProbeArrangement::getOres() const {
   // TODO: figure out how different probes affect ore extraction
   std::set<int> minedOres;
   for (size_t i = 0; i < ProbeOptimizer::getSites().size(); ++i) {
-    const Probe &probe = PROBE_VALUES[probes_[i]];
-    if (probe.isMining()) {
+    const auto probe = probes_[i];
+    if (probe->category == Probe::Category::Mining) {
       for (auto &oreId : ProbeOptimizer::getSites().getSite(i).getOres())
         minedOres.insert(oreId);
     }
@@ -232,8 +209,9 @@ int ProbeArrangement::getComboSize(size_t source) const {
 }
 
 double ProbeArrangement::getComboBonus(size_t idx) const {
-  const auto &probe = PROBE_VALUES[probes_[idx]];
-  if (probe.isDupe() || probe.isBooster())
+  const auto &probe = probes_[idx];
+  if (probe->category == Probe::Category::Booster ||
+      probe->category == Probe::Category::Duplicator)
     return 1.0;
 
   int sz = getComboSize(idx);
@@ -248,49 +226,48 @@ double ProbeArrangement::getComboBonus(size_t idx) const {
 }
 
 double ProbeArrangement::getProbeBoost(size_t idx) const noexcept {
-  const auto &probe = PROBE_VALUES[probes_[idx]];
-  if (!probe.isDupe()) {
-    if (probe.isBooster())
-      return probe.getBoost() * getComboBonus(idx);
+  const auto probe = probes_[idx];
+  if (probe->category != Probe::Category::Duplicator) {
+    if (probe->category == Probe::Category::Booster)
+      return probe->boost * getComboBonus(idx);
     else
-      return probe.getBoost();
+      return probe->boost;
   }
 
   double boost = 1.0;
   for (auto nidx : ProbeOptimizer::getSites().getSite(idx).getNeighbors()) {
-    const auto &neighbor = PROBE_VALUES[probes_[nidx]];
-    boost *= neighbor.getBoost();
+    const auto neighbor = probes_[nidx];
+    boost *= neighbor->boost;
   }
   return boost;
 }
 
 double ProbeArrangement::getProbeProduction(size_t idx) const noexcept {
-  auto type = probes_[idx];
-
-  const auto &probe = PROBE_VALUES[type];
+  const auto probe = probes_[idx];
   const auto &site = ProbeOptimizer::getSites().getSite(idx);
 
-  double probeRate = probe.getProduction();
+  double probeRate = probe->production;
 
   // check if it's in a combo
-  if (probe.isMining())
+  if (probe->category == Probe::Category::Mining)
     probeRate *= getComboBonus(idx);
 
   double dupeStash = 0; // things that don't get boosted
-  if (probe.isDupe()) {
+  if (probe->category == Probe::Category::Duplicator) {
     for (auto nidx : site.getNeighbors()) {
-      const auto &neighbor = PROBE_VALUES[probes_[nidx]];
-      if (neighbor.isDupe())
+      const auto &neighbor = probes_[nidx];
+      if (neighbor->category == Probe::Category::Duplicator)
         continue;
-      if (neighbor.isMining())
-        probeRate += neighbor.getProduction();
+      if (neighbor->category == Probe::Category::Mining)
+        probeRate += neighbor->production;
       else
-        dupeStash += neighbor.getProduction();
+        dupeStash += neighbor->production;
     }
   }
 
   // check if there are neighbor boosters
-  if (probe.isMining() || probe.isDupe()) {
+  if (probe->category == Probe::Category::Mining ||
+      probe->category == Probe::Category::Duplicator) {
     double scale = 1;
     for (auto nidx : site.getNeighbors()) {
       // const auto& neighbor = probes[setup[nidx]];
@@ -310,32 +287,31 @@ double ProbeArrangement::getProduction(size_t idx) const noexcept {
 }
 
 double ProbeArrangement::getProbeRevenue(size_t idx) const noexcept {
-  auto type = probes_[idx];
-
-  const auto &probe = PROBE_VALUES[type];
+  const auto probe = probes_[idx];
   const auto &site = ProbeOptimizer::getSites().getSite(idx);
 
-  double probeRate = probe.getRevenue();
+  double probeRate = probe->revenue;
 
   // check if it's in a combo
-  if (probe.isResearch())
+  if (probe->category == Probe::Category::Research)
     probeRate *= getComboBonus(idx);
 
   double dupeStash = 0; // things that don't get boosted
-  if (probe.isDupe()) {
+  if (probe->category == Probe::Category::Duplicator) {
     for (auto nidx : site.getNeighbors()) {
-      const auto &neighbor = PROBE_VALUES[probes_[nidx]];
-      if (neighbor.isDupe())
+      const auto &neighbor = probes_[nidx];
+      if (neighbor->category == Probe::Category::Duplicator)
         continue;
-      if (neighbor.isResearch())
-        probeRate += neighbor.getRevenue();
+      if (neighbor->category == Probe::Category::Research)
+        probeRate += neighbor->revenue;
       else
-        dupeStash += neighbor.getRevenue();
+        dupeStash += neighbor->revenue;
     }
   }
 
   // check if there are neighbor boosters
-  if (probe.isResearch() || probe.isDupe()) {
+  if (probe->category == Probe::Category::Research ||
+      probe->category == Probe::Category::Duplicator) {
     double scale = 1;
     for (auto nidx : site.getNeighbors()) {
       double boost = getProbeBoost(nidx);
@@ -352,36 +328,35 @@ double ProbeArrangement::getRevenue(size_t idx) const noexcept {
   const auto &site = ProbeOptimizer::getSites().getSite(idx);
 
   double siteRev = site.getRevenue();
-  if (PROBE_VALUES[probes_[idx]].isResearch())
+  if (probes_[idx]->category == Probe::Category::Research)
     siteRev += 1000 * site.getSightseeing();
 
   return getProbeRevenue(idx) * siteRev;
 }
 
 double ProbeArrangement::getStorage(size_t idx) const noexcept {
-  auto type = probes_[idx];
-
-  const auto &probe = PROBE_VALUES[type];
+  const auto probe = probes_[idx];
   const auto &site = ProbeOptimizer::getSites().getSite(idx);
 
   double probeStorage = 0;
 
   // check if it's in a combo
-  if (probe.isStorage()) {
+  if (probe->category == Probe::Category::Storage) {
     probeStorage = 3000;
     probeStorage *= getComboBonus(idx);
   }
 
-  if (probe.isDupe()) {
+  if (probe->category == Probe::Category::Duplicator) {
     for (auto nidx : site.getNeighbors()) {
-      const auto &neighbor = PROBE_VALUES[probes_[nidx]];
-      if (neighbor.isStorage())
+      const auto neighbor = probes_[nidx];
+      if (neighbor->category == Probe::Category::Storage)
         probeStorage += 3000;
     }
   }
 
   // check if there are neighbor boosters
-  if (probe.isStorage() || probe.isDupe()) {
+  if (probe->category == Probe::Category::Storage ||
+      probe->category == Probe::Category::Duplicator) {
     double scale = 1;
     for (auto nidx : site.getNeighbors()) {
       // const auto& neighbor = probes[setup[nidx]];

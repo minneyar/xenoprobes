@@ -51,14 +51,14 @@ public:
 
   static const ProbeArrangement &getDefaultArrangement();
   static const SiteList &getSites();
-  static std::vector<Probe::Type> getInventory();
+  static std::vector<Probe::Ptr> getInventory();
   [[nodiscard]] const Solution &solution() const { return solution_; }
 
   bool isValid() const {
-    std::map<Probe::Type, int> histoInv;
-    std::map<Probe::Type, int> histoSetup;
+    std::map<Probe::Ptr, int> histoInv;
+    std::map<Probe::Ptr, int> histoSetup;
 
-    for (const auto &item : inventory_) {
+    for (const auto item : inventory_) {
       ++histoInv[item];
     }
     for (size_t i = 0; i < setup_.getSize(); i++) {
@@ -68,9 +68,9 @@ public:
   }
 
 private:
-  static std::vector<Probe::Type> inventory_;
-  static SiteList sites_;
-  static ProbeArrangement setup_;
+  inline static std::vector<Probe::Ptr> inventory_;
+  inline static SiteList sites_;
+  inline static ProbeArrangement setup_;
 
   float mutationRate_;
   float eliteRatio_;
