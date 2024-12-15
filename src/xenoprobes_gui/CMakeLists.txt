@@ -2,8 +2,6 @@ qt_add_executable(${PROJECT_NAME}_gui
         ${PROJECT_SOURCE_DIR}/resources/resources.qrc
         DataProbe.cpp
         DataProbe.h
-        FnSite.cpp
-        FnSite.h
         FnSiteWidget.cpp
         FnSiteWidget.h
         InventoryLoader.h
@@ -33,21 +31,21 @@ if (CMAKE_SYSTEM_NAME STREQUAL "Windows")
 endif ()
 
 # Create FN Site data file
-add_custom_command(OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/kAllSites.cpp"
-        COMMAND sitelist
-        "${PROJECT_SOURCE_DIR}/sites.csv"
-        "${PROJECT_SOURCE_DIR}/resources/map.svg"
-        "${CMAKE_CURRENT_BINARY_DIR}/kAllSites.cpp"
-        DEPENDS
-        "${PROJECT_SOURCE_DIR}/sites.csv"
-        "${PROJECT_SOURCE_DIR}/resources/map.svg"
-)
-target_sources(${PROJECT_NAME}_gui PRIVATE "${CMAKE_CURRENT_BINARY_DIR}/kAllSites.cpp")
-# This file needs the header from the source directory.
-set_property(SOURCE
-        "${CMAKE_CURRENT_BINARY_DIR}/kAllSites.cpp"
-        APPEND PROPERTY INCLUDE_DIRECTORIES "${CMAKE_CURRENT_SOURCE_DIR}"
-)
+#add_custom_command(OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/kAllSites.cpp"
+#        COMMAND sitelist
+#        "${PROJECT_SOURCE_DIR}/sites.csv"
+#        "${PROJECT_SOURCE_DIR}/resources/map.svg"
+#        "${CMAKE_CURRENT_BINARY_DIR}/kAllSites.cpp"
+#        DEPENDS
+#        "${PROJECT_SOURCE_DIR}/sites.csv"
+#        "${PROJECT_SOURCE_DIR}/resources/map.svg"
+#)
+#target_sources(${PROJECT_NAME}_gui PRIVATE "${CMAKE_CURRENT_BINARY_DIR}/kAllSites.cpp")
+## This file needs the header from the source directory.
+#set_property(SOURCE
+#        "${CMAKE_CURRENT_BINARY_DIR}/kAllSites.cpp"
+#        APPEND PROPERTY INCLUDE_DIRECTORIES "${CMAKE_CURRENT_SOURCE_DIR}"
+#)
 
 target_link_libraries(${PROJECT_NAME}_gui PRIVATE
         probeoptimizer

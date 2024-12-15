@@ -979,6 +979,26 @@ Site::Grade Site::gradeFromChar(char grade) {
   throw std::invalid_argument("Invalid grade");
 }
 
+char Site::gradeToChar(Grade grade) {
+  switch (grade) {
+  case Grade::F:
+    return 'F';
+  case Grade::E:
+    return 'E';
+  case Grade::D:
+    return 'D';
+  case Grade::C:
+    return 'C';
+  case Grade::B:
+    return 'B';
+  case Grade::A:
+    return 'A';
+  case Grade::S:
+    return 'S';
+  }
+  throw std::invalid_argument("Invalid grade");
+}
+
 Site::Ptr Site::fromName(Id id) { return &ALL.at(id); }
 
 int Site::getProductionVal() const {

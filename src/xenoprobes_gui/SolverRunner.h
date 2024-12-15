@@ -10,7 +10,6 @@
 #define SOLVERRUNNER_H
 
 #include "DataProbe.h"
-#include "FnSite.h"
 #include "MiraMap.h"
 #include "RunOptions.h"
 
@@ -19,7 +18,7 @@
 class SolverRunner : public QThread {
   Q_OBJECT
 public:
-  explicit SolverRunner(const FnSite::IdList &siteList,
+  explicit SolverRunner(const std::unordered_set<Site::Id> &siteList,
                         const MiraMap::SiteProbeMap &siteProbeMap,
                         const ProbeInventory &probeInventory,
                         const RunOptions &runOptions,
@@ -35,7 +34,7 @@ protected:
   void run() override;
 
 private:
-  FnSite::IdList siteList_;
+  std::unordered_set<Site::Id> siteList_;
   MiraMap::SiteProbeMap siteProbeMap_;
   ProbeInventory probeInventory_;
   RunOptions runOptions_;

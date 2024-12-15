@@ -4,12 +4,7 @@
 
 #include "probeoptimizer/site_list.h"
 #include "probeoptimizer/csv.h"
-#include "probeoptimizer/probe_optimizer.h"
-#include "probeoptimizer/site_links.h"
-#include <fstream>
 #include <iosfwd>
-#include <iostream>
-#include <map>
 #include <spdlog/spdlog.h>
 
 std::vector<Site::Ptr> loadSiteList(const std::string &filename) {
@@ -24,16 +19,32 @@ std::vector<Site::Ptr> loadSiteList(const std::string &filename) {
 
 std::vector<Site::Ptr>
 loadSiteList(const std::vector<std::vector<CsvRecordVal>> &records) {
-  std::vector<Site::Ptr> sites;
   try {
+    std::unordered_set<Site::Id> idList;
+
     for (const auto &record : records) {
       // Ignore all other columns in the list as those values are compiled in.
       const auto siteId = csvRecordValToInt(record[0]);
-      sites.push_back(Site::fromName(siteId));
+      idList.insert(siteId);
     }
+
+    return loadSiteList(idList);
   } catch (std::exception &e) {
     spdlog::error("Bad site data format: {}", e.what());
     throw;
+  }
+}
+
+std::vector<Site::Ptr>
+loadSiteList(const std::unordered_set<Site::Id> &idList) {
+  std::vector<Site::Ptr> sites;
+  for (const auto id : idList) {
+    try {
+      sites.push_back(Site::fromName(id));
+    } catch (std::out_of_range &) {
+      spdlog::error("Could not find ID {}", idList.size());
+      throw;
+    }
   }
 
   int numConnections = 0;

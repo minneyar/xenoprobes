@@ -16,7 +16,7 @@
 #include <QSvgRenderer>
 #include <QVBoxLayout>
 
-FnSiteWidget::FnSiteWidget(const FnSite &site, QWidget *parent)
+FnSiteWidget::FnSiteWidget(const Site::Ptr site, QWidget *parent)
     : QStackedWidget(parent), site_(site),
       visitedWidget_(new detail::VisitedWidget(site, this)),
       dataProbeWidget_(new detail::DataProbeWidget(site, this)) {
@@ -60,6 +60,11 @@ void FnSiteWidget::setDataProbe(const Probe::Id &dataProbeId) {
 }
 
 void FnSiteWidget::updateTooltipText() {
+  const auto ores = site_->getOre();
+  QStringList oreStrings;
+  std::transform(
+      ores.begin(), ores.end(), std::back_inserter(oreStrings),
+      [](const Ore::Ptr ore) { return QString::fromStdString(ore->name); });
   setToolTip(
       tr("<strong>FN%1</strong><br>"
          "%2<br>"
@@ -70,17 +75,17 @@ void FnSiteWidget::updateTooltipText() {
          "<tr><th align=\"right\">Combat:</th><td align=\"left\">%5</td></tr>"
          "<tr><th align=\"right\">Ore:</th><td align=\"left\">%6</td></tr>"
          "</table>")
-          .arg(site_.id)
+          .arg(site_->name)
           .arg(dataProbe() == nullptr ? tr("No probe")
                                       : dataProbeName(dataProbe()))
-          .arg(FnSite::gradeToChar(site_.miningGrade))
-          .arg(FnSite::gradeToChar(site_.revenueGrade))
-          .arg(FnSite::gradeToChar(site_.combatGrade))
-          .arg(QLocale().createSeparatedList(site_.ore)));
+          .arg(Site::gradeToChar(site_->production))
+          .arg(Site::gradeToChar(site_->revenue))
+          .arg(Site::gradeToChar(site_->combat))
+          .arg(QLocale().createSeparatedList(oreStrings)));
 }
 
 namespace detail {
-VisitedWidget::VisitedWidget(const FnSite &site, FnSiteWidget *parent)
+VisitedWidget::VisitedWidget(const Site::Ptr site, FnSiteWidget *parent)
     : QWidget(parent), site_(site) {
   auto *layout = new QVBoxLayout(this);
 
@@ -101,7 +106,7 @@ VisitedWidget::VisitedWidget(const FnSite &site, FnSiteWidget *parent)
   // Label
   widgets_.label = new QLabel(this);
   layout->addWidget(widgets_.label);
-  widgets_.label->setText(QString("<b><big>%1</big></b>").arg(site_.id));
+  widgets_.label->setText(QString("<b><big>%1</big></b>").arg(site_->name));
   widgets_.label->setAlignment(Qt::AlignCenter);
   widgets_.label->setTextFormat(Qt::RichText);
 }
@@ -127,7 +132,7 @@ FnSiteWidget *VisitedWidget::parentFnSiteWidget() const {
   return static_cast<FnSiteWidget *>(parent());
 }
 
-DataProbeWidget::DataProbeWidget(const FnSite &site, FnSiteWidget *parent)
+DataProbeWidget::DataProbeWidget(const Site::Ptr site, FnSiteWidget *parent)
     : QWidget(parent), site_(site) {
   setAttribute(Qt::WA_NoSystemBackground, true);
 }

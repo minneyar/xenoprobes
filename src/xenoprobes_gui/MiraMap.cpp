@@ -7,13 +7,11 @@
  */
 
 #include "MiraMap.h"
+#include "FnSiteWidget.h"
 #include <QGraphicsPixmapItem>
 #include <QGraphicsProxyWidget>
 #include <QJsonArray>
-#include <probeoptimizer/site_links.h>
-
-#include "FnSite.h"
-#include "FnSiteWidget.h"
+#include <ranges>
 
 MiraMap::MiraMap(QWidget *parent) : QGraphicsView(parent) {
   setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
@@ -39,15 +37,15 @@ MiraMap::MiraMap(QWidget *parent) : QGraphicsView(parent) {
   setScene(&mapScene_);
 
   // Site widgets.
-  for (const auto &node : FnSite::kAllSites) {
-    auto siteWidget = new FnSiteWidget(node);
-    siteWidget->setVisited(sitesVisited_.contains(node.id));
+  for (const auto &node : Site::ALL | std::views::values) {
+    auto siteWidget = new FnSiteWidget(&node);
+    siteWidget->setVisited(sitesVisited_.contains(node.name));
     connect(siteWidget, &FnSiteWidget::visitedChanged,
             [this, &node](const bool visited) {
               if (visited) {
-                sitesVisited_.insert(node.id);
+                sitesVisited_.insert(node.name);
               } else {
-                sitesVisited_.erase(node.id);
+                sitesVisited_.erase(node.name);
               }
               calculateLinks();
             });
@@ -59,14 +57,15 @@ MiraMap::MiraMap(QWidget *parent) : QGraphicsView(parent) {
         siteWidgets_.emplace_back(mapScene_.addWidget(siteWidget));
     // Site data stores the center point, so we need to half it to get the
     // corners for drawing.
-    siteButton->setX(node.position.x() - (siteWidget->width() / 2.0));
-    siteButton->setY(node.position.y() - (siteWidget->height() / 2.0));
+    siteButton->setX(node.position.first - (siteWidget->width() / 2.0));
+    siteButton->setY(node.position.second - (siteWidget->height() / 2.0));
     siteButton->setZValue(kZSites);
   }
   calculateLinks();
 }
 
-void MiraMap::setSitesVisited(const FnSite::IdList &sitesVisited) {
+void MiraMap::setSitesVisited(
+    const std::unordered_set<Site::Id> &sitesVisited) {
   sitesVisited_ = sitesVisited;
   calculateSiteWidgets();
 }
@@ -107,7 +106,13 @@ MiraMap::SiteProbeMap MiraMap::siteProbesFromJson(const QJsonValue &json) {
     }
     const auto siteProbeInfo = siteProbe.toArray();
     const auto siteId = siteProbeInfo[0];
-    if (!siteId.isDouble() || !FnSite::kAllSites.contains(siteId.toInt())) {
+    if (!siteId.isDouble()) {
+      throw std::runtime_error("Bad site id.");
+    }
+    Site::Ptr site;
+    try {
+      site = Site::fromName(siteId.toInt());
+    } catch (const std::out_of_range &) {
       throw std::runtime_error("Bad site id.");
     }
     const auto probeId = siteProbeInfo[1];
@@ -120,7 +125,7 @@ MiraMap::SiteProbeMap MiraMap::siteProbesFromJson(const QJsonValue &json) {
     } catch (const std::out_of_range &) {
       throw std::runtime_error("Bad probe id.");
     }
-    siteProbeMap.emplace(siteId.toInt(), probe->id);
+    siteProbeMap.emplace(site->name, probe->id);
   }
   return siteProbeMap;
 }
@@ -144,8 +149,9 @@ void MiraMap::calculateSiteWidgets() {
   for (auto &widget : siteWidgets_) {
     auto *fnSiteWidget = dynamic_cast<FnSiteWidget *>(
         dynamic_cast<QGraphicsProxyWidget *>(widget.get())->widget());
-    fnSiteWidget->setVisited(sitesVisited_.contains(fnSiteWidget->site().id));
-    const auto dataProbe = siteProbeMap_.find(fnSiteWidget->site().id);
+    fnSiteWidget->setVisited(
+        sitesVisited_.contains(fnSiteWidget->site()->name));
+    const auto dataProbe = siteProbeMap_.find(fnSiteWidget->site()->name);
     if (dataProbe == siteProbeMap_.end()) {
       fnSiteWidget->setDataProbe(nullptr);
     } else {
@@ -161,15 +167,23 @@ void MiraMap::calculateLinks() {
   pen.setWidth(4);
   pen.setColor(Qt::white);
   linkGraphics_.clear();
-  for (const auto &link : kAllSiteLinks) {
-    const auto linkVisited =
-        sitesVisited_.contains(link[0]) && sitesVisited_.contains(link[1]);
-    if (linkVisited) {
-      const auto linkA = FnSite::kAllSites.value(link[0]);
-      const auto linkB = FnSite::kAllSites.value(link[1]);
+  // Need to track which lines have already been drawn as both sides of the link
+  // are stored.
+  std::vector<std::unordered_set<Site::Id>> drawnLinks;
+  for (const auto &site : Site::ALL | std::views::values) {
+    for (const auto neighbor : site.getNeighbors()) {
+      const std::unordered_set linkPair{site.name, neighbor->name};
+      if (std::find(drawnLinks.cbegin(), drawnLinks.cend(), linkPair) !=
+          drawnLinks.cend()) {
+        // Already drawn line.
+        continue;
+      }
+      const auto [x1, y1] = site.position;
+      const auto [x2, y2] = neighbor->position;
       auto &linkItem = linkGraphics_.emplace_back(
-          mapScene_.addLine(QLine(linkA.position, linkB.position), pen));
+          mapScene_.addLine(QLine(x1, y1, x2, y2), pen));
       linkItem->setZValue(kZLinks);
+      drawnLinks.emplace_back(std::move(linkPair));
     }
   }
 }

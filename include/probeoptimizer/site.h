@@ -11,12 +11,15 @@
 #include <vector>
 
 struct Site {
+  friend auto operator<=>(const Site &, const Site &) = default;
+
   using Ptr = const Site *;
   using Id = int;
   using Point = std::pair<int, int>;
 
   enum class Grade { F, E, D, C, B, A, S };
   static Grade gradeFromChar(char grade);
+  static char gradeToChar(Grade grade);
 
   int getProductionVal() const;
   int getRevenueVal() const;

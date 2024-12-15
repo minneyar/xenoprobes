@@ -9,12 +9,12 @@
 #ifndef FNSITEWIDGET_H
 #define FNSITEWIDGET_H
 
-#include "FnSite.h"
-#include <probeoptimizer/probe.h>
 #include <QCheckBox>
 #include <QLabel>
 #include <QStackedWidget>
 #include <QWidget>
+#include <probeoptimizer/probe.h>
+#include <probeoptimizer/site.h>
 
 class FnSiteWidget;
 
@@ -25,8 +25,8 @@ namespace detail {
 class VisitedWidget : public QWidget {
   Q_OBJECT
 public:
-  explicit VisitedWidget(const FnSite &site, FnSiteWidget *parent = nullptr);
-  [[nodiscard]] FnSite site() const { return site_; }
+  explicit VisitedWidget(const Site::Ptr site, FnSiteWidget *parent = nullptr);
+  [[nodiscard]] Site::Ptr site() const { return site_; }
   [[nodiscard]] bool visited() const { return visited_; }
   void setVisited(const bool visited);
 
@@ -43,7 +43,7 @@ private:
     QLabel *label = nullptr;
   };
   Widgets widgets_;
-  const FnSite &site_;
+  const Site::Ptr site_;
   bool visited_ = false;
 
   [[nodiscard]] FnSiteWidget *parentFnSiteWidget() const;
@@ -56,9 +56,10 @@ private:
 class DataProbeWidget : public QWidget {
   Q_OBJECT
 public:
-  explicit DataProbeWidget(const FnSite &site, FnSiteWidget *parent = nullptr);
+  explicit DataProbeWidget(const Site::Ptr site,
+                           FnSiteWidget *parent = nullptr);
 
-  [[nodiscard]] FnSite site() const { return site_; }
+  [[nodiscard]] Site::Ptr site() const { return site_; }
   [[nodiscard]] bool visited() const { return visited_; }
   void setVisited(const bool visited);
   [[nodiscard]] const Probe *dataProbe() const { return dataProbe_; }
@@ -68,7 +69,7 @@ protected:
   void paintEvent(QPaintEvent *event) override;
 
 private:
-  const FnSite &site_;
+  const Site::Ptr site_;
   bool visited_ = false;
   const Probe *dataProbe_ = nullptr;
 
@@ -92,11 +93,11 @@ public:
 
   static constexpr auto kSize = 64;
 
-  explicit FnSiteWidget(const FnSite &site, QWidget *parent = nullptr);
+  explicit FnSiteWidget(const Site::Ptr site, QWidget *parent = nullptr);
 
   [[nodiscard]] ViewMode viewMode() const { return viewMode_; }
   void setViewMode(const ViewMode viewMode);
-  [[nodiscard]] FnSite site() const { return site_; }
+  [[nodiscard]] Site::Ptr site() const { return site_; }
   [[nodiscard]] bool visited() const { return visited_; }
   void setVisited(const bool visited);
   [[nodiscard]] const Probe *dataProbe() const {
@@ -114,7 +115,7 @@ Q_SIGNALS:
 
 private:
   ViewMode viewMode_ = ViewMode::DataProbe;
-  const FnSite &site_;
+  const Site::Ptr site_;
   bool visited_ = false;
   detail::VisitedWidget *visitedWidget_;
   detail::DataProbeWidget *dataProbeWidget_;

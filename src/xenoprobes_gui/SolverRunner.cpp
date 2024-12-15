@@ -10,7 +10,7 @@
 
 #include <probeoptimizer/probe_optimizer.h>
 
-SolverRunner::SolverRunner(const FnSite::IdList &siteList,
+SolverRunner::SolverRunner(const std::unordered_set<Site::Id> &siteList,
                            const MiraMap::SiteProbeMap &siteProbeMap,
                            const ProbeInventory &probeInventory,
                            const RunOptions &runOptions, QObject *parent)
@@ -27,38 +27,11 @@ void SolverRunner::run() {
   optimizer.setMutationRate(runOptions_.mutation / 100.0);
   optimizer.setMaxPopSize(runOptions_.population);
 
-  std::vector<std::vector<CsvRecordVal>> records;
-  // Load sites.
-  records.reserve(siteList_.size());
-  for (const auto &siteId : siteList_) {
-    const auto &site = FnSite::kAllSites.value(siteId);
-    auto &record = records.emplace_back();
-    record.reserve(8);
-    record.emplace_back(static_cast<int>(siteId));
-    record.emplace_back(std::string(1, FnSite::gradeToChar(site.miningGrade)));
-    record.emplace_back(std::string(1, FnSite::gradeToChar(site.revenueGrade)));
-    record.emplace_back(std::string(1, FnSite::gradeToChar(site.combatGrade)));
-    record.emplace_back(static_cast<int>(site.sightseeingSpots));
-    for (const auto &ore : site.ore) {
-      record.emplace_back(ore.toStdString());
-    }
-  }
-  optimizer.loadSites(records);
-  records.clear();
+  // Load enabled sites.
+  optimizer.loadSites(siteList_);
 
   // Load inventory.
-  records.reserve(probeInventory_.size());
-  for (const auto &[probeId, quantity] : probeInventory_) {
-    if (quantity == 0) {
-      continue;
-    }
-    auto &record = records.emplace_back();
-    record.reserve(2);
-    record.emplace_back(probeId);
-    record.emplace_back(static_cast<int>(quantity));
-  }
-  optimizer.loadInventory(records);
-  records.clear();
+  optimizer.loadInventory(probeInventory_);
 
   // Do the thing.
   optimizer.doHillClimbing(

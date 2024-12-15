@@ -23,9 +23,13 @@ public:
 
   void loadInventory(const std::string &filename);
   void loadInventory(const std::vector<std::vector<CsvRecordVal>> &records);
+  void loadInventory(
+      const std::vector<std::pair<Probe::Id, unsigned int>> &inventory);
   void loadSetup(const std::string &filename);
-  void loadSites(const std::string &filename);
-  void loadSites(const std::vector<std::vector<CsvRecordVal>> &records);
+  template <typename T> void loadSites(T sites) {
+    sites_ = loadSiteList(sites);
+    updateSiteListIndexes();
+  }
 
   void printInventory() const;
   void printSetup() const;

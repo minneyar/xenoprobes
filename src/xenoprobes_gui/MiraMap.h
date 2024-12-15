@@ -11,25 +11,27 @@
 
 #include <QGraphicsView>
 
-#include "FnSite.h"
 #include "FnSiteWidget.h"
 #include "QGraphicsItemDeleter.h"
+
+#include <probeoptimizer/site.h>
+#include <unordered_set>
 
 class MiraMap : public QGraphicsView {
   Q_OBJECT
 
 public:
-  using SiteProbeMap = std::unordered_map<FnSite::Id, Probe::Id>;
+  using SiteProbeMap = std::unordered_map<Site::Id, Probe::Id>;
 
   [[nodiscard]] static QJsonValue
   siteProbesToJson(const SiteProbeMap &siteProbeMap);
   [[nodiscard]] static SiteProbeMap siteProbesFromJson(const QJsonValue &json);
 
   explicit MiraMap(QWidget *parent = nullptr);
-  [[nodiscard]] const FnSite::IdList &sitesVisited() const {
+  [[nodiscard]] const std::unordered_set<Site::Id> &sitesVisited() const {
     return sitesVisited_;
   }
-  void setSitesVisited(const FnSite::IdList &sitesVisited);
+  void setSitesVisited(const std::unordered_set<Site::Id> &sitesVisited);
   [[nodiscard]] const SiteProbeMap &siteProbeMap() const {
     return siteProbeMap_;
   }
@@ -48,7 +50,7 @@ private:
   static constexpr auto kZLinks = -10;
   static constexpr auto kZMap = -100;
   QGraphicsScene mapScene_;
-  FnSite::IdList sitesVisited_;
+  std::unordered_set<Site::Id> sitesVisited_;
   SiteProbeMap siteProbeMap_;
   std::vector<std::unique_ptr<QGraphicsItem, QGraphicsItemDeleter>>
       siteWidgets_;

@@ -9,8 +9,9 @@
 #ifndef SITELISTLOADER_H
 #define SITELISTLOADER_H
 
-#include "FnSite.h"
+#include "FnSiteWidget.h"
 #include <QJsonValue>
+#include <unordered_set>
 
 /**
  * Read a site list.
@@ -20,11 +21,14 @@
  */
 class SiteListLoader {
 public:
-  [[nodiscard]] static FnSite::IdList readSiteListFromFile(const QString &path);
-  [[nodiscard]] static FnSite::IdList readSiteListFromJson(const QJsonValue &json);
-  static void writeSiteListToFile(const FnSite::IdList &ids,
+  [[nodiscard]] static std::unordered_set<Site::Id>
+  readSiteListFromFile(const QString &path);
+  [[nodiscard]] static std::unordered_set<Site::Id>
+  readSiteListFromJson(const QJsonValue &json);
+  static void writeSiteListToFile(const std::unordered_set<Site::Id> &ids,
                                   const QString &path);
-  [[nodiscard]] static QJsonValue writeSiteListToJson(const FnSite::IdList &ids);
+  [[nodiscard]] static QJsonValue
+  writeSiteListToJson(const std::unordered_set<Site::Id> &ids);
 };
 
 #endif // SITELISTLOADER_H

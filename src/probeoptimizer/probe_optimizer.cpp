@@ -32,12 +32,29 @@ void ProbeOptimizer::loadInventory(const std::string &filename) {
 
 void ProbeOptimizer::loadInventory(
     const std::vector<std::vector<CsvRecordVal>> &records) {
-  inventory_.clear();
+  std::vector<std::pair<Probe::Id, unsigned int>> inventory;
 
   for (const auto &record : records) {
-    int num = csvRecordValToInt(record[1]);
-    for (int i = 0; i < num; ++i)
-      inventory_.push_back(Probe::fromString(std::get<std::string>(record[0])));
+    try {
+      const auto probeId = std::get<std::string>(record[0]);
+      int num = csvRecordValToInt(record[1]);
+      inventory.emplace_back(probeId, num);
+    } catch (const std::exception &e) {
+      spdlog::error("Bad inventory format: {}", e.what());
+      throw;
+    }
+  }
+  loadInventory(inventory);
+}
+
+void ProbeOptimizer::loadInventory(
+    const std::vector<std::pair<Probe::Id, unsigned int>> &inventory) {
+  inventory_.clear();
+
+  for (const auto &[probeId, num] : inventory) {
+    for (unsigned int i = 0; i < num; ++i) {
+      inventory_.push_back(Probe::fromString(probeId));
+    }
   }
 
   // ensure inventory is as big as needed to fill the entire map
@@ -78,17 +95,6 @@ void ProbeOptimizer::loadSetup(const std::string &filename) {
       throw std::runtime_error{"Setup file uses a non-available site."};
     }
   }
-}
-
-void ProbeOptimizer::loadSites(const std::string &filename) {
-  sites_ = loadSiteList(filename);
-  updateSiteListIndexes();
-}
-
-void ProbeOptimizer::loadSites(
-    const std::vector<std::vector<CsvRecordVal>> &records) {
-  sites_ = loadSiteList(records);
-  updateSiteListIndexes();
 }
 
 void ProbeOptimizer::updateSiteListIndexes() {
@@ -240,7 +246,12 @@ const ProbeArrangement &ProbeOptimizer::getDefaultArrangement() {
 const std::vector<Site::Ptr> &ProbeOptimizer::getSites() { return sites_; }
 
 std::size_t ProbeOptimizer::getIndexForSiteId(Site::Id siteId) {
-  return siteListIndexes.at(siteId);
+  try {
+    return siteListIndexes.at(siteId);
+  } catch (std::out_of_range &e) {
+    spdlog::error("No index for site id {}", siteId);
+    throw;
+  }
 }
 
 std::vector<Probe::Ptr> ProbeOptimizer::getInventory() { return inventory_; }

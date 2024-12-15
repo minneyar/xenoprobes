@@ -9,7 +9,6 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
-#include "FnSite.h"
 #include "InventoryModel.h"
 #include "MiraMap.h"
 #include "RunOptionsWidget.h"

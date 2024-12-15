@@ -8,16 +8,18 @@
 
 #include "SiteListLoader.h"
 #include <QFile>
-#include <QTextStream>
 #include <QJsonArray>
+#include <QTextStream>
+#include <ranges>
 
-FnSite::IdList SiteListLoader::readSiteListFromFile(const QString &path) {
+std::unordered_set<Site::Id>
+SiteListLoader::readSiteListFromFile(const QString &path) {
   QFile file(path);
   if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
     throw std::runtime_error("Failed to open file.");
   }
   QTextStream in(&file);
-  FnSite::IdList ids;
+  std::unordered_set<Site::Id> ids;
   QString line;
   bool ok;
   while (in.readLineInto(&line)) {
@@ -32,7 +34,7 @@ FnSite::IdList SiteListLoader::readSiteListFromFile(const QString &path) {
     if (!ok) {
       throw std::runtime_error("Failed to parse id.");
     }
-    if (!FnSite::kAllSites.contains(id)) {
+    if (!Site::ALL.contains(id)) {
       throw std::runtime_error("Site not found.");
     }
 
@@ -42,16 +44,17 @@ FnSite::IdList SiteListLoader::readSiteListFromFile(const QString &path) {
   return ids;
 }
 
-FnSite::IdList SiteListLoader::readSiteListFromJson(const QJsonValue &json) {
+std::unordered_set<Site::Id>
+SiteListLoader::readSiteListFromJson(const QJsonValue &json) {
   if (!json.isArray()) {
     throw std::runtime_error("Bad site list format.");
   }
-  FnSite::IdList ids;
+  std::unordered_set<Site::Id> ids;
   for (const auto id : json.toArray()) {
     if (!id.isDouble()) {
       throw std::runtime_error("Failed to parse id.");
     }
-    if (!FnSite::kAllSites.contains(id.toInt())) {
+    if (!Site::ALL.contains(id.toInt())) {
       throw std::runtime_error("Site not found.");
     }
     ids.insert(id.toInt());
@@ -60,8 +63,8 @@ FnSite::IdList SiteListLoader::readSiteListFromJson(const QJsonValue &json) {
   return ids;
 }
 
-void SiteListLoader::writeSiteListToFile(const FnSite::IdList &ids,
-                                         const QString &path) {
+void SiteListLoader::writeSiteListToFile(
+    const std::unordered_set<Site::Id> &ids, const QString &path) {
   QFile file(path);
   if (!file.open(QIODevice::ReadWrite | QIODevice::Truncate |
                  QIODevice::Text)) {
@@ -76,33 +79,23 @@ void SiteListLoader::writeSiteListToFile(const FnSite::IdList &ids,
          "#\n"
          "# Everything after a # will be ignored.\n";
   // Write all sites, commenting out those that are not in ids.
-  // Sort the sites by id.
-  std::vector allSites(FnSite::kAllSites.begin(), FnSite::kAllSites.end());
-  std::sort(allSites.begin(), allSites.end(),
-            [](const FnSite &a, const FnSite &b) { return a.id < b.id; });
-
-  FnSite::Id lastId = 0;
-  for (const auto &site : allSites) {
-    if (site.id / 100 != lastId / 100) {
-      out << '\n';
-    }
-    if (!ids.contains(site.id)) {
+  for (const auto &site : Site::ALL | std::views::values) {
+    if (!ids.contains(site.name)) {
       out << '#';
     }
-    out << site.id << ',' << FnSite::gradeToChar(site.miningGrade) << ','
-        << FnSite::gradeToChar(site.revenueGrade) << ','
-        << FnSite::gradeToChar(site.combatGrade) << ','
-        << site.sightseeingSpots;
-    for (const auto &ore : site.ore) {
-      out << ',' << ore;
+    out << site.name << ',' << Site::gradeToChar(site.production) << ','
+        << Site::gradeToChar(site.revenue) << ','
+        << Site::gradeToChar(site.combat) << ',' << site.sightseeing;
+    for (const auto &ore : site.getOre()) {
+      out << ',' << QString::fromStdString(ore->name);
     }
     out << '\n';
-    lastId = site.id;
   }
   out.flush();
 }
 
-QJsonValue SiteListLoader::writeSiteListToJson(const FnSite::IdList &ids) {
+QJsonValue
+SiteListLoader::writeSiteListToJson(const std::unordered_set<Site::Id> &ids) {
   QJsonArray json;
   for (const auto id : ids) {
     json.append(static_cast<int>(id));

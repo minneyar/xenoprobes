@@ -7,24 +7,26 @@
  */
 
 #include "MainWindow.h"
+#include <QApplication>
 #include <QCloseEvent>
 #include <QFileDialog>
 #include <QHBoxLayout>
 #include <QHeaderView>
 #include <QJsonDocument>
+#include <QJsonObject>
 #include <QMenuBar>
 #include <QMessageBox>
+#include <QPushButton>
 #include <QTabBar>
 
-#include "FnSite.h"
 #include "FnSiteWidget.h"
 #include "InventoryLoader.h"
 #include "SiteListLoader.h"
 #include "settings.h"
+#include <probeoptimizer/site.h>
 
-#include <QJsonObject>
-#include <QPushButton>
-#include <qguiapplication.h>
+#include <ranges>
+#include <unordered_set>
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent), inventoryModel_(new InventoryModel(this)) {
@@ -66,8 +68,10 @@ void MainWindow::initUi() {
   widgets_.miraMap = new MiraMap(central);
   mapLayout->addWidget(widgets_.miraMap);
   // Start with all sites enabled.
-  FnSite::IdList sitesVisited(FnSite::kAllSites.keyBegin(),
-                              FnSite::kAllSites.keyEnd());
+  std::unordered_set<Site::Id> sitesVisited;
+  for (const auto siteId : Site::ALL | std::views::keys) {
+    sitesVisited.insert(siteId);
+  }
   widgets_.miraMap->setSitesVisited(sitesVisited);
   widgets_.miraMap->show();
   connect(widgets_.miraMap, &MiraMap::sitesVisitedChanged, this,
