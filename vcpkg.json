@@ -17,8 +17,5 @@
   }, {
     "name" : "spdlog",
     "version>=" : "1.15.0"
-  }, {
-    "name" : "tinyxml2",
-    "version>=" : "10.0.0"
   } ]
 }
