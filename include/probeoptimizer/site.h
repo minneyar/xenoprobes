@@ -5,34 +5,45 @@
 #ifndef XENOPROBES_SITE_H
 #define XENOPROBES_SITE_H
 
-#include <vector>
 #include <cstddef>
+#include <vector>
 
 class Site {
 public:
-    Site(int name) : name_(name) {};
+  using Point = std::pair<int, int>;
+  enum class Grade { F, E, D, C, B, A, S };
+  static Grade gradeFromChar(char grade);
 
-    int getName() const;
-    int getProduction() const;
-    void setProduction(int);
-    int getRevenue() const;
-    void setRevenue(int);
-    int getSightseeing() const;
-    void setSightseeing(int);
+  explicit Site(int name) : name_(name) {};
 
-    void addNeighbor(std::size_t);
-    std::vector<std::size_t> getNeighbors() const;
-    void addOre(int);
-    std::vector<int> getOres() const;
+  int getName() const;
+  Point getPosition() const;
+  void setPosition(const Point &position);
+  Grade getProduction() const;
+  int getProductionVal() const;
+  void setProduction(Grade grade);
+  Grade getRevenue() const;
+  int getRevenueVal() const;
+  void setRevenue(Grade grade);
+  Grade getCombat() const;
+  void setCombat(Grade grade);
+  int getSightseeing() const;
+  void setSightseeing(int sightseeing);
+
+  void addNeighbor(std::size_t neighborId);
+  std::vector<std::size_t> getNeighbors() const;
+  void addOre(int oreId);
+  std::vector<int> getOres() const;
 
 private:
-    int name_;
-    int production_ = 0;
-    int revenue_ = 0;
-    int sightseeing_ = 0;
-    std::vector<std::size_t> neighbors_;
-    std::vector<int> ores_;
+  int name_;
+  Point position_{0, 0};
+  Grade production_ = Grade::F;
+  Grade revenue_ = Grade::F;
+  Grade combat_ = Grade::F;
+  int sightseeing_ = 0;
+  std::vector<std::size_t> neighbors_;
+  std::vector<int> ores_;
 };
 
-
-#endif //XENOPROBES_SITE_H
+#endif // XENOPROBES_SITE_H

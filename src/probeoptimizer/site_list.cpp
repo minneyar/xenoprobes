@@ -12,11 +12,6 @@
 #include <map>
 #include <spdlog/spdlog.h>
 
-const std::map<std::string, int> prodGrade{{"A", 500}, {"B", 350}, {"C", 250}};
-const std::map<std::string, int> revGrade{{"S", 850}, {"A", 750}, {"B", 650},
-                                          {"C", 550}, {"D", 450}, {"E", 300},
-                                          {"F", 200}};
-
 void SiteList::addNeighborToSite(size_t site_index, size_t neighbor_index) {
   sites_[site_index].addNeighbor(neighbor_index);
   sites_[neighbor_index].addNeighbor(site_index);
@@ -39,8 +34,9 @@ void SiteList::loadSites(
   try {
     for (const auto &record : records) {
       Site site(csvRecordValToInt(record[0]));
-      site.setProduction(prodGrade.at(std::get<std::string>(record[1])));
-      site.setRevenue(revGrade.at(std::get<std::string>(record[2])));
+      site.setProduction(
+          Site::gradeFromChar(std::get<std::string>(record[1])[0]));
+      site.setRevenue(Site::gradeFromChar(std::get<std::string>(record[2])[0]));
       site.setSightseeing(csvRecordValToInt(record[4]));
       if (site.getSightseeing() < 0 || site.getSightseeing() > 2)
         spdlog::warn("site {} looks wrong: sightseeing spots should be in "

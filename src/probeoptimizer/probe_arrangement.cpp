@@ -283,7 +283,7 @@ double ProbeArrangement::getProbeProduction(size_t idx) const noexcept {
 
 double ProbeArrangement::getProduction(size_t idx) const noexcept {
   return getProbeProduction(idx) *
-         ProbeOptimizer::getSites().getSite(idx).getProduction();
+         ProbeOptimizer::getSites().getSite(idx).getProductionVal();
 }
 
 double ProbeArrangement::getProbeRevenue(size_t idx) const noexcept {
@@ -327,7 +327,7 @@ double ProbeArrangement::getProbeRevenue(size_t idx) const noexcept {
 double ProbeArrangement::getRevenue(size_t idx) const noexcept {
   const auto &site = ProbeOptimizer::getSites().getSite(idx);
 
-  double siteRev = site.getRevenue();
+  double siteRev = site.getRevenueVal();
   if (probes_[idx]->category == Probe::Category::Research)
     siteRev += 1000 * site.getSightseeing();
 
