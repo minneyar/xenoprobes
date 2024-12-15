@@ -12,97 +12,37 @@
 #include <map>
 #include <spdlog/spdlog.h>
 
-void SiteList::addNeighborToSite(size_t site_index, size_t neighbor_index) {
-  sites_[site_index].addNeighbor(neighbor_index);
-  sites_[neighbor_index].addNeighbor(site_index);
-}
-
-void SiteList::loadSites(const std::string &filename) {
+std::vector<Site::Ptr> loadSiteList(const std::string &filename) {
   try {
     auto data = loadCSV(filename);
-    loadSites(data);
+    return loadSiteList(data);
   } catch (std::exception &e) {
     spdlog::error("Error while loading {}: {}", filename, e.what());
     throw;
   }
 }
 
-void SiteList::loadSites(
-    const std::vector<std::vector<CsvRecordVal>> &records) {
-  sites_.clear();
-
+std::vector<Site::Ptr>
+loadSiteList(const std::vector<std::vector<CsvRecordVal>> &records) {
+  std::vector<Site::Ptr> sites;
   try {
     for (const auto &record : records) {
-      Site site(csvRecordValToInt(record[0]));
-      site.setProduction(
-          Site::gradeFromChar(std::get<std::string>(record[1])[0]));
-      site.setRevenue(Site::gradeFromChar(std::get<std::string>(record[2])[0]));
-      site.setSightseeing(csvRecordValToInt(record[4]));
-      if (site.getSightseeing() < 0 || site.getSightseeing() > 2)
-        spdlog::warn("site {} looks wrong: sightseeing spots should be in "
-                     "[0..2], but is {}.",
-                     site.getSightseeing(), site.getSightseeing());
-      for (size_t i = 5; i < record.size(); ++i) {
-        const auto &oreName = std::get<std::string>(record[i]);
-        int oreIdx = findIndexForOreName(oreName);
-        if (oreIdx == -1) {
-          oreIdx = int(ores_.size());
-          ores_.push_back({oreIdx, oreName, 0});
-        }
-        site.addOre(oreIdx);
-      }
-      sites_.push_back(std::move(site));
+      // Ignore all other columns in the list as those values are compiled in.
+      const auto siteId = csvRecordValToInt(record[0]);
+      sites.push_back(Site::fromName(siteId));
     }
   } catch (std::exception &e) {
     spdlog::error("Bad site data format: {}", e.what());
     throw;
   }
-  addConnections();
 
   int numConnections = 0;
-  for (const auto &site : sites_) {
-    numConnections += site.getNeighbors().size();
+  for (const auto &site : sites) {
+    numConnections += site->getNeighbors().size();
   }
   // Counted both edges of the connection.
   numConnections /= 2;
-  spdlog::info("Loaded {} FN sites with {} connections.", sites_.size(),
+  spdlog::info("Loaded {} FN sites with {} connections.", sites.size(),
                numConnections);
+  return sites;
 }
-
-void SiteList::addConnections() {
-  for (const auto [u, v] : kAllSiteLinks) {
-    const auto uidx = findIndexForSiteName(u);
-    const auto vidx = findIndexForSiteName(v);
-    if (uidx != -1 && vidx != -1) {
-      addNeighborToSite(uidx, vidx);
-    }
-  }
-}
-
-long SiteList::findIndexForSiteName(int name) const {
-  for (int i = 0; i < sites_.size(); ++i) {
-    if (sites_[i].getName() == name) {
-      return i;
-    }
-  }
-  return -1;
-}
-
-Site SiteList::getSite(size_t index) const { return sites_[index]; }
-
-long SiteList::findIndexForOreName(const std::string &name) const {
-  for (int i = 0; i < ores_.size(); i++) {
-    if (ores_[i].getName() == name) {
-      return i;
-    }
-  }
-  return -1;
-}
-
-void SiteList::clear() { sites_.clear(); }
-
-size_t SiteList::size() const { return sites_.size(); }
-
-Ore SiteList::getOreByIndex(size_t index) const { return ores_[index]; }
-
-size_t SiteList::getOreCount() const { return ores_.size(); }

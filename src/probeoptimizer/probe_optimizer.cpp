@@ -67,26 +67,37 @@ void ProbeOptimizer::loadSetup(const std::string &filename) {
   spdlog::info("Loading setup.");
   setup_.resize(sites_.size());
 
-  auto data = loadCSV(filename);
-  for (auto &record : data) {
-    int siteName = csvRecordValToInt(record[0]);
-    int siteIdx = sites_.findIndexForSiteName(siteName);
-    if (siteIdx == -1) {
-      throw std::runtime_error{"Setup file uses a non-available site: " +
-                               std::to_string(siteIdx)};
+  const auto data = loadCSV(filename);
+  for (const auto &record : data) {
+    const auto siteName = csvRecordValToInt(record[0]);
+    try {
+      const auto site = Site::fromName(siteName);
+      setup_.setProbeAt(site->name,
+                        Probe::fromString(std::get<std::string>(record[1])));
+    } catch (const std::exception &e) {
+      throw std::runtime_error{"Setup file uses a non-available site."};
     }
-    setup_.setProbeAt(siteIdx,
-                      Probe::fromString(std::get<std::string>(record[1])));
   }
 }
 
 void ProbeOptimizer::loadSites(const std::string &filename) {
-  sites_.loadSites(filename);
+  sites_ = loadSiteList(filename);
+  updateSiteListIndexes();
 }
 
 void ProbeOptimizer::loadSites(
     const std::vector<std::vector<CsvRecordVal>> &records) {
-  sites_.loadSites(records);
+  sites_ = loadSiteList(records);
+  updateSiteListIndexes();
+}
+
+void ProbeOptimizer::updateSiteListIndexes() {
+  siteListIndexes.clear();
+  siteListIndexes.reserve(sites_.size());
+  for (std::size_t ix = 0; ix < sites_.size(); ++ix) {
+    const auto site = sites_.at(ix);
+    siteListIndexes.emplace(site->name, ix);
+  }
 }
 
 void ProbeOptimizer::printSetup() const { setup_.printSetup(); }
@@ -226,6 +237,10 @@ const ProbeArrangement &ProbeOptimizer::getDefaultArrangement() {
   return setup_;
 }
 
-const SiteList &ProbeOptimizer::getSites() { return sites_; }
+const std::vector<Site::Ptr> &ProbeOptimizer::getSites() { return sites_; }
+
+std::size_t ProbeOptimizer::getIndexForSiteId(Site::Id siteId) {
+  return siteListIndexes.at(siteId);
+}
 
 std::vector<Probe::Ptr> ProbeOptimizer::getInventory() { return inventory_; }

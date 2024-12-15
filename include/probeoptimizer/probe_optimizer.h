@@ -50,7 +50,8 @@ public:
   static bool shouldStop() { return shouldStop_; }
 
   static const ProbeArrangement &getDefaultArrangement();
-  static const SiteList &getSites();
+  static const std::vector<Site::Ptr> &getSites();
+  static std::size_t getIndexForSiteId(Site::Id siteId);
   static std::vector<Probe::Ptr> getInventory();
   [[nodiscard]] const Solution &solution() const { return solution_; }
 
@@ -69,8 +70,12 @@ public:
 
 private:
   inline static std::vector<Probe::Ptr> inventory_;
-  inline static SiteList sites_;
+  inline static std::vector<Site::Ptr> sites_;
+  // Needed because many operations require indexes in sites_ and cannot be
+  // converted to use a map because of their nature.
+  inline static std::unordered_map<Site::Id, std::size_t> siteListIndexes;
   inline static ProbeArrangement setup_;
+  static void updateSiteListIndexes();
 
   float mutationRate_;
   float eliteRatio_;

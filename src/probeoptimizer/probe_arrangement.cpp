@@ -91,8 +91,7 @@ void ProbeArrangement::printSetup() const {
 std::map<int, Probe::Ptr> ProbeArrangement::getSetup() const {
   std::map<int, Probe::Ptr> setup;
   for (size_t idx = 0; idx < ProbeOptimizer::getSites().size(); ++idx) {
-    setup.emplace(ProbeOptimizer::getSites().getSite(idx).getName(),
-                  probes_[idx]);
+    setup.emplace(ProbeOptimizer::getSites().at(idx)->name, probes_[idx]);
   }
 
   return setup;
@@ -133,7 +132,7 @@ void ProbeArrangement::printTotals() const {
                fmt::arg("totalProd", totalProd), fmt::arg("totalRev", totalRev),
                fmt::arg("totalStorage", totalStorage),
                fmt::arg("minedOresSize", minedOres.size()),
-               fmt::arg("oreCount", ProbeOptimizer::getSites().getOreCount()),
+               fmt::arg("oreCount", Ore::ALL.size()),
                fmt::arg("oreNames", fmt::join(minedOres, "\n#  ")));
 }
 
@@ -163,24 +162,23 @@ double ProbeArrangement::getTotalStorage() const {
 
 std::vector<std::string> ProbeArrangement::getOres() const {
   // TODO: figure out how different probes affect ore extraction
-  std::set<int> minedOres;
+  std::set<Ore::Ptr> minedOres;
   for (size_t i = 0; i < ProbeOptimizer::getSites().size(); ++i) {
     const auto probe = probes_[i];
     if (probe->category == Probe::Category::Mining) {
-      for (auto &oreId : ProbeOptimizer::getSites().getSite(i).getOres())
-        minedOres.insert(oreId);
+      const auto &siteOre = ProbeOptimizer::getSites().at(i)->getOre();
+      minedOres.insert(siteOre.cbegin(), siteOre.cend());
     }
   }
   std::vector<std::string> oreNames;
-  for (const auto &oreId : minedOres)
-    oreNames.push_back(
-        ProbeOptimizer::getSites().getOreByIndex(oreId).getName());
+  for (const auto ore : minedOres)
+    oreNames.push_back(ore->name);
   std::sort(oreNames.begin(), oreNames.end());
   return oreNames;
 }
 
 int ProbeArrangement::getComboSize(size_t source) const {
-  const auto stype = probes_[source];
+  const auto sourceType = probes_[source];
 
   int comboSize = 0;
 
@@ -199,8 +197,9 @@ int ProbeArrangement::getComboSize(size_t source) const {
     visited[idx] = true;
     ++comboSize;
 
-    for (auto nidx : ProbeOptimizer::getSites().getSite(idx).getNeighbors()) {
-      if (probes_[nidx] == stype && !visited[nidx]) {
+    for (auto neighbor : ProbeOptimizer::getSites().at(idx)->getNeighbors()) {
+      const auto nidx = ProbeOptimizer::getIndexForSiteId(neighbor->name);
+      if (probes_[nidx] == sourceType && !visited[nidx]) {
         Q.push(nidx);
       }
     }
@@ -235,16 +234,17 @@ double ProbeArrangement::getProbeBoost(size_t idx) const noexcept {
   }
 
   double boost = 1.0;
-  for (auto nidx : ProbeOptimizer::getSites().getSite(idx).getNeighbors()) {
-    const auto neighbor = probes_[nidx];
-    boost *= neighbor->boost;
+  for (auto neighbor : ProbeOptimizer::getSites().at(idx)->getNeighbors()) {
+    const auto nidx = ProbeOptimizer::getIndexForSiteId(neighbor->name);
+    const auto neighborProbe = probes_[nidx];
+    boost *= neighborProbe->boost;
   }
   return boost;
 }
 
 double ProbeArrangement::getProbeProduction(size_t idx) const noexcept {
   const auto probe = probes_[idx];
-  const auto &site = ProbeOptimizer::getSites().getSite(idx);
+  const auto site = ProbeOptimizer::getSites().at(idx);
 
   double probeRate = probe->production;
 
@@ -254,14 +254,15 @@ double ProbeArrangement::getProbeProduction(size_t idx) const noexcept {
 
   double dupeStash = 0; // things that don't get boosted
   if (probe->category == Probe::Category::Duplicator) {
-    for (auto nidx : site.getNeighbors()) {
-      const auto &neighbor = probes_[nidx];
-      if (neighbor->category == Probe::Category::Duplicator)
+    for (auto neighbor : site->getNeighbors()) {
+      const auto nidx = ProbeOptimizer::getIndexForSiteId(neighbor->name);
+      const auto neighborProbe = probes_[nidx];
+      if (neighborProbe->category == Probe::Category::Duplicator)
         continue;
-      if (neighbor->category == Probe::Category::Mining)
-        probeRate += neighbor->production;
+      if (neighborProbe->category == Probe::Category::Mining)
+        probeRate += neighborProbe->production;
       else
-        dupeStash += neighbor->production;
+        dupeStash += neighborProbe->production;
     }
   }
 
@@ -269,8 +270,8 @@ double ProbeArrangement::getProbeProduction(size_t idx) const noexcept {
   if (probe->category == Probe::Category::Mining ||
       probe->category == Probe::Category::Duplicator) {
     double scale = 1;
-    for (auto nidx : site.getNeighbors()) {
-      // const auto& neighbor = probes[setup[nidx]];
+    for (auto neighbor : site->getNeighbors()) {
+      const auto nidx = ProbeOptimizer::getIndexForSiteId(neighbor->name);
       double boost = getProbeBoost(nidx);
       scale *= boost;
     }
@@ -283,12 +284,12 @@ double ProbeArrangement::getProbeProduction(size_t idx) const noexcept {
 
 double ProbeArrangement::getProduction(size_t idx) const noexcept {
   return getProbeProduction(idx) *
-         ProbeOptimizer::getSites().getSite(idx).getProductionVal();
+         ProbeOptimizer::getSites().at(idx)->getProductionVal();
 }
 
 double ProbeArrangement::getProbeRevenue(size_t idx) const noexcept {
   const auto probe = probes_[idx];
-  const auto &site = ProbeOptimizer::getSites().getSite(idx);
+  const auto site = ProbeOptimizer::getSites().at(idx);
 
   double probeRate = probe->revenue;
 
@@ -298,14 +299,15 @@ double ProbeArrangement::getProbeRevenue(size_t idx) const noexcept {
 
   double dupeStash = 0; // things that don't get boosted
   if (probe->category == Probe::Category::Duplicator) {
-    for (auto nidx : site.getNeighbors()) {
-      const auto &neighbor = probes_[nidx];
-      if (neighbor->category == Probe::Category::Duplicator)
+    for (auto neighbor : site->getNeighbors()) {
+      const auto nidx = ProbeOptimizer::getIndexForSiteId(neighbor->name);
+      const auto neighborProbe = probes_[nidx];
+      if (neighborProbe->category == Probe::Category::Duplicator)
         continue;
-      if (neighbor->category == Probe::Category::Research)
-        probeRate += neighbor->revenue;
+      if (neighborProbe->category == Probe::Category::Research)
+        probeRate += neighborProbe->revenue;
       else
-        dupeStash += neighbor->revenue;
+        dupeStash += neighborProbe->revenue;
     }
   }
 
@@ -313,7 +315,8 @@ double ProbeArrangement::getProbeRevenue(size_t idx) const noexcept {
   if (probe->category == Probe::Category::Research ||
       probe->category == Probe::Category::Duplicator) {
     double scale = 1;
-    for (auto nidx : site.getNeighbors()) {
+    for (auto neighbor : site->getNeighbors()) {
+      const auto nidx = ProbeOptimizer::getIndexForSiteId(neighbor->name);
       double boost = getProbeBoost(nidx);
       scale *= boost;
     }
@@ -325,18 +328,18 @@ double ProbeArrangement::getProbeRevenue(size_t idx) const noexcept {
 }
 
 double ProbeArrangement::getRevenue(size_t idx) const noexcept {
-  const auto &site = ProbeOptimizer::getSites().getSite(idx);
+  const auto site = ProbeOptimizer::getSites().at(idx);
 
-  double siteRev = site.getRevenueVal();
+  double siteRev = site->getRevenueVal();
   if (probes_[idx]->category == Probe::Category::Research)
-    siteRev += 1000 * site.getSightseeing();
+    siteRev += 1000 * site->sightseeing;
 
   return getProbeRevenue(idx) * siteRev;
 }
 
 double ProbeArrangement::getStorage(size_t idx) const noexcept {
   const auto probe = probes_[idx];
-  const auto &site = ProbeOptimizer::getSites().getSite(idx);
+  const auto site = ProbeOptimizer::getSites().at(idx);
 
   double probeStorage = 0;
 
@@ -347,9 +350,10 @@ double ProbeArrangement::getStorage(size_t idx) const noexcept {
   }
 
   if (probe->category == Probe::Category::Duplicator) {
-    for (auto nidx : site.getNeighbors()) {
-      const auto neighbor = probes_[nidx];
-      if (neighbor->category == Probe::Category::Storage)
+    for (auto neighbor : site->getNeighbors()) {
+      const auto nidx = ProbeOptimizer::getIndexForSiteId(neighbor->name);
+      const auto neighborProbe = probes_[nidx];
+      if (neighborProbe->category == Probe::Category::Storage)
         probeStorage += 3000;
     }
   }
@@ -358,8 +362,8 @@ double ProbeArrangement::getStorage(size_t idx) const noexcept {
   if (probe->category == Probe::Category::Storage ||
       probe->category == Probe::Category::Duplicator) {
     double scale = 1;
-    for (auto nidx : site.getNeighbors()) {
-      // const auto& neighbor = probes[setup[nidx]];
+    for (auto neighbor : site->getNeighbors()) {
+      const auto nidx = ProbeOptimizer::getIndexForSiteId(neighbor->name);
       double boost = getProbeBoost(nidx);
       scale *= boost;
     }

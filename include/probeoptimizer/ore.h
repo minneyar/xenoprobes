@@ -6,20 +6,31 @@
 #define XENOPROBES_ORE_H
 
 #include <string>
+#include <vector>
 
-class Ore {
-public:
-    Ore(int id, const std::string& name, int importance);
+struct Ore {
+  using Ptr = const Ore *;
 
-    int getId() const;
-    std::string getName() const;
-    int getImportance() const;
+  static const Ore arcSandOre;
+  static const Ore aurorite;
+  static const Ore boiledEggOre;
+  static const Ore bonjelium;
+  static const Ore cimmerianCinnabar;
+  static const Ore dawnstone;
+  static const Ore enduronLead;
+  static const Ore everfreezeOre;
+  static const Ore foucaultium;
+  static const Ore infernium;
+  static const Ore lionboneBort;
+  static const Ore marineRutile;
+  static const Ore ouroborosCrystal;
+  static const Ore parhelionPlatinum;
+  static const Ore whiteCometite;
 
-private:
-    int id_;
-    std::string name_;
-    int importance_;
+  static const std::vector<Ptr> ALL;
+
+  std::string name;
+  int importance;
 };
 
-
-#endif //XENOPROBES_ORE_H
+#endif // XENOPROBES_ORE_H
