@@ -23,7 +23,7 @@ struct Site {
 
   int getProductionVal() const;
   int getRevenueVal() const;
-  const std::vector<Ptr> &getNeighbors() const;
+  std::vector<Ptr> getNeighbors() const;
   const std::vector<Ore::Ptr> &getOre() const;
 
   static const std::map<Id, Site> ALL;

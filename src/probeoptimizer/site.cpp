@@ -3,6 +3,8 @@
 //
 
 #include "probeoptimizer/site.h"
+
+#include <probeoptimizer/probe_optimizer.h>
 #include <spdlog/spdlog.h>
 
 const std::map<Site::Id, Site> Site::ALL{
@@ -848,7 +850,7 @@ const std::vector<Ore::Ptr> &Site::getOre() const {
   return oreMap.at(name);
 }
 
-const std::vector<Site::Ptr> &Site::getNeighbors() const {
+std::vector<Site::Ptr> Site::getNeighbors() const {
   static const std::unordered_map<Id, std::vector<Ptr>> neighborsMap{
       {101, {fromName(105)}},
       {102, {fromName(104)}},
@@ -956,7 +958,12 @@ const std::vector<Site::Ptr> &Site::getNeighbors() const {
       {516, {fromName(513)}},
   };
 
-  return neighborsMap.at(name);
+  auto neighbors = neighborsMap.at(name);
+  // Don't return unvisited neighbors.
+  std::erase_if(neighbors, [](const Site::Ptr &neighbor) {
+    return !ProbeOptimizer::getSites().contains(neighbor);
+  });
+  return neighbors;
 }
 
 Site::Grade Site::gradeFromChar(char grade) {

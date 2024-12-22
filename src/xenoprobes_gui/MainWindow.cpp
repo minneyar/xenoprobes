@@ -320,6 +320,7 @@ void MainWindow::openFromPath(const QString &path) {
 
     ProbeOptimizer newProbeOptimizer;
     const auto sites = SiteListLoader::readSiteListFromJson(jsonObj["sites"]);
+    newProbeOptimizer.loadSites(sites);
     const auto inventory =
         InventoryLoader::readInventoryFromJson(jsonObj["inventory"]);
     newProbeOptimizer.loadInventory(inventory);

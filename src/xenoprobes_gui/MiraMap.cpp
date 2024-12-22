@@ -45,9 +45,9 @@ MiraMap::MiraMap(ProbeOptimizer *probeOptimizer, QWidget *parent)
     connect(siteWidget, &FnSiteWidget::visitedChanged,
             [this, site](const bool visited) {
               if (visited) {
-                probeOptimizer_->getSites().insert(site);
+                probeOptimizer_->addSite(site);
               } else {
-                probeOptimizer_->getSites().erase(site);
+                probeOptimizer_->removeSite(site);
               }
               calculateSiteWidgets();
             });
@@ -132,11 +132,6 @@ void MiraMap::calculateLinks() {
       continue;
     }
     for (const auto neighbor : site->getNeighbors()) {
-      if (!probeOptimizer_->getSites().contains(neighbor)) {
-        // Do not draw links between sites not visited.
-        continue;
-      }
-
       const std::unordered_set linkPair{site->name, neighbor->name};
       if (std::find(drawnLinks.cbegin(), drawnLinks.cend(), linkPair) !=
           drawnLinks.cend()) {
