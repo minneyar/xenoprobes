@@ -35,4 +35,6 @@ const std::map<Probe::Id, Probe> Probe::ALL{
 };
 // clang-format on
 
-Probe::Ptr Probe::fromString(const std::string &s) { return &Probe::ALL.at(s); }
+Probe::Ptr Probe::fromString(const std::string &s) {
+  return &Probe::ALL.at(s);
+}

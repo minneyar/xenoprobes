@@ -18,6 +18,7 @@
 #include <QMainWindow>
 #include <QProgressDialog>
 #include <QTableView>
+#include <probeoptimizer/probe_optimizer.h>
 
 class MainWindow : public QMainWindow {
   Q_OBJECT
@@ -56,6 +57,7 @@ private:
   QProgressDialog *progressDialog_ = nullptr;
   QElapsedTimer solverStopwatch_;
   SolverRunner *solverRunner_ = nullptr;
+  ProbeOptimizer probeOptimizer_;
 
   void initUi();
   void initActions();

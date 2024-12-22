@@ -10,21 +10,19 @@
 #include "InventoryLoader.h"
 #include <ranges>
 
-InventoryModel::InventoryModel(QObject *parent) : QAbstractTableModel(parent) {
-  probeInventory_.reserve(Probe::ALL.size());
-  for (const auto &probe : Probe::ALL | std::views::values) {
-    if (probe.category == Probe::Category::Basic) {
-      continue;
-    }
-    probeInventory_.emplace_back(probe.id, 0);
-  }
-  sortProbeInventory(probeInventory_);
-}
+const std::vector<Probe::Id> InventoryModel::kProbeIdOrder{
+    // Don't show basic probes in this list.
+    "M1",  "M2", "M3", "M4", "M5", "M6", "M7", "M8", "M9",
+    "M10", "R1", "R2", "R3", "R4", "R5", "R6", "B1", "B2",
+    "D",   "S",  "CF", "CM", "CR", "CD", "CA",
+};
 
-void InventoryModel::setProbeInventory(const ProbeInventory &probeInventory) {
+InventoryModel::InventoryModel(ProbeOptimizer *probeOptimizer, QObject *parent)
+    : QAbstractTableModel(parent), probeOptimizer_(probeOptimizer) {}
+
+void InventoryModel::setProbeOptimizer(ProbeOptimizer *probeOptimizer) {
   beginResetModel();
-  probeInventory_ = probeInventory;
-  sortProbeInventory(probeInventory_);
+  probeOptimizer_ = probeOptimizer;
   endResetModel();
 }
 
@@ -49,13 +47,14 @@ QVariant InventoryModel::headerData(int section, Qt::Orientation orientation,
 }
 
 int InventoryModel::rowCount(const QModelIndex &parent) const {
-  return probeInventory_.size();
+  return kProbeIdOrder.size();
 }
 
 QVariant InventoryModel::data(const QModelIndex &index, int role) const {
   const auto col = static_cast<Column>(index.column());
-  const auto [probeId, quantity] = probeInventory().at(index.row());
+  const auto probeId = kProbeIdOrder.at(index.row());
   const auto probe = Probe::fromString(probeId);
+  const auto quantity = probeOptimizer_->getInventory().at(probe);
 
   if (role == Qt::DisplayRole) {
     if (col == Column::Name) {
@@ -76,11 +75,13 @@ bool InventoryModel::setData(const QModelIndex &index, const QVariant &value,
                              int role) {
   bool success = false;
   const auto col = static_cast<Column>(index.column());
+  const auto probeId = kProbeIdOrder.at(index.row());
+  const auto probe = Probe::fromString(probeId);
   if (role == Qt::EditRole) {
     if (col == Column::Quantity) {
       const auto val = value.toUInt(&success);
       if (success) {
-        probeInventory_[index.row()].second = val;
+        probeOptimizer_->getInventory()[probe] = val;
       }
     }
   }

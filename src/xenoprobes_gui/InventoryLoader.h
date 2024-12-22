@@ -9,8 +9,8 @@
 #ifndef INVENTORYLOADER_H
 #define INVENTORYLOADER_H
 
-#include "DataProbe.h"
 #include <QJsonValue>
+#include <probeoptimizer/probe_optimizer.h>
 
 /**
  * Read probe inventory.
@@ -19,14 +19,13 @@
  */
 class InventoryLoader {
 public:
-  [[nodiscard]] static ProbeInventory
-  readInventoryFromFile(const QString &path);
-  [[nodiscard]] static ProbeInventory
+  [[nodiscard]] static ProbeOptimizer::ProbeInventory
   readInventoryFromJson(const QJsonValue &json);
-  static void writeInventoryToFile(const ProbeInventory &probeInventory,
-                                   const QString &path);
+  static void
+  writeInventoryToFile(const ProbeOptimizer::ProbeInventory &probeInventory,
+                       const QString &path);
   [[nodiscard]] static QJsonValue
-  writeInventoryToJson(const ProbeInventory &probeInventory);
+  writeInventoryToJson(const ProbeOptimizer::ProbeInventory &probeInventory);
 };
 
 #endif // INVENTORYLOADER_H

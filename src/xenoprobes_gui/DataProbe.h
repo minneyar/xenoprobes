@@ -16,7 +16,5 @@
 
 QString dataProbeIcon(Probe::Ptr probe);
 QString dataProbeName(Probe::Ptr probe);
-using ProbeInventory = std::vector<std::pair<Probe::Id, unsigned int>>;
-void sortProbeInventory(ProbeInventory &probeInventory);
 
 #endif // DATAPROBE_H

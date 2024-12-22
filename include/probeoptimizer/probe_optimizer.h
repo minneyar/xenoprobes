@@ -26,6 +26,8 @@ public:
                          double worstScore, unsigned long killed)>;
   using StopCallback = std::function<bool()>;
 
+  explicit ProbeOptimizer();
+
   void loadInventory(const std::string &filename);
   void loadInventory(const std::vector<std::vector<CsvRecordVal>> &records);
   void loadInventory(

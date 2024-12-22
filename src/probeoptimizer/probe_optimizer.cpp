@@ -22,6 +22,15 @@
 
 std::atomic<bool> ProbeOptimizer::shouldStop_(false);
 
+ProbeOptimizer::ProbeOptimizer() {
+  for (const auto &probeId : Probe::ALL | std::views::keys) {
+    if (probeId == "B") {
+      continue;
+    }
+    inventory_.emplace(Probe::fromString(probeId), 0);
+  }
+}
+
 void ProbeOptimizer::loadInventory(const std::string &filename) {
   try {
     auto data = loadCSV(filename);

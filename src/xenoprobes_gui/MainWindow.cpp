@@ -29,7 +29,8 @@
 #include <unordered_set>
 
 MainWindow::MainWindow(QWidget *parent)
-    : QMainWindow(parent), inventoryModel_(new InventoryModel(this)) {
+    : QMainWindow(parent),
+      inventoryModel_(new InventoryModel(&probeOptimizer_, this)) {
   initUi();
   connect(inventoryModel_, &InventoryModel::dataChanged, this,
           &MainWindow::dataChanged);
@@ -315,16 +316,20 @@ void MainWindow::openFromPath(const QString &path) {
                             tr("%1 is not valid.").arg(path));
       return;
     }
+
+    ProbeOptimizer newProbeOptimizer;
     const auto sites = SiteListLoader::readSiteListFromJson(jsonObj["sites"]);
     const auto probeMap = MiraMap::siteProbesFromJson(jsonObj["probeMap"]);
     const auto inventory =
         InventoryLoader::readInventoryFromJson(jsonObj["inventory"]);
+    newProbeOptimizer.loadInventory(inventory);
     const auto options = RunOptionsWidget::optionsFromJson(jsonObj["options"]);
 
     // Defer saving until everything is loaded in case of errors.
+    probeOptimizer_ = newProbeOptimizer;
     widgets_.miraMap->setSitesVisited(sites);
     widgets_.miraMap->setSiteProbeMap(probeMap);
-    inventoryModel_->setProbeInventory(inventory);
+    inventoryModel_->setProbeOptimizer(&probeOptimizer_);
     widgets_.runOptions->setOptions(options);
 
     setWindowFilePath(path);
@@ -350,7 +355,7 @@ void MainWindow::saveToPath(const QString &path) {
   json["probeMap"] =
       MiraMap::siteProbesToJson(widgets_.miraMap->siteProbeMap());
   json["inventory"] =
-      InventoryLoader::writeInventoryToJson(inventoryModel_->probeInventory());
+      InventoryLoader::writeInventoryToJson(probeOptimizer_.getInventory());
   json["options"] =
       RunOptionsWidget::optionsToJson(widgets_.runOptions->options());
   file.write(QJsonDocument(json).toJson());
@@ -407,9 +412,8 @@ void MainWindow::fileImportInventory() {
   }
   const auto filenames = dialog.selectedFiles();
   try {
-    const auto newInventory =
-        InventoryLoader::readInventoryFromFile(filenames.first());
-    inventoryModel_->setProbeInventory(newInventory);
+    probeOptimizer_.loadInventory(filenames.first().toStdString());
+    inventoryModel_->setProbeOptimizer(&probeOptimizer_);
     dataChanged();
   } catch (const std::exception &) {
     QMessageBox::critical(this, tr("Failed to open file"),
@@ -427,7 +431,7 @@ void MainWindow::fileExportInventory() {
   }
   const auto filenames = dialog.selectedFiles();
   try {
-    InventoryLoader::writeInventoryToFile(inventoryModel_->probeInventory(),
+    InventoryLoader::writeInventoryToFile(probeOptimizer_.getInventory(),
                                           filenames.first());
   } catch (const std::exception &) {
     QMessageBox::critical(this, tr("Failed to save file"),
@@ -460,9 +464,10 @@ void MainWindow::solve() {
   // Can't use autoreset because progress is reported *before* the calculation,
   // not after.
   progressDialog_->setAutoReset(false);
+  progressDialog_->setModal(true);
   solverRunner_ = new SolverRunner(
-      widgets_.miraMap->sitesVisited(), widgets_.miraMap->siteProbeMap(),
-      inventoryModel_->probeInventory(), widgets_.runOptions->options(), this);
+      &probeOptimizer_, widgets_.miraMap->sitesVisited(),
+      widgets_.miraMap->siteProbeMap(), widgets_.runOptions->options(), this);
   connect(solverRunner_, &SolverRunner::progress, this, &MainWindow::progress);
   connect(progressDialog_, &QProgressDialog::canceled, solverRunner_,
           &SolverRunner::requestInterruption);

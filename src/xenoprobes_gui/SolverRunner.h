@@ -14,13 +14,14 @@
 #include "RunOptions.h"
 
 #include <QThread>
+#include <probeoptimizer/probe_optimizer.h>
 
 class SolverRunner : public QThread {
   Q_OBJECT
 public:
-  explicit SolverRunner(const std::unordered_set<Site::Id> &siteList,
+  explicit SolverRunner(ProbeOptimizer *probeOptimizer,
+                        const std::unordered_set<Site::Id> &siteList,
                         const MiraMap::SiteProbeMap &siteProbeMap,
-                        const ProbeInventory &probeInventory,
                         const RunOptions &runOptions,
                         QObject *parent = nullptr);
 
@@ -34,9 +35,9 @@ protected:
   void run() override;
 
 private:
+  ProbeOptimizer *probeOptimizer_;
   std::unordered_set<Site::Id> siteList_;
   MiraMap::SiteProbeMap siteProbeMap_;
-  ProbeInventory probeInventory_;
   RunOptions runOptions_;
 };
 

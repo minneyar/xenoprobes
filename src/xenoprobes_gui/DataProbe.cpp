@@ -59,10 +59,3 @@ static const QHash<Probe::Id, QString> kProbeNames{
 };
 
 QString dataProbeName(Probe::Ptr probe) { return kProbeNames.value(probe->id); }
-
-void sortProbeInventory(ProbeInventory &probeInventory) {
-  std::ranges::sort(probeInventory, [](const ProbeInventory::value_type &lhs,
-                                       const ProbeInventory::value_type &rhs) {
-    return Probe::fromString(lhs.first) < Probe::fromString(rhs.first);
-  });
-}

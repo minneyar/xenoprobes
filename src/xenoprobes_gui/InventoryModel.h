@@ -11,6 +11,7 @@
 
 #include "DataProbe.h"
 #include <QAbstractTableModel>
+#include <probeoptimizer/probe_optimizer.h>
 
 class InventoryModel : public QAbstractTableModel {
   Q_OBJECT
@@ -21,11 +22,8 @@ public:
   };
   static constexpr auto kColumnCount = static_cast<int>(Column::Quantity) + 1;
 
-  explicit InventoryModel(QObject *parent = nullptr);
-  [[nodiscard]] ProbeInventory probeInventory() const {
-    return probeInventory_;
-  }
-  void setProbeInventory(const ProbeInventory &probeInventory);
+  explicit InventoryModel(ProbeOptimizer* probeOptimizer, QObject *parent = nullptr);
+  void setProbeOptimizer(ProbeOptimizer *probeOptimizer);
   [[nodiscard]] int columnCount(const QModelIndex &parent) const override;
   [[nodiscard]] QVariant headerData(int section, Qt::Orientation orientation,
                                     int role) const override;
@@ -37,7 +35,8 @@ public:
   [[nodiscard]] Qt::ItemFlags flags(const QModelIndex &index) const override;
 
 private:
-  ProbeInventory probeInventory_;
+  static const std::vector<Probe::Id> kProbeIdOrder;
+  ProbeOptimizer* probeOptimizer_;
 };
 
 #endif // INVENTORYMODEL_H

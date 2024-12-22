@@ -10,31 +10,27 @@
 
 #include <probeoptimizer/probe_optimizer.h>
 
-SolverRunner::SolverRunner(const std::unordered_set<Site::Id> &siteList,
+SolverRunner::SolverRunner(ProbeOptimizer *probeOptimizer,
+                           const std::unordered_set<Site::Id> &siteList,
                            const MiraMap::SiteProbeMap &siteProbeMap,
-                           const ProbeInventory &probeInventory,
                            const RunOptions &runOptions, QObject *parent)
-    : QThread(parent), siteList_(siteList), siteProbeMap_(siteProbeMap),
-      probeInventory_(probeInventory), runOptions_(runOptions) {}
+    : QThread(parent), probeOptimizer_(probeOptimizer), siteList_(siteList),
+      siteProbeMap_(siteProbeMap), runOptions_(runOptions) {}
 
 void SolverRunner::run() {
-  ProbeOptimizer optimizer;
-  optimizer.setStorageWeight(runOptions_.storageWeight);
-  optimizer.setRevenueWeight(runOptions_.revenueWeight);
-  optimizer.setProductionWeight(runOptions_.productionWeight);
-  optimizer.setMaxIterations(runOptions_.iterations);
-  optimizer.setNumOffsprings(runOptions_.offsprings);
-  optimizer.setMutationRate(runOptions_.mutation / 100.0);
-  optimizer.setMaxPopSize(runOptions_.population);
+  probeOptimizer_->setStorageWeight(runOptions_.storageWeight);
+  probeOptimizer_->setRevenueWeight(runOptions_.revenueWeight);
+  probeOptimizer_->setProductionWeight(runOptions_.productionWeight);
+  probeOptimizer_->setMaxIterations(runOptions_.iterations);
+  probeOptimizer_->setNumOffsprings(runOptions_.offsprings);
+  probeOptimizer_->setMutationRate(runOptions_.mutation / 100.0);
+  probeOptimizer_->setMaxPopSize(runOptions_.population);
 
   // Load enabled sites.
-  optimizer.loadSites(siteList_);
-
-  // Load inventory.
-  optimizer.loadInventory(probeInventory_);
+  probeOptimizer_->loadSites(siteList_);
 
   // Do the thing.
-  optimizer.doHillClimbing(
+  probeOptimizer_->doHillClimbing(
       [this](unsigned long iter, double bestScore, double worstScore,
              unsigned long killed) {
         Q_EMIT(progress(iter, bestScore, worstScore, killed));
@@ -42,7 +38,7 @@ void SolverRunner::run() {
       [this]() { return isInterruptionRequested(); });
 
   // Report solution.
-  const auto &solutionSetup = optimizer.solution().getSetup();
+  const auto &solutionSetup = probeOptimizer_->solution().getSetup();
   QStringList ores;
   for (const auto &ore : solutionSetup.getOres()) {
     ores.push_back(QString::fromStdString(ore));
