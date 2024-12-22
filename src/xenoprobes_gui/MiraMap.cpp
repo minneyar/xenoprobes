@@ -10,7 +10,7 @@
 #include "FnSiteWidget.h"
 #include <QGraphicsPixmapItem>
 #include <QGraphicsProxyWidget>
-#include <qguiapplication.h>
+#include <QGuiApplication>
 #include <QJsonArray>
 #include <ranges>
 
