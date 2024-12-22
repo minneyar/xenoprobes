@@ -10,16 +10,17 @@
 #include <QFile>
 #include <QJsonArray>
 #include <QTextStream>
+#include <probeoptimizer/probe_optimizer.h>
 #include <ranges>
 
-std::unordered_set<Site::Id>
+ProbeOptimizer::SiteList
 SiteListLoader::readSiteListFromFile(const QString &path) {
   QFile file(path);
   if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
     throw std::runtime_error("Failed to open file.");
   }
   QTextStream in(&file);
-  std::unordered_set<Site::Id> ids;
+  ProbeOptimizer::SiteList siteList;
   QString line;
   bool ok;
   while (in.readLineInto(&line)) {
@@ -34,22 +35,23 @@ SiteListLoader::readSiteListFromFile(const QString &path) {
     if (!ok) {
       throw std::runtime_error("Failed to parse id.");
     }
-    if (!Site::ALL.contains(id)) {
+
+    try {
+      siteList.insert(Site::fromName(id));
+    } catch (const std::exception &e) {
       throw std::runtime_error("Site not found.");
     }
-
-    ids.insert(id);
   }
 
-  return ids;
+  return siteList;
 }
 
-std::unordered_set<Site::Id>
+ProbeOptimizer::SiteList
 SiteListLoader::readSiteListFromJson(const QJsonValue &json) {
   if (!json.isArray()) {
     throw std::runtime_error("Bad site list format.");
   }
-  std::unordered_set<Site::Id> ids;
+  ProbeOptimizer::SiteList siteList;
   for (const auto id : json.toArray()) {
     if (!id.isDouble()) {
       throw std::runtime_error("Failed to parse id.");
@@ -57,14 +59,18 @@ SiteListLoader::readSiteListFromJson(const QJsonValue &json) {
     if (!Site::ALL.contains(id.toInt())) {
       throw std::runtime_error("Site not found.");
     }
-    ids.insert(id.toInt());
+    try {
+      siteList.insert(Site::fromName(id.toInt()));
+    } catch (const std::exception &e) {
+      throw std::runtime_error("Site not found.");
+    }
   }
 
-  return ids;
+  return siteList;
 }
 
 void SiteListLoader::writeSiteListToFile(
-    const std::unordered_set<Site::Id> &ids, const QString &path) {
+    const ProbeOptimizer::SiteList &siteList, const QString &path) {
   QFile file(path);
   if (!file.open(QIODevice::ReadWrite | QIODevice::Truncate |
                  QIODevice::Text)) {
@@ -79,14 +85,15 @@ void SiteListLoader::writeSiteListToFile(
          "#\n"
          "# Everything after a # will be ignored.\n";
   // Write all sites, commenting out those that are not in ids.
-  for (const auto &site : Site::ALL | std::views::values) {
-    if (!ids.contains(site.name)) {
+  for (const auto &siteId : Site::ALL | std::views::keys) {
+    const auto site = Site::fromName(siteId);
+    if (!siteList.contains(site)) {
       out << '#';
     }
-    out << site.name << ',' << Site::gradeToChar(site.production) << ','
-        << Site::gradeToChar(site.revenue) << ','
-        << Site::gradeToChar(site.combat) << ',' << site.sightseeing;
-    for (const auto &ore : site.getOre()) {
+    out << site->name << ',' << Site::gradeToChar(site->production) << ','
+        << Site::gradeToChar(site->revenue) << ','
+        << Site::gradeToChar(site->combat) << ',' << site->sightseeing;
+    for (const auto &ore : site->getOre()) {
       out << ',' << QString::fromStdString(ore->name);
     }
     out << '\n';
@@ -95,10 +102,61 @@ void SiteListLoader::writeSiteListToFile(
 }
 
 QJsonValue
-SiteListLoader::writeSiteListToJson(const std::unordered_set<Site::Id> &ids) {
+SiteListLoader::writeSiteListToJson(const ProbeOptimizer::SiteList &siteList) {
   QJsonArray json;
-  for (const auto id : ids) {
-    json.append(static_cast<int>(id));
+  for (const auto site : siteList) {
+    json.append(static_cast<int>(site->name));
   }
   return json;
+}
+
+QJsonValue SiteListLoader::writeSiteProbesToJson(
+    const ProbeArrangement &probeArrangement) {
+  // Do this as an array of 2-tuples so we don't have to worry about int parsing
+  // when reading.
+  QJsonArray json;
+  for (const auto [site, probe] : probeArrangement.getSetup()) {
+    json.append(QJsonArray(
+        {static_cast<int>(site->name), QString::fromStdString(probe->id)}));
+  }
+
+  return json;
+}
+
+ProbeArrangement
+SiteListLoader::readSiteProbesFromJson(const QJsonValue &json) {
+  if (!json.isArray()) {
+    throw std::runtime_error("Bad site probes map format.");
+  }
+  ProbeArrangement probeArrangement;
+  probeArrangement.resize(json.toArray().size());
+  for (const auto &siteProbe : json.toArray()) {
+    if (!siteProbe.isArray() || siteProbe.toArray().size() != 2) {
+      throw std::runtime_error("Bad site probe format.");
+    }
+    const auto siteProbeInfo = siteProbe.toArray();
+    const auto siteId = siteProbeInfo[0];
+    if (!siteId.isDouble()) {
+      throw std::runtime_error("Bad site id.");
+    }
+    Site::Ptr site;
+    try {
+      site = Site::fromName(siteId.toInt());
+    } catch (const std::out_of_range &) {
+      throw std::runtime_error("Bad site id.");
+    }
+    const auto probeId = siteProbeInfo[1];
+    if (!probeId.isString()) {
+      throw std::runtime_error("Bad probe id.");
+    }
+    Probe::Ptr probe;
+    try {
+      probe = Probe::fromString(probeId.toString().toStdString());
+    } catch (const std::out_of_range &) {
+      throw std::runtime_error("Bad probe id.");
+    }
+    probeArrangement.setProbeAt(ProbeOptimizer::getIndexForSiteId(site->name),
+                                probe);
+  }
+  return probeArrangement;
 }

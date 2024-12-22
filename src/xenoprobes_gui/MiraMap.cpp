@@ -13,7 +13,8 @@
 #include <QJsonArray>
 #include <ranges>
 
-MiraMap::MiraMap(QWidget *parent) : QGraphicsView(parent) {
+MiraMap::MiraMap(ProbeOptimizer *probeOptimizer, QWidget *parent)
+    : QGraphicsView(parent), probeOptimizer_(probeOptimizer) {
   setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
   setDragMode(ScrollHandDrag);
   setMouseTracking(true);
@@ -37,17 +38,18 @@ MiraMap::MiraMap(QWidget *parent) : QGraphicsView(parent) {
   setScene(&mapScene_);
 
   // Site widgets.
-  for (const auto &node : Site::ALL | std::views::values) {
-    auto siteWidget = new FnSiteWidget(&node);
-    siteWidget->setVisited(sitesVisited_.contains(node.name));
+  for (const auto &siteId : Site::ALL | std::views::keys) {
+    const auto site = Site::fromName(siteId);
+    auto siteWidget = new FnSiteWidget(site);
+    siteWidget->setVisited(probeOptimizer_->getSites().contains(site));
     connect(siteWidget, &FnSiteWidget::visitedChanged,
-            [this, &node](const bool visited) {
+            [this, site](const bool visited) {
               if (visited) {
-                sitesVisited_.insert(node.name);
+                probeOptimizer_->getSites().insert(site);
               } else {
-                sitesVisited_.erase(node.name);
+                probeOptimizer_->getSites().erase(site);
               }
-              calculateLinks();
+              calculateSiteWidgets();
             });
     connect(siteWidget, &FnSiteWidget::visitedChanged, this,
             &MiraMap::sitesVisitedChanged);
@@ -57,21 +59,15 @@ MiraMap::MiraMap(QWidget *parent) : QGraphicsView(parent) {
         siteWidgets_.emplace_back(mapScene_.addWidget(siteWidget));
     // Site data stores the center point, so we need to half it to get the
     // corners for drawing.
-    siteButton->setX(node.position.first - (siteWidget->width() / 2.0));
-    siteButton->setY(node.position.second - (siteWidget->height() / 2.0));
+    siteButton->setX(site->position.first - (siteWidget->width() / 2.0));
+    siteButton->setY(site->position.second - (siteWidget->height() / 2.0));
     siteButton->setZValue(kZSites);
   }
   calculateLinks();
 }
 
-void MiraMap::setSitesVisited(
-    const std::unordered_set<Site::Id> &sitesVisited) {
-  sitesVisited_ = sitesVisited;
-  calculateSiteWidgets();
-}
-
-void MiraMap::setSiteProbeMap(const SiteProbeMap &siteProbeMap) {
-  siteProbeMap_ = siteProbeMap;
+void MiraMap::setProbeOptimizer(ProbeOptimizer *probeOptimizer) {
+  probeOptimizer_ = probeOptimizer;
   calculateSiteWidgets();
 }
 
@@ -81,53 +77,6 @@ void MiraMap::setViewMode(const FnSiteWidget::ViewMode viewMode) {
         dynamic_cast<QGraphicsProxyWidget *>(widget.get())->widget());
     fnSiteWidget->setViewMode(viewMode);
   }
-}
-
-QJsonValue MiraMap::siteProbesToJson(const SiteProbeMap &siteProbeMap) {
-  // Do this as an array of 2-tuples so we don't have to worry about int parsing
-  // when reading.
-  QJsonArray json;
-  for (const auto &[siteId, probeId] : siteProbeMap) {
-    json.append(QJsonArray(
-        {static_cast<int>(siteId), QString::fromStdString(probeId)}));
-  }
-
-  return json;
-}
-MiraMap::SiteProbeMap MiraMap::siteProbesFromJson(const QJsonValue &json) {
-  if (!json.isArray()) {
-    throw std::runtime_error("Bad site probes map format.");
-  }
-  SiteProbeMap siteProbeMap;
-  siteProbeMap.reserve(json.toArray().size());
-  for (const auto &siteProbe : json.toArray()) {
-    if (!siteProbe.isArray() || siteProbe.toArray().size() != 2) {
-      throw std::runtime_error("Bad site probe format.");
-    }
-    const auto siteProbeInfo = siteProbe.toArray();
-    const auto siteId = siteProbeInfo[0];
-    if (!siteId.isDouble()) {
-      throw std::runtime_error("Bad site id.");
-    }
-    Site::Ptr site;
-    try {
-      site = Site::fromName(siteId.toInt());
-    } catch (const std::out_of_range &) {
-      throw std::runtime_error("Bad site id.");
-    }
-    const auto probeId = siteProbeInfo[1];
-    if (!probeId.isString()) {
-      throw std::runtime_error("Bad probe id.");
-    }
-    Probe::Ptr probe;
-    try {
-      probe = Probe::fromString(probeId.toString().toStdString());
-    } catch (const std::out_of_range &) {
-      throw std::runtime_error("Bad probe id.");
-    }
-    siteProbeMap.emplace(site->name, probe->id);
-  }
-  return siteProbeMap;
 }
 
 void MiraMap::wheelEvent(QWheelEvent *event) {
@@ -149,13 +98,19 @@ void MiraMap::calculateSiteWidgets() {
   for (auto &widget : siteWidgets_) {
     auto *fnSiteWidget = dynamic_cast<FnSiteWidget *>(
         dynamic_cast<QGraphicsProxyWidget *>(widget.get())->widget());
-    fnSiteWidget->setVisited(
-        sitesVisited_.contains(fnSiteWidget->site()->name));
-    const auto dataProbe = siteProbeMap_.find(fnSiteWidget->site()->name);
-    if (dataProbe == siteProbeMap_.end()) {
-      fnSiteWidget->setDataProbe(nullptr);
+    const auto site = fnSiteWidget->site();
+    const auto visited = probeOptimizer_->getSites().contains(site);
+    fnSiteWidget->setVisited(visited);
+    if (visited) {
+      const auto dataProbe = probeOptimizer_->solution().getSetup().getProbeAt(
+          ProbeOptimizer::getIndexForSiteId(site->name));
+      if (dataProbe == nullptr) {
+        fnSiteWidget->setDataProbe(nullptr);
+      } else {
+        fnSiteWidget->setDataProbe(dataProbe);
+      }
     } else {
-      fnSiteWidget->setDataProbe(dataProbe->second);
+      fnSiteWidget->setDataProbe(nullptr);
     }
   }
 
@@ -170,24 +125,25 @@ void MiraMap::calculateLinks() {
   // Need to track which lines have already been drawn as both sides of the link
   // are stored.
   std::vector<std::unordered_set<Site::Id>> drawnLinks;
-  for (const auto &site : Site::ALL | std::views::values) {
-    if (!sitesVisited_.contains(site.name)) {
+  for (const auto &siteId : Site::ALL | std::views::keys) {
+    const auto site = Site::fromName(siteId);
+    if (!probeOptimizer_->getSites().contains(site)) {
       // Do not draw links between sites not visited.
       continue;
     }
-    for (const auto neighbor : site.getNeighbors()) {
-      if (!sitesVisited_.contains(neighbor->name)) {
-      // Do not draw links between sites not visited.
+    for (const auto neighbor : site->getNeighbors()) {
+      if (!probeOptimizer_->getSites().contains(neighbor)) {
+        // Do not draw links between sites not visited.
         continue;
       }
 
-      const std::unordered_set linkPair{site.name, neighbor->name};
+      const std::unordered_set linkPair{site->name, neighbor->name};
       if (std::find(drawnLinks.cbegin(), drawnLinks.cend(), linkPair) !=
           drawnLinks.cend()) {
         // Already drawn line.
         continue;
       }
-      const auto [x1, y1] = site.position;
+      const auto [x1, y1] = site->position;
       const auto [x2, y2] = neighbor->position;
       auto &linkItem = linkGraphics_.emplace_back(
           mapScene_.addLine(QLine(x1, y1, x2, y2), pen));

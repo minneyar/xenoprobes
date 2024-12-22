@@ -99,19 +99,39 @@ void ProbeOptimizer::printInventory() const {
 }
 
 void ProbeOptimizer::loadSetup(const std::string &filename) {
-  spdlog::info("Loading setup.");
-  setup_.resize(sites_.size());
-
   const auto data = loadCSV(filename);
+  std::unordered_map<Site::Id, Probe::Id> siteProbeMap;
   for (const auto &record : data) {
-    const auto siteName = csvRecordValToInt(record[0]);
     try {
-      setup_.setProbeAt(getIndexForSiteId(siteName),
-                        Probe::fromString(std::get<std::string>(record[1])));
+      const auto siteName = csvRecordValToInt(record[0]);
+      siteProbeMap.emplace(siteName, std::get<std::string>(record[1]));
+    } catch (const std::exception &e) {
+      throw std::runtime_error("Setup file has bad format.");
+    }
+  }
+  loadSetup(siteProbeMap);
+}
+
+void ProbeOptimizer::loadSetup(
+    const std::unordered_map<Site::Id, Probe::Id> &siteProbeMap) {
+  spdlog::info("Loading setup.");
+  ProbeArrangement newSetup;
+  newSetup.resize(sites_.size());
+
+  for (const auto &[siteName, probeId] : siteProbeMap) {
+    try {
+      newSetup.setProbeAt(getIndexForSiteId(siteName),
+                          Probe::fromString(probeId));
     } catch (const std::exception &e) {
       throw std::runtime_error{"Setup file uses a non-available site."};
     }
   }
+  loadSetup(newSetup);
+}
+
+void ProbeOptimizer::loadSetup(const ProbeArrangement &setup) {
+  setup_ = setup;
+  solution_.setSetup(setup);
 }
 
 void ProbeOptimizer::loadSites(const std::string &filename) {
@@ -166,6 +186,7 @@ void ProbeOptimizer::loadSites(const SiteList &sites) {
                numConnections);
   sites_ = sites;
   updateSiteListIndexes();
+  setup_.resize(sites_.size());
 }
 
 void ProbeOptimizer::updateSiteListIndexes() {

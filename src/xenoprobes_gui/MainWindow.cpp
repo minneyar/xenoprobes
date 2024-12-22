@@ -26,7 +26,7 @@
 #include <probeoptimizer/site.h>
 
 #include <ranges>
-#include <unordered_set>
+#include <spdlog/spdlog.h>
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent),
@@ -66,14 +66,15 @@ void MainWindow::initUi() {
   // Map
   auto mapLayout = new QVBoxLayout();
   layout->addLayout(mapLayout);
-  widgets_.miraMap = new MiraMap(central);
-  mapLayout->addWidget(widgets_.miraMap);
   // Start with all sites enabled.
-  std::unordered_set<Site::Id> sitesVisited;
-  for (const auto siteId : Site::ALL | std::views::keys) {
-    sitesVisited.insert(siteId);
+  ProbeOptimizer::SiteList sites;
+  for (const auto &siteId : Site::ALL | std::views::keys) {
+    sites.insert(Site::fromName(siteId));
   }
-  widgets_.miraMap->setSitesVisited(sitesVisited);
+  probeOptimizer_.loadSites(sites);
+  widgets_.miraMap = new MiraMap(&probeOptimizer_, central);
+  mapLayout->addWidget(widgets_.miraMap);
+
   widgets_.miraMap->show();
   connect(widgets_.miraMap, &MiraMap::sitesVisitedChanged, this,
           &MainWindow::dataChanged);
@@ -319,16 +320,17 @@ void MainWindow::openFromPath(const QString &path) {
 
     ProbeOptimizer newProbeOptimizer;
     const auto sites = SiteListLoader::readSiteListFromJson(jsonObj["sites"]);
-    const auto probeMap = MiraMap::siteProbesFromJson(jsonObj["probeMap"]);
     const auto inventory =
         InventoryLoader::readInventoryFromJson(jsonObj["inventory"]);
     newProbeOptimizer.loadInventory(inventory);
+    const auto probeMap =
+        SiteListLoader::readSiteProbesFromJson(jsonObj["probeMap"]);
+    newProbeOptimizer.loadSetup(probeMap);
     const auto options = RunOptionsWidget::optionsFromJson(jsonObj["options"]);
 
     // Defer saving until everything is loaded in case of errors.
     probeOptimizer_ = newProbeOptimizer;
-    widgets_.miraMap->setSitesVisited(sites);
-    widgets_.miraMap->setSiteProbeMap(probeMap);
+    widgets_.miraMap->setProbeOptimizer(&probeOptimizer_);
     inventoryModel_->setProbeOptimizer(&probeOptimizer_);
     widgets_.runOptions->setOptions(options);
 
@@ -351,9 +353,9 @@ void MainWindow::saveToPath(const QString &path) {
   }
   QJsonObject json;
   json["sites"] =
-      SiteListLoader::writeSiteListToJson(widgets_.miraMap->sitesVisited());
-  json["probeMap"] =
-      MiraMap::siteProbesToJson(widgets_.miraMap->siteProbeMap());
+      SiteListLoader::writeSiteListToJson(probeOptimizer_.getSites());
+  json["probeMap"] = SiteListLoader::writeSiteProbesToJson(
+      probeOptimizer_.solution().getSetup());
   json["inventory"] =
       InventoryLoader::writeInventoryToJson(probeOptimizer_.getInventory());
   json["options"] =
@@ -375,10 +377,13 @@ void MainWindow::fileImportSites() {
   }
   const auto filenames = dialog.selectedFiles();
   try {
-    const auto newIds = SiteListLoader::readSiteListFromFile(filenames.first());
-    widgets_.miraMap->setSitesVisited(newIds);
+    const auto siteList =
+        SiteListLoader::readSiteListFromFile(filenames.first());
+    probeOptimizer_.loadSites(siteList);
+    widgets_.miraMap->setProbeOptimizer(&probeOptimizer_);
     dataChanged();
-  } catch (const std::exception &) {
+  } catch (const std::exception &e) {
+    spdlog::error(e.what());
     QMessageBox::critical(this, tr("Failed to open file"),
                           tr("Could not open %1").arg(filenames.first()));
   }
@@ -394,7 +399,7 @@ void MainWindow::fileExportSites() {
   }
   const auto filenames = dialog.selectedFiles();
   try {
-    SiteListLoader::writeSiteListToFile(widgets_.miraMap->sitesVisited(),
+    SiteListLoader::writeSiteListToFile(probeOptimizer_.getSites(),
                                         filenames.first());
   } catch (const std::exception &) {
     QMessageBox::critical(this, tr("Failed to save file"),
@@ -465,9 +470,8 @@ void MainWindow::solve() {
   // not after.
   progressDialog_->setAutoReset(false);
   progressDialog_->setModal(true);
-  solverRunner_ = new SolverRunner(
-      &probeOptimizer_, widgets_.miraMap->sitesVisited(),
-      widgets_.miraMap->siteProbeMap(), widgets_.runOptions->options(), this);
+  solverRunner_ =
+      new SolverRunner(&probeOptimizer_, widgets_.runOptions->options(), this);
   connect(solverRunner_, &SolverRunner::progress, this, &MainWindow::progress);
   connect(progressDialog_, &QProgressDialog::canceled, solverRunner_,
           &SolverRunner::requestInterruption);
@@ -507,20 +511,20 @@ void MainWindow::progress(unsigned long iter, double bestScore,
           .arg(secondsRemaining, 2, 10, QChar('0')));
 }
 
-void MainWindow::solved(unsigned int mining, unsigned int revenue,
-                        unsigned int storage, QStringList ores,
-                        MiraMap::SiteProbeMap siteProbeMap) {
+void MainWindow::solved(ProbeArrangement probeArrangement) {
   progressDialog_->close();
   progressDialog_->deleteLater();
   progressDialog_ = nullptr;
   solverStopwatch_.invalidate();
 
-  widgets_.miraMap->setSiteProbeMap(siteProbeMap);
+  probeOptimizer_.loadSetup(probeArrangement);
+  widgets_.miraMap->setProbeOptimizer(&probeOptimizer_);
+  widgets_.solutionWidget->setSolution(probeArrangement);
 
-  widgets_.solutionWidget->setProduction(mining);
-  widgets_.solutionWidget->setRevenue(revenue);
-  widgets_.solutionWidget->setStorage(storage);
-  widgets_.solutionWidget->setOres(ores);
+  QStringList ores;
+  for (const auto &ore : probeArrangement.getOres()) {
+    ores.push_back(QString::fromStdString(ore));
+  }
 
   QMessageBox resultDialog(this);
   resultDialog.setText(tr("Completed solving!"));
@@ -535,9 +539,9 @@ void MainWindow::solved(unsigned int mining, unsigned int revenue,
             "<tr><th align=\"right\">Ores</th><td align=\"left\">%4</td></tr>"
           "</table>"
           )
-          .arg(mining)
-          .arg(revenue)
-          .arg(storage)
+          .arg(probeArrangement.getTotalProduction())
+          .arg(probeArrangement.getTotalRevenue())
+          .arg(probeArrangement.getTotalStorage())
           .arg(ores.join("<br>")));
   // @formatter:on
   // clang-format on

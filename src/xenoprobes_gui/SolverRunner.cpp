@@ -11,11 +11,9 @@
 #include <probeoptimizer/probe_optimizer.h>
 
 SolverRunner::SolverRunner(ProbeOptimizer *probeOptimizer,
-                           const std::unordered_set<Site::Id> &siteList,
-                           const MiraMap::SiteProbeMap &siteProbeMap,
                            const RunOptions &runOptions, QObject *parent)
-    : QThread(parent), probeOptimizer_(probeOptimizer), siteList_(siteList),
-      siteProbeMap_(siteProbeMap), runOptions_(runOptions) {}
+    : QThread(parent), probeOptimizer_(probeOptimizer),
+      runOptions_(runOptions) {}
 
 void SolverRunner::run() {
   probeOptimizer_->setStorageWeight(runOptions_.storageWeight);
@@ -26,9 +24,6 @@ void SolverRunner::run() {
   probeOptimizer_->setMutationRate(runOptions_.mutation / 100.0);
   probeOptimizer_->setMaxPopSize(runOptions_.population);
 
-  // Load enabled sites.
-  probeOptimizer_->loadSites(siteList_);
-
   // Do the thing.
   probeOptimizer_->doHillClimbing(
       [this](unsigned long iter, double bestScore, double worstScore,
@@ -38,15 +33,5 @@ void SolverRunner::run() {
       [this]() { return isInterruptionRequested(); });
 
   // Report solution.
-  const auto &solutionSetup = probeOptimizer_->solution().getSetup();
-  QStringList ores;
-  for (const auto &ore : solutionSetup.getOres()) {
-    ores.push_back(QString::fromStdString(ore));
-  }
-  for (const auto [site, probe] : solutionSetup.getSetup()) {
-    siteProbeMap_[site->name] = probe->id;
-  }
-  Q_EMIT(finished(solutionSetup.getTotalProduction(),
-                  solutionSetup.getTotalRevenue(),
-                  solutionSetup.getTotalStorage(), ores, siteProbeMap_));
+  Q_EMIT(finished(probeOptimizer_->solution().getSetup()));
 }

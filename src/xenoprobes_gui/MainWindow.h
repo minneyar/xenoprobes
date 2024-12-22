@@ -81,8 +81,7 @@ private Q_SLOTS:
   void solve();
   void progress(unsigned long iter, double bestScore, double worstScore,
                 unsigned long killed);
-  void solved(unsigned int mining, unsigned int revenue, unsigned int storage,
-              QStringList ores, MiraMap::SiteProbeMap siteProbeMap);
+  void solved(ProbeArrangement probeArrangement);
 };
 
 #endif // MAINWINDOW_H

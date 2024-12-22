@@ -11,15 +11,13 @@
 
 #include <QLabel>
 #include <QWidget>
+#include <probeoptimizer/probe_arrangement.h>
 
 class SolutionWidget : public QWidget {
   Q_OBJECT
 public:
   explicit SolutionWidget(QWidget *parent = nullptr);
-  void setProduction(unsigned int production);
-  void setRevenue(unsigned int revenue);
-  void setStorage(unsigned int storage);
-  void setOres(const QStringList &ores);
+  void setSolution(const ProbeArrangement &probeArrangement);
 
 private:
   QLabel *productionLabel_;

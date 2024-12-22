@@ -24,18 +24,14 @@ SolutionWidget::SolutionWidget(QWidget *parent)
   oresLabel_->setTextFormat(Qt::RichText);
 }
 
-void SolutionWidget::setProduction(unsigned int production) {
-  productionLabel_->setText(QString::number(production));
-}
-
-void SolutionWidget::setRevenue(unsigned int revenue) {
-  revenueLabel_->setText(QString::number(revenue));
-}
-
-void SolutionWidget::setStorage(unsigned int storage) {
-  storageLabel_->setText(QString::number(storage));
-}
-
-void SolutionWidget::setOres(const QStringList &ores) {
+void SolutionWidget::setSolution(const ProbeArrangement &probeArrangement) {
+  productionLabel_->setText(
+      QString::number(probeArrangement.getTotalProduction()));
+  revenueLabel_->setText(QString::number(probeArrangement.getTotalRevenue()));
+  storageLabel_->setText(QString::number(probeArrangement.getTotalStorage()));
+  QStringList ores;
+  for (const auto &ore : probeArrangement.getOres()) {
+    ores.push_back(QString::fromStdString(ore));
+  }
   oresLabel_->setText(ores.join("<br>"));
 }

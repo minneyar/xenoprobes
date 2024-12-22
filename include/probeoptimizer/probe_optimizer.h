@@ -34,6 +34,8 @@ public:
       const std::vector<std::pair<Probe::Id, unsigned int>> &inventory);
   void loadInventory(const ProbeInventory &inventory);
   void loadSetup(const std::string &filename);
+  void loadSetup(const std::unordered_map<Site::Id, Probe::Id> &siteProbeMap);
+  void loadSetup(const ProbeArrangement &setup);
   void loadSites(const std::string &filename);
   void loadSites(const std::vector<std::vector<CsvRecordVal>> &records);
   void loadSites(const std::unordered_set<Site::Id> &idList);

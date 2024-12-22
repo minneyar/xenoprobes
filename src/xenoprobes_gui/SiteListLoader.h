@@ -11,6 +11,8 @@
 
 #include "FnSiteWidget.h"
 #include <QJsonValue>
+#include <probeoptimizer/probe_arrangement.h>
+#include <probeoptimizer/probe_optimizer.h>
 #include <unordered_set>
 
 /**
@@ -21,14 +23,20 @@
  */
 class SiteListLoader {
 public:
-  [[nodiscard]] static std::unordered_set<Site::Id>
+  [[nodiscard]] static ProbeOptimizer::SiteList
   readSiteListFromFile(const QString &path);
-  [[nodiscard]] static std::unordered_set<Site::Id>
+  [[nodiscard]] static ProbeOptimizer::SiteList
   readSiteListFromJson(const QJsonValue &json);
-  static void writeSiteListToFile(const std::unordered_set<Site::Id> &ids,
+
+  static void writeSiteListToFile(const ProbeOptimizer::SiteList &siteList,
                                   const QString &path);
   [[nodiscard]] static QJsonValue
-  writeSiteListToJson(const std::unordered_set<Site::Id> &ids);
+  writeSiteListToJson(const ProbeOptimizer::SiteList &siteList);
+
+  [[nodiscard]] static QJsonValue
+  writeSiteProbesToJson(const ProbeArrangement &probeArrangement);
+  [[nodiscard]] static ProbeArrangement
+  readSiteProbesFromJson(const QJsonValue &json);
 };
 
 #endif // SITELISTLOADER_H

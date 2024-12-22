@@ -5,40 +5,40 @@
 #ifndef XENOPROBES_SOLUTION_H
 #define XENOPROBES_SOLUTION_H
 
-#include <vector>
 #include "probe.h"
 #include "probe_arrangement.h"
+#include <vector>
 
 class Solution {
 public:
-    Solution();
+  Solution();
 
-    int getAge() const;
-    void setAge(int);
+  int getAge() const;
+  void setAge(int);
 
-    double getScore() const;
+  double getScore() const;
 
-    void randomize();
-    void evaluate();
-    void mutate(double rate);
+  void randomize();
+  void evaluate();
+  void mutate(double rate);
 
-    void printTotals() const;
-    void printSetup() const;
-    const ProbeArrangement& getSetup() const {return setup_;}
+  void printTotals() const;
+  void printSetup() const;
+  const ProbeArrangement &getSetup() const { return setup_; }
+  void setSetup(const ProbeArrangement &setup) { setup_ = setup; }
 
-    bool hasSameArrangement(const Solution& arr2) const;
+  bool hasSameArrangement(const Solution &arr2) const;
 
-    Solution findBestChild(size_t numOffsprings, double mutationRate) const;
+  Solution findBestChild(size_t numOffsprings, double mutationRate) const;
 
-    bool operator==(const Solution& b);
-    bool operator<(const Solution& b);
-    bool operator>(const Solution& b);
+  bool operator==(const Solution &b);
+  bool operator<(const Solution &b);
+  bool operator>(const Solution &b);
 
 private:
-    double score_ = 0;
-    int age_ = 0;
-    ProbeArrangement setup_;
+  double score_ = 0;
+  int age_ = 0;
+  ProbeArrangement setup_;
 };
 
-
-#endif //XENOPROBES_SOLUTION_H
+#endif // XENOPROBES_SOLUTION_H

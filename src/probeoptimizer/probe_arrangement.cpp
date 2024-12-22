@@ -49,6 +49,9 @@ bool operator==(const ProbeArrangement &l, const ProbeArrangement &r) {
 void ProbeArrangement::seedMT(std::seed_seq &seed) { mt.seed(seed); }
 
 Probe::Ptr ProbeArrangement::getProbeAt(size_t index) const {
+  if (index >= probes_.size()) {
+    return nullptr;
+  }
   return probes_.at(index);
 }
 
