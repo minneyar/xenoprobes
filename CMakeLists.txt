@@ -1,4 +1,4 @@
-cmake_minimum_required (VERSION 3.28)
+cmake_minimum_required (VERSION 3.22)
 project (xenoprobes
     VERSION 1.0.0
     DESCRIPTION "Calculate the optimal Data Probe layout for Xenoblade Chronicles X"
@@ -30,11 +30,10 @@ set(Boost_USE_MULTITHREADED ON)
 add_compile_definitions(QT_NO_KEYWORDS)
 include_directories("${PROJECT_SOURCE_DIR}/include" "${PROJECT_BINARY_DIR}/include")
 
-find_package(Qt6 6.7 REQUIRED COMPONENTS
+find_package(Qt6 6.2 REQUIRED COMPONENTS
         Core
         Svg
         Widgets
 )
-qt_standard_project_setup(REQUIRES 6.7)
 
 add_subdirectory(src)

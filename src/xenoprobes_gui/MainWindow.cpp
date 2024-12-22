@@ -134,22 +134,32 @@ void MainWindow::initActions() {
   // File
   // Open
   actions.fileOpen = new QAction(
-      QIcon::fromTheme(QIcon::ThemeIcon::DocumentOpen), tr("&Open"), this);
+#if QT_VERSION >= QT_VERSION_CHECK(6, 7, 0)
+      QIcon::fromTheme(QIcon::ThemeIcon::DocumentOpen),
+#endif
+      tr("&Open"), this);
   actions.fileOpen->setShortcut(QKeySequence::Open);
   connect(actions.fileOpen, &QAction::triggered, this, &MainWindow::fileOpen);
   // Recent
   actions.fileRecent = new QMenu(tr("Recent Documents"), this);
-  actions.fileRecent->setIcon(
-      QIcon::fromTheme(QIcon::ThemeIcon::DocumentOpenRecent));
+#if QT_VERSION >= QT_VERSION_CHECK(6, 7, 0)
+  actions.fileRecent->setIcon(QIcon::fromTheme(QIcon::ThemeIcon::DocumentOpenRecent));
+#endif
   updateRecentDocuments();
   // Save
   actions.fileSave = new QAction(
-      QIcon::fromTheme(QIcon::ThemeIcon::DocumentSave), tr("&Save"), this);
+#if QT_VERSION >= QT_VERSION_CHECK(6, 7, 0)
+      QIcon::fromTheme(QIcon::ThemeIcon::DocumentSave),
+#endif
+      tr("&Save"), this);
   actions.fileSave->setShortcut(QKeySequence::Save);
   connect(actions.fileSave, &QAction::triggered, this, &MainWindow::fileSave);
   // Save As
   actions.fileSaveAs = new QAction(
-      QIcon::fromTheme(QIcon::ThemeIcon::DocumentSaveAs), tr("Save &As"), this);
+#if QT_VERSION >= QT_VERSION_CHECK(6, 7, 0)
+      QIcon::fromTheme(QIcon::ThemeIcon::DocumentSaveAs),
+#endif
+      tr("Save &As"), this);
   actions.fileSaveAs->setShortcut(QKeySequence::SaveAs);
   connect(actions.fileSaveAs, &QAction::triggered, this,
           &MainWindow::fileSaveAs);
@@ -171,7 +181,10 @@ void MainWindow::initActions() {
           &MainWindow::fileExportInventory);
   // Exit
   actions.fileExit = new QAction(
-      QIcon::fromTheme(QIcon::ThemeIcon::ApplicationExit), "E&xit", this);
+#if QT_VERSION >= QT_VERSION_CHECK(6, 7, 0)
+      QIcon::fromTheme(QIcon::ThemeIcon::ApplicationExit),
+#endif
+      "E&xit", this);
   connect(actions.fileExit, &QAction::triggered, this, &MainWindow::close);
 }
 

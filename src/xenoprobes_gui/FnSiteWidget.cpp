@@ -11,6 +11,7 @@
 #include "DataProbe.h"
 
 #include <QFile>
+#include <QLocale>
 #include <QPaintEvent>
 #include <QPainter>
 #include <QSvgRenderer>
@@ -97,8 +98,15 @@ VisitedWidget::VisitedWidget(const Site::Ptr site, FnSiteWidget *parent)
   checkLayout->addWidget(widgets_.checkBox);
   checkLayout->addStretch();
   updateCheckbox();
-  connect(widgets_.checkBox, &QCheckBox::checkStateChanged,
-          [this](Qt::CheckState checkState) {
+  connect(widgets_.checkBox,
+#if QT_VERSION >= QT_VERSION_CHECK(6, 7, 0)
+    &QCheckBox::checkStateChanged,
+          [this](Qt::CheckState checkState)
+#else
+    &QCheckBox::stateChanged,
+          [this](int checkState)
+#endif
+          {
             visited_ = checkState == Qt::Checked;
             Q_EMIT(visitedChanged(visited_));
           });
