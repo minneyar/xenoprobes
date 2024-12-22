@@ -16,6 +16,7 @@
 
 class ProbeOptimizer {
 public:
+  using ProbeInventory = std::map<Probe::Ptr, unsigned int>;
   using ProgressCallback =
       std::function<void(unsigned long iter, double bestScore,
                          double worstScore, unsigned long killed)>;
@@ -25,6 +26,7 @@ public:
   void loadInventory(const std::vector<std::vector<CsvRecordVal>> &records);
   void loadInventory(
       const std::vector<std::pair<Probe::Id, unsigned int>> &inventory);
+  void loadInventory(const ProbeInventory &inventory);
   void loadSetup(const std::string &filename);
   template <typename T> void loadSites(T sites) {
     sites_ = loadSiteList(sites);
@@ -56,24 +58,20 @@ public:
   static const ProbeArrangement &getDefaultArrangement();
   static const std::vector<Site::Ptr> &getSites();
   static std::size_t getIndexForSiteId(Site::Id siteId);
-  static std::vector<Probe::Ptr> getInventory();
+  static ProbeInventory &getInventory();
   [[nodiscard]] const Solution &solution() const { return solution_; }
 
   bool isValid() const {
-    std::map<Probe::Ptr, int> histoInv;
-    std::map<Probe::Ptr, int> histoSetup;
+    ProbeInventory histoSetup;
 
-    for (const auto item : inventory_) {
-      ++histoInv[item];
-    }
     for (size_t i = 0; i < setup_.getSize(); i++) {
       ++histoSetup[setup_.getProbeAt(i)];
     }
-    return histoInv == histoSetup;
+    return inventory_ == histoSetup;
   }
 
 private:
-  inline static std::vector<Probe::Ptr> inventory_;
+  inline static ProbeInventory inventory_;
   inline static std::vector<Site::Ptr> sites_;
   // Needed because many operations require indexes in sites_ and cannot be
   // converted to use a map because of their nature.

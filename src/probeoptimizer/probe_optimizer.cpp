@@ -10,6 +10,7 @@
 #include <boost/algorithm/string/trim.hpp>
 #include <iomanip>
 #include <mutex>
+#include <ranges>
 #include <spdlog/spdlog.h>
 #include <thread>
 
@@ -49,33 +50,38 @@ void ProbeOptimizer::loadInventory(
 
 void ProbeOptimizer::loadInventory(
     const std::vector<std::pair<Probe::Id, unsigned int>> &inventory) {
-  inventory_.clear();
+  ProbeInventory newInventory;
 
   for (const auto &[probeId, num] : inventory) {
-    for (unsigned int i = 0; i < num; ++i) {
-      inventory_.push_back(Probe::fromString(probeId));
-    }
+    newInventory.emplace(Probe::fromString(probeId), num);
+  }
+
+  loadInventory(newInventory);
+}
+
+void ProbeOptimizer::loadInventory(const ProbeInventory &inventory) {
+  ProbeInventory newInventory(inventory);
+
+  // Ensure every probe type is accounted for in the inventory.
+  ProbeInventory::mapped_type probeCount = 0;
+  for (const auto &probeId : Probe::ALL | std::views::keys) {
+    // Inserts a 0 if not already present in inventory.
+    probeCount += newInventory[Probe::fromString(probeId)];
   }
 
   // ensure inventory is as big as needed to fill the entire map
-  inventory_.reserve(sites_.size());
-  while (inventory_.size() < sites_.size())
-    inventory_.push_back(Probe::fromString("B"));
+  if (probeCount < sites_.size()) {
+    newInventory[Probe::fromString("B")] = sites_.size() - probeCount;
+  }
 
-  spdlog::info("Inventory has {} probes.", inventory_.size());
-  auto numBasic = std::count_if(
-      inventory_.begin(), inventory_.end(), [](const Probe::Ptr probe) {
-        return probe->category == Probe::Category::Basic;
-      });
-  if (numBasic > 0)
-    spdlog::info("{} are Basic Probes.", numBasic);
+  spdlog::info("Inventory has {} probes.", newInventory.size());
+  if (newInventory[Probe::fromString("B")] > 0)
+    spdlog::info("{} are Basic Probes.", newInventory[Probe::fromString("B")]);
+  inventory_ = newInventory;
 }
 
 void ProbeOptimizer::printInventory() const {
-  std::map<Probe::Ptr, int> histo;
-  for (auto item : inventory_)
-    ++histo[item];
-  for (auto &entry : histo)
+  for (auto &entry : inventory_)
     if (entry.first->category != Probe::Category::Basic)
       spdlog::info("{},{}", entry.first->id, entry.second);
 }
@@ -253,4 +259,6 @@ std::size_t ProbeOptimizer::getIndexForSiteId(Site::Id siteId) {
   }
 }
 
-std::vector<Probe::Ptr> ProbeOptimizer::getInventory() { return inventory_; }
+ProbeOptimizer::ProbeInventory &ProbeOptimizer::getInventory() {
+  return inventory_;
+}

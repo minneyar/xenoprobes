@@ -76,7 +76,10 @@ double ProbeArrangement::evaluate() const {
 }
 
 void ProbeArrangement::randomize() {
-  probes_ = ProbeOptimizer::getInventory();
+  probes_.clear();
+  for (const auto [probe, num] : ProbeOptimizer::getInventory()) {
+    std::fill_n(std::back_inserter(probes_), num, probe);
+  }
   std::shuffle(probes_.begin(), probes_.end(), mt);
 }
 
