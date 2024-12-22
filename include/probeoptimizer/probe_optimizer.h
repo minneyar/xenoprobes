@@ -5,18 +5,22 @@
 #ifndef XENOPROBES_PROBE_OPTIMIZER_H
 #define XENOPROBES_PROBE_OPTIMIZER_H
 
+#include "csv.h"
 #include "probe.h"
 #include "probe_arrangement.h"
-#include "site_list.h"
+#include "site.h"
 #include "solution.h"
 #include <atomic>
 #include <functional>
 #include <map>
+#include <set>
+#include <unordered_set>
 #include <vector>
 
 class ProbeOptimizer {
 public:
   using ProbeInventory = std::map<Probe::Ptr, unsigned int>;
+  using SiteList = std::set<Site::Ptr>;
   using ProgressCallback =
       std::function<void(unsigned long iter, double bestScore,
                          double worstScore, unsigned long killed)>;
@@ -28,10 +32,10 @@ public:
       const std::vector<std::pair<Probe::Id, unsigned int>> &inventory);
   void loadInventory(const ProbeInventory &inventory);
   void loadSetup(const std::string &filename);
-  template <typename T> void loadSites(T sites) {
-    sites_ = loadSiteList(sites);
-    updateSiteListIndexes();
-  }
+  void loadSites(const std::string &filename);
+  void loadSites(const std::vector<std::vector<CsvRecordVal>> &records);
+  void loadSites(const std::unordered_set<Site::Id> &idList);
+  void loadSites(const SiteList &sites);
 
   void printInventory() const;
   void printSetup() const;
@@ -56,8 +60,9 @@ public:
   static bool shouldStop() { return shouldStop_; }
 
   static const ProbeArrangement &getDefaultArrangement();
-  static const std::vector<Site::Ptr> &getSites();
+  static SiteList &getSites();
   static std::size_t getIndexForSiteId(Site::Id siteId);
+  static Site::Id getSiteIdForIndex(std::size_t index);
   static ProbeInventory &getInventory();
   [[nodiscard]] const Solution &solution() const { return solution_; }
 
@@ -72,10 +77,11 @@ public:
 
 private:
   inline static ProbeInventory inventory_;
-  inline static std::vector<Site::Ptr> sites_;
+  inline static SiteList sites_;
   // Needed because many operations require indexes in sites_ and cannot be
   // converted to use a map because of their nature.
-  inline static std::unordered_map<Site::Id, std::size_t> siteListIndexes_;
+  inline static std::unordered_map<Site::Id, std::size_t> siteIdIndexMap_;
+  inline static std::unordered_map<std::size_t, Site::Id> siteIndexIdMap_;
   inline static ProbeArrangement setup_;
   static void updateSiteListIndexes();
 

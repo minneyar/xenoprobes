@@ -21,8 +21,12 @@ std::mt19937_64 ProbeArrangement::mt{std::random_device{}()};
 #endif
 
 void ProbeArrangement::resize(size_t size) {
+  if (probes_.size() == size) {
+    return;
+  }
+
   spdlog::debug("Resizing to {}", size);
-  probes_.resize(size);
+  probes_.resize(size, Probe::fromString("B"));
 }
 
 void ProbeArrangement::setProbeAt(size_t index, const Probe::Ptr &type) {
@@ -81,20 +85,25 @@ void ProbeArrangement::randomize() {
     std::fill_n(std::back_inserter(probes_), num, probe);
   }
   std::shuffle(probes_.begin(), probes_.end(), mt);
+  resize(ProbeOptimizer::getSites().size());
 }
 
 void ProbeArrangement::printSetup() const {
   for (const auto [site, probe] : getSetup()) {
     if (probe->category != Probe::Category::Basic) {
-      spdlog::info("{},{}", site, probe->id);
+      spdlog::info("{},{}", site->name, probe->id);
     }
   }
 }
 
-std::map<int, Probe::Ptr> ProbeArrangement::getSetup() const {
-  std::map<int, Probe::Ptr> setup;
-  for (size_t idx = 0; idx < ProbeOptimizer::getSites().size(); ++idx) {
-    setup.emplace(ProbeOptimizer::getSites().at(idx)->name, probes_[idx]);
+std::map<Site::Ptr, Probe::Ptr> ProbeArrangement::getSetup() const {
+  std::map<Site::Ptr, Probe::Ptr> setup;
+  assert(ProbeOptimizer::getSites().size() == probes_.size());
+  auto site = ProbeOptimizer::getSites().cbegin();
+  auto probe = probes_.cbegin();
+  for (; site != ProbeOptimizer::getSites().end() && probe != probes_.cend();
+       ++site, ++probe) {
+    setup.emplace(*site, *probe);
   }
 
   return setup;
@@ -166,10 +175,13 @@ double ProbeArrangement::getTotalStorage() const {
 std::vector<std::string> ProbeArrangement::getOres() const {
   // TODO: figure out how different probes affect ore extraction
   std::set<Ore::Ptr> minedOres;
-  for (size_t i = 0; i < ProbeOptimizer::getSites().size(); ++i) {
-    const auto probe = probes_[i];
-    if (probe->category == Probe::Category::Mining) {
-      const auto &siteOre = ProbeOptimizer::getSites().at(i)->getOre();
+  assert(ProbeOptimizer::getSites().size() == probes_.size());
+  auto site = ProbeOptimizer::getSites().cbegin();
+  auto probe = probes_.cbegin();
+  for (; site != ProbeOptimizer::getSites().end() && probe != probes_.cend();
+       ++site, ++probe) {
+    if ((*probe)->category == Probe::Category::Mining) {
+      const auto &siteOre = (*site)->getOre();
       minedOres.insert(siteOre.cbegin(), siteOre.cend());
     }
   }
@@ -186,24 +198,21 @@ int ProbeArrangement::getComboSize(size_t source) const {
   int comboSize = 0;
 
   // TODO Why were these static...?
-  std::vector<char> visited;
-  std::queue<size_t> Q;
+  std::unordered_set<Site::Ptr> visited;
+  std::queue<Site::Ptr> Q;
 
-  visited.clear();
-  visited.resize(probes_.size());
-
-  Q.push(source);
+  Q.push(Site::fromName(ProbeOptimizer::getSiteIdForIndex(source)));
   while (!Q.empty()) {
-    size_t idx = Q.front();
+    const auto site = Q.front();
     Q.pop();
 
-    visited[idx] = true;
+    visited.insert(site);
     ++comboSize;
 
-    for (auto neighbor : ProbeOptimizer::getSites().at(idx)->getNeighbors()) {
+    for (auto neighbor : site->getNeighbors()) {
       const auto nidx = ProbeOptimizer::getIndexForSiteId(neighbor->name);
-      if (probes_[nidx] == sourceType && !visited[nidx]) {
-        Q.push(nidx);
+      if (probes_[nidx] == sourceType && !visited.contains(neighbor)) {
+        Q.push(neighbor);
       }
     }
   }
@@ -237,7 +246,8 @@ double ProbeArrangement::getProbeBoost(size_t idx) const noexcept {
   }
 
   double boost = 1.0;
-  for (auto neighbor : ProbeOptimizer::getSites().at(idx)->getNeighbors()) {
+  const auto site = Site::fromName(ProbeOptimizer::getSiteIdForIndex(idx));
+  for (auto neighbor : site->getNeighbors()) {
     const auto nidx = ProbeOptimizer::getIndexForSiteId(neighbor->name);
     const auto neighborProbe = probes_[nidx];
     boost *= neighborProbe->boost;
@@ -247,7 +257,7 @@ double ProbeArrangement::getProbeBoost(size_t idx) const noexcept {
 
 double ProbeArrangement::getProbeProduction(size_t idx) const noexcept {
   const auto probe = probes_[idx];
-  const auto site = ProbeOptimizer::getSites().at(idx);
+  const auto site = Site::fromName(ProbeOptimizer::getSiteIdForIndex(idx));
 
   double probeRate = probe->production;
 
@@ -286,13 +296,13 @@ double ProbeArrangement::getProbeProduction(size_t idx) const noexcept {
 }
 
 double ProbeArrangement::getProduction(size_t idx) const noexcept {
-  return getProbeProduction(idx) *
-         ProbeOptimizer::getSites().at(idx)->getProductionVal();
+  const auto site = Site::fromName(ProbeOptimizer::getSiteIdForIndex(idx));
+  return getProbeProduction(idx) * site->getProductionVal();
 }
 
 double ProbeArrangement::getProbeRevenue(size_t idx) const noexcept {
   const auto probe = probes_[idx];
-  const auto site = ProbeOptimizer::getSites().at(idx);
+  const auto site = Site::fromName(ProbeOptimizer::getSiteIdForIndex(idx));
 
   double probeRate = probe->revenue;
 
@@ -331,7 +341,7 @@ double ProbeArrangement::getProbeRevenue(size_t idx) const noexcept {
 }
 
 double ProbeArrangement::getRevenue(size_t idx) const noexcept {
-  const auto site = ProbeOptimizer::getSites().at(idx);
+  const auto site = Site::fromName(ProbeOptimizer::getSiteIdForIndex(idx));
 
   double siteRev = site->getRevenueVal();
   if (probes_[idx]->category == Probe::Category::Research)
@@ -342,7 +352,7 @@ double ProbeArrangement::getRevenue(size_t idx) const noexcept {
 
 double ProbeArrangement::getStorage(size_t idx) const noexcept {
   const auto probe = probes_[idx];
-  const auto site = ProbeOptimizer::getSites().at(idx);
+  const auto site = Site::fromName(ProbeOptimizer::getSiteIdForIndex(idx));
 
   double probeStorage = 0;
 

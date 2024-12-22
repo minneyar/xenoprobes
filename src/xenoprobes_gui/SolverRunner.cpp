@@ -47,8 +47,8 @@ void SolverRunner::run() {
   for (const auto &ore : solutionSetup.getOres()) {
     ores.push_back(QString::fromStdString(ore));
   }
-  for (const auto [siteId, probe] : solutionSetup.getSetup()) {
-    siteProbeMap_[siteId] = probe->id;
+  for (const auto [site, probe] : solutionSetup.getSetup()) {
+    siteProbeMap_[site->name] = probe->id;
   }
   Q_EMIT(finished(solutionSetup.getTotalProduction(),
                   solutionSetup.getTotalRevenue(),

@@ -6,7 +6,7 @@
 #define XENOPROBES_PROBE_ARRANGEMENT_H
 
 #include "probe.h"
-#include "site_list.h"
+#include "site.h"
 #include <random>
 #include <vector>
 
@@ -26,7 +26,7 @@ public:
 
     void printTotals() const;
     void printSetup() const;
-    std::map<int, Probe::Ptr> getSetup() const;
+    std::map<Site::Ptr, Probe::Ptr> getSetup() const;
 
     double getStorageWeight() const;
     void setStorageWeight(double storage_weight);

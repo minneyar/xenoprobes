@@ -9,7 +9,6 @@ add_library(probeoptimizer
         probe.cpp
         probe_optimizer.cpp
         site.cpp
-        site_list.cpp
         solution.cpp
         semaphore.cpp
 )

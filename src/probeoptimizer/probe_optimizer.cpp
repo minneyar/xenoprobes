@@ -65,6 +65,9 @@ void ProbeOptimizer::loadInventory(const ProbeInventory &inventory) {
   // Ensure every probe type is accounted for in the inventory.
   ProbeInventory::mapped_type probeCount = 0;
   for (const auto &probeId : Probe::ALL | std::views::keys) {
+    if (probeId == "B") {
+      continue;
+    }
     // Inserts a 0 if not already present in inventory.
     probeCount += newInventory[Probe::fromString(probeId)];
   }
@@ -74,7 +77,7 @@ void ProbeOptimizer::loadInventory(const ProbeInventory &inventory) {
     newInventory[Probe::fromString("B")] = sites_.size() - probeCount;
   }
 
-  spdlog::info("Inventory has {} probes.", newInventory.size());
+  spdlog::info("Inventory has {} probes.", probeCount);
   if (newInventory[Probe::fromString("B")] > 0)
     spdlog::info("{} are Basic Probes.", newInventory[Probe::fromString("B")]);
   inventory_ = newInventory;
@@ -94,7 +97,7 @@ void ProbeOptimizer::loadSetup(const std::string &filename) {
   for (const auto &record : data) {
     const auto siteName = csvRecordValToInt(record[0]);
     try {
-      setup_.setProbeAt(siteListIndexes_.at(siteName),
+      setup_.setProbeAt(getIndexForSiteId(siteName),
                         Probe::fromString(std::get<std::string>(record[1])));
     } catch (const std::exception &e) {
       throw std::runtime_error{"Setup file uses a non-available site."};
@@ -102,12 +105,68 @@ void ProbeOptimizer::loadSetup(const std::string &filename) {
   }
 }
 
+void ProbeOptimizer::loadSites(const std::string &filename) {
+  try {
+    auto data = loadCSV(filename);
+    loadSites(data);
+  } catch (std::exception &e) {
+    spdlog::error("Error while loading {}: {}", filename, e.what());
+    throw;
+  }
+}
+
+void ProbeOptimizer::loadSites(
+    const std::vector<std::vector<CsvRecordVal>> &records) {
+  try {
+    std::unordered_set<Site::Id> idList;
+
+    for (const auto &record : records) {
+      // Ignore all other columns in the list as those values are compiled in.
+      const auto siteId = csvRecordValToInt(record[0]);
+      idList.insert(siteId);
+    }
+
+    loadSites(idList);
+  } catch (std::exception &e) {
+    spdlog::error("Bad site data format: {}", e.what());
+    throw;
+  }
+}
+
+void ProbeOptimizer::loadSites(const std::unordered_set<Site::Id> &idList) {
+  SiteList newSites;
+  for (const auto id : idList) {
+    try {
+      newSites.insert(Site::fromName(id));
+    } catch (std::out_of_range &) {
+      spdlog::error("Could not find ID {}", idList.size());
+      throw;
+    }
+  }
+  loadSites(newSites);
+}
+
+void ProbeOptimizer::loadSites(const SiteList &sites) {
+  int numConnections = 0;
+  for (const auto site : sites) {
+    numConnections += site->getNeighbors().size();
+  }
+  // Counted both edges of the connection.
+  numConnections /= 2;
+  spdlog::info("Loaded {} FN sites with {} connections.", sites.size(),
+               numConnections);
+  sites_ = sites;
+  updateSiteListIndexes();
+}
+
 void ProbeOptimizer::updateSiteListIndexes() {
-  siteListIndexes_.clear();
-  siteListIndexes_.reserve(sites_.size());
-  for (std::size_t ix = 0; ix < sites_.size(); ++ix) {
-    const auto site = sites_.at(ix);
-    siteListIndexes_.emplace(site->name, ix);
+  siteIdIndexMap_.clear();
+  siteIndexIdMap_.clear();
+  std::size_t ix = 0;
+  for (const auto site : sites_) {
+    siteIdIndexMap_.emplace(site->name, ix);
+    siteIndexIdMap_.emplace(ix, site->name);
+    ++ix;
   }
 }
 
@@ -248,13 +307,22 @@ const ProbeArrangement &ProbeOptimizer::getDefaultArrangement() {
   return setup_;
 }
 
-const std::vector<Site::Ptr> &ProbeOptimizer::getSites() { return sites_; }
+ProbeOptimizer::SiteList &ProbeOptimizer::getSites() { return sites_; }
 
 std::size_t ProbeOptimizer::getIndexForSiteId(Site::Id siteId) {
   try {
-    return siteListIndexes_.at(siteId);
+    return siteIdIndexMap_.at(siteId);
   } catch (std::out_of_range &e) {
     spdlog::error("No index for site id {}", siteId);
+    throw;
+  }
+}
+
+Site::Id ProbeOptimizer::getSiteIdForIndex(std::size_t index) {
+  try {
+    return siteIndexIdMap_.at(index);
+  } catch (std::out_of_range &e) {
+    spdlog::error("No site id for index {}", index);
     throw;
   }
 }
