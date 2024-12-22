@@ -29,6 +29,7 @@
 
 # CLion project
 .idea/
+cmake-build-*
 
 # CMake build dir
 build/

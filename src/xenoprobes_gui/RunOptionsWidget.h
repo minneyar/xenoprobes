@@ -31,6 +31,7 @@ public:
         .population = population_->value(),
         .offsprings = offsprings_->value(),
         .mutation = mutation_->value(),
+        .threads = threads_->value(),
     };
   }
   void setOptions(const RunOptions &options) {
@@ -41,6 +42,7 @@ public:
     population_->setValue(options.population);
     offsprings_->setValue(options.offsprings);
     mutation_->setValue(options.mutation);
+    threads_->setValue(options.threads);
   }
   [[nodiscard]] unsigned int storageWeight() { return storageWeight_->value(); }
   void setStorageWeight(int storageWeight) {
@@ -64,6 +66,8 @@ public:
   void setOffsprings(int offsprings) { offsprings_->setValue(offsprings); }
   [[nodiscard]] unsigned int mutation() { return mutation_->value(); }
   void setMutation(int mutation) { mutation_->setValue(mutation); }
+  [[nodiscard]] unsigned int threads() { return threads_->value(); }
+  void setThreads(int threads) { threads_->setValue(threads); }
 
 Q_SIGNALS:
   void settingsChanged();
@@ -79,6 +83,7 @@ private:
   SliderWithValWidget *population_;
   SliderWithValWidget *offsprings_;
   SliderWithValWidget *mutation_;
+  SliderWithValWidget *threads_;
 };
 
 #endif // RUNOPTIONSWIDGET_H

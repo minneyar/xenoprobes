@@ -8,6 +8,7 @@
 
 #ifndef RUNOPTIONS_H
 #define RUNOPTIONS_H
+#include <QThread>
 
 struct RunOptions {
   int storageWeight = 1000;
@@ -17,6 +18,7 @@ struct RunOptions {
   int population = 200;
   int offsprings = 100;
   int mutation = 3;
+  int threads = QThread::idealThreadCount();
 };
 
 #endif //RUNOPTIONS_H

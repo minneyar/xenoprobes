@@ -10,6 +10,7 @@
 
 #include <QJsonObject>
 #include <QPushButton>
+#include <QThread>
 #include <QVBoxLayout>
 
 RunOptionsWidget::RunOptionsWidget(QWidget *parent)
@@ -19,7 +20,8 @@ RunOptionsWidget::RunOptionsWidget(QWidget *parent)
       iterations_(new SliderWithValWidget(this)),
       population_(new SliderWithValWidget(this)),
       offsprings_(new SliderWithValWidget(this)),
-      mutation_(new SliderWithValWidget(this)) {
+      mutation_(new SliderWithValWidget(this)),
+      threads_(new SliderWithValWidget(this)) {
   auto *layout = new QVBoxLayout(this);
   layout->addWidget(new QLabel(tr("Storage Weight:"), this));
   layout->addWidget(storageWeight_);
@@ -64,6 +66,12 @@ RunOptionsWidget::RunOptionsWidget(QWidget *parent)
   mutation_->spinBox()->setSuffix(tr("%"));
   connect(mutation_, &SliderWithValWidget::valueChanged, this,
           &RunOptionsWidget::settingsChanged);
+  layout->addWidget(new QLabel(tr("CPU Threads:"), this));
+  layout->addWidget(threads_);
+  threads_->setMinimum(1);
+  threads_->setMaximum(QThread::idealThreadCount() * 2);
+  connect(threads_, &SliderWithValWidget::valueChanged, this,
+      &RunOptionsWidget::settingsChanged);
   applyDefaultValues();
 
   auto applyDefaultsBtn = new QPushButton(tr("Restore Defaults"), this);
@@ -74,7 +82,7 @@ RunOptionsWidget::RunOptionsWidget(QWidget *parent)
   // Match spinbox widths for aesthetics.
   const auto allWidgets = {
       storageWeight_, revenueWeight_, productionWeight_, iterations_,
-      population_,    offsprings_,    mutation_,
+      population_,    offsprings_,    mutation_,         threads_,
   };
   const auto maxWidth =
       std::ranges::max(allWidgets,
@@ -98,6 +106,7 @@ QJsonValue RunOptionsWidget::optionsToJson(const RunOptions &options) {
   json["population"] = options.population;
   json["offsprings"] = options.offsprings;
   json["mutation"] = options.mutation;
+  json["threads"] = options.threads;
 
   return json;
 }
@@ -147,6 +156,11 @@ RunOptions RunOptionsWidget::optionsFromJson(const QJsonValue &json) {
   }
   options.mutation = json["mutation"].toInt();
 
+  if  (!jsonObj.contains("threads") || !jsonObj["threads"].isDouble()) {
+    throw std::runtime_error("Bad threads");
+  }
+  options.threads = json["threads"].toInt();
+
   return options;
 }
 
@@ -159,4 +173,5 @@ void RunOptionsWidget::applyDefaultValues() {
   population_->setValue(defaults.population);
   offsprings_->setValue(defaults.offsprings);
   mutation_->setValue(defaults.mutation);
+  threads_->setValue(defaults.threads);
 }

@@ -23,6 +23,7 @@ void SolverRunner::run() {
   probeOptimizer_->setNumOffsprings(runOptions_.offsprings);
   probeOptimizer_->setMutationRate(runOptions_.mutation / 100.0);
   probeOptimizer_->setMaxPopSize(runOptions_.population);
+  probeOptimizer_->setMaxThreads(runOptions_.threads);
 
   // Do the thing.
   probeOptimizer_->doHillClimbing(
