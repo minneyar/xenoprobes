@@ -88,8 +88,7 @@ void ProbeOptimizer::loadSetup(const std::string &filename) {
   for (const auto &record : data) {
     const auto siteName = csvRecordValToInt(record[0]);
     try {
-      const auto site = Site::fromName(siteName);
-      setup_.setProbeAt(site->name,
+      setup_.setProbeAt(siteListIndexes_.at(siteName),
                         Probe::fromString(std::get<std::string>(record[1])));
     } catch (const std::exception &e) {
       throw std::runtime_error{"Setup file uses a non-available site."};
@@ -98,11 +97,11 @@ void ProbeOptimizer::loadSetup(const std::string &filename) {
 }
 
 void ProbeOptimizer::updateSiteListIndexes() {
-  siteListIndexes.clear();
-  siteListIndexes.reserve(sites_.size());
+  siteListIndexes_.clear();
+  siteListIndexes_.reserve(sites_.size());
   for (std::size_t ix = 0; ix < sites_.size(); ++ix) {
     const auto site = sites_.at(ix);
-    siteListIndexes.emplace(site->name, ix);
+    siteListIndexes_.emplace(site->name, ix);
   }
 }
 
@@ -247,7 +246,7 @@ const std::vector<Site::Ptr> &ProbeOptimizer::getSites() { return sites_; }
 
 std::size_t ProbeOptimizer::getIndexForSiteId(Site::Id siteId) {
   try {
-    return siteListIndexes.at(siteId);
+    return siteListIndexes_.at(siteId);
   } catch (std::out_of_range &e) {
     spdlog::error("No index for site id {}", siteId);
     throw;

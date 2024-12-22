@@ -77,7 +77,7 @@ private:
   inline static std::vector<Site::Ptr> sites_;
   // Needed because many operations require indexes in sites_ and cannot be
   // converted to use a map because of their nature.
-  inline static std::unordered_map<Site::Id, std::size_t> siteListIndexes;
+  inline static std::unordered_map<Site::Id, std::size_t> siteListIndexes_;
   inline static ProbeArrangement setup_;
   static void updateSiteListIndexes();
 
