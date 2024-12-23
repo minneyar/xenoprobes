@@ -48,10 +48,18 @@ install(FILES "$<TARGET_RUNTIME_DLLS:${PROJECT_NAME}_gui>"
         TYPE BIN
 )
 if (NOT CMAKE_SYSTEM_NAME STREQUAL "Linux")
-    qt_generate_deploy_app_script(
-            TARGET "${PROJECT_NAME}_gui"
-            OUTPUT_SCRIPT DEPLOY_SCRIPT
-            NO_UNSUPPORTED_PLATFORM_ERROR
-    )
+    if ("${Qt6_VERSION}" VERSION_GREATER_EQUAL "6.3")
+        qt_generate_deploy_app_script(
+                TARGET "${PROJECT_NAME}_gui"
+                OUTPUT_SCRIPT DEPLOY_SCRIPT
+                NO_UNSUPPORTED_PLATFORM_ERROR
+        )
+    else ()
+        include(deployqt)
+        deployqt(
+                TARGET "${PROJECT_NAME}_gui"
+                OUTPUT_SCRIPT DEPLOY_SCRIPT
+        )
+    endif ()
     install(SCRIPT ${DEPLOY_SCRIPT})
 endif ()
