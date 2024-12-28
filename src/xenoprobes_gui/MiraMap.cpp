@@ -41,7 +41,6 @@ MiraMap::MiraMap(ProbeOptimizer *probeOptimizer, QWidget *parent)
   // Site widgets.
   for (const auto site : Site::ALL | std::views::values) {
     auto siteWidget = new FnSiteWidget(site);
-    siteWidget->setVisited(probeOptimizer_->getSites().contains(site));
     connect(siteWidget, &FnSiteWidget::visitedChanged,
             [this, site](const bool visited) {
               if (visited) {
@@ -63,7 +62,7 @@ MiraMap::MiraMap(ProbeOptimizer *probeOptimizer, QWidget *parent)
     siteButton->setY(site->position.second - (siteWidget->height() / 2.0));
     siteButton->setZValue(kZSites);
   }
-  calculateLinks();
+  calculateSiteWidgets();
 }
 
 void MiraMap::setProbeOptimizer(ProbeOptimizer *probeOptimizer) {
@@ -117,28 +116,37 @@ void MiraMap::calculateSiteWidgets() {
   calculateLinks();
 }
 
+static const auto noComboLinkColor = QColorConstants::Svg::cyan;
+static const auto withComboLinkColor = QColorConstants::Svg::deeppink;
+
 void MiraMap::calculateLinks() {
   QPen pen(Qt::SolidLine);
   pen.setWidth(4);
-  pen.setColor(Qt::white);
   linkGraphics_.clear();
   // Need to track which lines have already been drawn as both sides of the link
   // are stored.
-  std::vector<std::unordered_set<Site::Id>> drawnLinks;
+  std::vector<std::set<Site::Id>> drawnLinks;
   for (const auto site : Site::ALL | std::views::values) {
     if (!probeOptimizer_->getSites().contains(site)) {
       // Do not draw links between sites not visited.
       continue;
     }
     for (const auto neighbor : site->getNeighbors()) {
-      const std::unordered_set linkPair{site->name, neighbor->name};
-      if (std::find(drawnLinks.cbegin(), drawnLinks.cend(), linkPair) !=
-          drawnLinks.cend()) {
+      const std::set linkPair{site->name, neighbor->name};
+      if (std::ranges::find(drawnLinks, linkPair) != drawnLinks.cend()) {
         // Already drawn line.
         continue;
       }
       const auto [x1, y1] = site->position;
       const auto [x2, y2] = neighbor->position;
+      const auto comboBonus =
+          probeOptimizer_->solution().getSetup().getComboBonus(
+              ProbeOptimizer::getIndexForSiteId(site->name));
+      if (comboBonus > 1) {
+        pen.setColor(withComboLinkColor);
+      } else {
+        pen.setColor(noComboLinkColor);
+      }
       auto &linkItem = linkGraphics_.emplace_back(
           mapScene_.addLine(QLine(x1, y1, x2, y2), pen));
       linkItem->setZValue(kZLinks);

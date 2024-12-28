@@ -37,6 +37,7 @@ public:
     double getTotalProduction() const;
     double getTotalRevenue() const;
     double getTotalStorage() const;
+    double getComboBonus(size_t idx) const;
     std::vector<std::string> getOres() const;
 
     size_t getSize() const;
@@ -47,7 +48,6 @@ public:
 
 private:
     int getComboSize(size_t source) const;
-    double getComboBonus(size_t idx) const;
     double getProbeBoost(size_t idx) const noexcept;
     double getProbeProduction(size_t idx) const noexcept;
     double getProduction(size_t idx) const noexcept;

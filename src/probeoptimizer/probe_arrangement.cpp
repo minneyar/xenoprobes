@@ -223,8 +223,9 @@ int ProbeArrangement::getComboSize(size_t source) const {
 }
 
 double ProbeArrangement::getComboBonus(size_t idx) const {
-  const auto &probe = probes_[idx];
-  if (probe->category == Probe::Category::Booster ||
+  const auto probe = probes_[idx];
+  if (probe == nullptr || probe->category == Probe::Category::Basic ||
+      probe->category == Probe::Category::Booster ||
       probe->category == Probe::Category::Duplicator)
     return 1.0;
 
