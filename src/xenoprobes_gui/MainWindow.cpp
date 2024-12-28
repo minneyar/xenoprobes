@@ -356,7 +356,7 @@ void MainWindow::saveToPath(const QString &path) {
       InventoryLoader::writeInventoryToJson(probeOptimizer_.getInventory());
   json["options"] =
       RunOptionsWidget::optionsToJson(widgets_.runOptions->options());
-  
+
   QFile file(path);
   if (!file.open(QIODevice::WriteOnly)) {
     QMessageBox::critical(this, tr("Error saving file"),
@@ -500,18 +500,20 @@ void MainWindow::progress(unsigned long iter, double bestScore,
   const auto hoursRemaining = totalSecsRemaining / 60 / 60;
   const auto minutesRemaining = (totalSecsRemaining / 60) % 60;
   const auto secondsRemaining = totalSecsRemaining % 60;
-  progressDialog_->setLabelText(
-      tr("Best: %1\nWorst: %2\nKilled: %3\n\nRequired: %4:%5:%6\nRemaining: "
-         "%7:%8:%9")
-          .arg(std::lround(bestScore))
-          .arg(std::lround(worstScore))
-          .arg(killed)
-          .arg(hoursRequired)
-          .arg(minutesRequired, 2, 10, QChar('0'))
-          .arg(secondsRequired, 2, 10, QChar('0'))
-          .arg(hoursRemaining)
-          .arg(minutesRemaining, 2, 10, QChar('0'))
-          .arg(secondsRemaining, 2, 10, QChar('0')));
+  progressDialog_->setLabelText(tr("%1/%2\nBest: %3\nWorst: %4\nKilled: "
+                                   "%5\n\nRequired: %6:%7:%8\nRemaining: "
+                                   "%9:%10:%11")
+                                    .arg(iter)
+                                    .arg(widgets_.runOptions->iterations())
+                                    .arg(std::lround(bestScore))
+                                    .arg(std::lround(worstScore))
+                                    .arg(killed)
+                                    .arg(hoursRequired)
+                                    .arg(minutesRequired, 2, 10, QChar('0'))
+                                    .arg(secondsRequired, 2, 10, QChar('0'))
+                                    .arg(hoursRemaining)
+                                    .arg(minutesRemaining, 2, 10, QChar('0'))
+                                    .arg(secondsRemaining, 2, 10, QChar('0')));
 }
 
 void MainWindow::solved(ProbeArrangement probeArrangement) {
