@@ -39,8 +39,7 @@ MiraMap::MiraMap(ProbeOptimizer *probeOptimizer, QWidget *parent)
   setScene(&mapScene_);
 
   // Site widgets.
-  for (const auto &siteId : Site::ALL | std::views::keys) {
-    const auto site = Site::fromName(siteId);
+  for (const auto site : Site::ALL | std::views::values) {
     auto siteWidget = new FnSiteWidget(site);
     siteWidget->setVisited(probeOptimizer_->getSites().contains(site));
     connect(siteWidget, &FnSiteWidget::visitedChanged,
@@ -126,8 +125,7 @@ void MiraMap::calculateLinks() {
   // Need to track which lines have already been drawn as both sides of the link
   // are stored.
   std::vector<std::unordered_set<Site::Id>> drawnLinks;
-  for (const auto &siteId : Site::ALL | std::views::keys) {
-    const auto site = Site::fromName(siteId);
+  for (const auto site : Site::ALL | std::views::values) {
     if (!probeOptimizer_->getSites().contains(site)) {
       // Do not draw links between sites not visited.
       continue;

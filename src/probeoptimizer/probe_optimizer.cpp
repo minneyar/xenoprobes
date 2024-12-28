@@ -187,6 +187,7 @@ void ProbeOptimizer::loadSites(const SiteList &sites) {
   sites_ = sites;
   updateSiteListIndexes();
   setup_.resize(sites_.size());
+  solution_.setSetup(setup_);
 }
 
 void ProbeOptimizer::updateSiteListIndexes() {

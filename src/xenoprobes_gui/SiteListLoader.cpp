@@ -85,8 +85,7 @@ void SiteListLoader::writeSiteListToFile(
          "#\n"
          "# Everything after a # will be ignored.\n";
   // Write all sites, commenting out those that are not in ids.
-  for (const auto &siteId : Site::ALL | std::views::keys) {
-    const auto site = Site::fromName(siteId);
+  for (const auto site : Site::ALL | std::views::values) {
     if (!siteList.contains(site)) {
       out << '#';
     }

@@ -70,8 +70,8 @@ void MainWindow::initUi() {
   layout->addLayout(mapLayout);
   // Start with all sites enabled.
   ProbeOptimizer::SiteList sites;
-  for (const auto &siteId : Site::ALL | std::views::keys) {
-    sites.insert(Site::fromName(siteId));
+  for (const auto site : Site::ALL | std::views::values) {
+    sites.insert(site);
   }
   probeOptimizer_.loadSites(sites);
   widgets_.miraMap = new MiraMap(&probeOptimizer_, central);
@@ -347,12 +347,6 @@ void MainWindow::openFromPath(const QString &path) {
 }
 
 void MainWindow::saveToPath(const QString &path) {
-  QFile file(path);
-  if (!file.open(QIODevice::WriteOnly)) {
-    QMessageBox::critical(this, tr("Error saving file"),
-                          tr("The file could not be opened for writing."));
-    return;
-  }
   QJsonObject json;
   json["sites"] =
       SiteListLoader::writeSiteListToJson(probeOptimizer_.getSites());
@@ -362,6 +356,13 @@ void MainWindow::saveToPath(const QString &path) {
       InventoryLoader::writeInventoryToJson(probeOptimizer_.getInventory());
   json["options"] =
       RunOptionsWidget::optionsToJson(widgets_.runOptions->options());
+  
+  QFile file(path);
+  if (!file.open(QIODevice::WriteOnly)) {
+    QMessageBox::critical(this, tr("Error saving file"),
+                          tr("The file could not be opened for writing."));
+    return;
+  }
   file.write(QJsonDocument(json).toJson());
   setWindowFilePath(path);
   setWindowModified(false);
