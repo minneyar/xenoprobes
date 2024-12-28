@@ -65,8 +65,8 @@ public:
 
   static const ProbeArrangement &getDefaultArrangement();
   static const SiteList &getSites();
-  static void addSite(const Site::Ptr &site);
-  static void removeSite(const Site::Ptr &site);
+  void addSite(Site::Ptr site);
+  void removeSite(Site::Ptr site);
   static std::size_t getIndexForSiteId(Site::Id siteId);
   static Site::Id getSiteIdForIndex(std::size_t index);
   static ProbeInventory &getInventory();

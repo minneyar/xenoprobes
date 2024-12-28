@@ -340,14 +340,22 @@ const ProbeArrangement &ProbeOptimizer::getDefaultArrangement() {
 
 const ProbeOptimizer::SiteList &ProbeOptimizer::getSites() { return sites_; }
 
-void ProbeOptimizer::addSite(const Site::Ptr &site) {
+void ProbeOptimizer::addSite(Site::Ptr site) {
+  auto newSetup = setup_.getSetup();
   sites_.insert(site);
   updateSiteListIndexes();
+  newSetup.emplace(site, Probe::B);
+  setup_.loadSetup(newSetup);
+  solution_.setSetup(setup_);
 }
 
-void ProbeOptimizer::removeSite(const Site::Ptr &site) {
+void ProbeOptimizer::removeSite(Site::Ptr site) {
+  auto newSetup = setup_.getSetup();
   sites_.erase(site);
   updateSiteListIndexes();
+  newSetup.erase(site);
+  setup_.loadSetup(newSetup);
+  solution_.setSetup(setup_);
 }
 
 std::size_t ProbeOptimizer::getIndexForSiteId(Site::Id siteId) {

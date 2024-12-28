@@ -112,6 +112,14 @@ std::map<Site::Ptr, Probe::Ptr> ProbeArrangement::getSetup() const {
   return setup;
 }
 
+void ProbeArrangement::loadSetup(const std::map<Site::Ptr, Probe::Ptr> &setup) {
+  probes_.clear();
+  resize(setup.size());
+  for (const auto [site, probe] : setup) {
+    probes_[ProbeOptimizer::getIndexForSiteId(site->name)] = probe;
+  }
+}
+
 double ProbeArrangement::getStorageWeight() const { return storage_weight_; }
 
 double ProbeArrangement::getProductionWeight() const {

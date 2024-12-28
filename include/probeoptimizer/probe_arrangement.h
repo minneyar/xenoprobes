@@ -27,6 +27,7 @@ public:
     void printTotals() const;
     void printSetup() const;
     std::map<Site::Ptr, Probe::Ptr> getSetup() const;
+    void loadSetup(const std::map<Site::Ptr, Probe::Ptr>& setup);
 
     double getStorageWeight() const;
     void setStorageWeight(double storage_weight);
