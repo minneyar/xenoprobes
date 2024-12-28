@@ -59,6 +59,7 @@ def main():
             lhs = int(match.group(1), 10)
             rhs = int(match.group(2), 10)
             sites[lhs].neighbors.add(rhs)
+            sites[rhs].neighbors.add(lhs)
 
     # Load node map positions.
     svg_path = Path(sys.argv[3])

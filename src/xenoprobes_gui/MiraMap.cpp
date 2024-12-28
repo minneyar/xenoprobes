@@ -132,6 +132,7 @@ void MiraMap::calculateLinks() {
       continue;
     }
     for (const auto neighbor : site->getNeighbors()) {
+      bool comboLink = false;
       const std::set linkPair{site->name, neighbor->name};
       if (std::ranges::find(drawnLinks, linkPair) != drawnLinks.cend()) {
         // Already drawn line.
@@ -143,6 +144,19 @@ void MiraMap::calculateLinks() {
           probeOptimizer_->solution().getSetup().getComboBonus(
               ProbeOptimizer::getIndexForSiteId(site->name));
       if (comboBonus > 1) {
+        // This site participates in a combo, determine if this link is part of
+        // it.
+        const auto siteProbe =
+            probeOptimizer_->solution().getSetup().getProbeAt(
+                ProbeOptimizer::getIndexForSiteId(site->name));
+        const auto neighborProbe =
+            probeOptimizer_->solution().getSetup().getProbeAt(
+                ProbeOptimizer::getIndexForSiteId(neighbor->name));
+        if (siteProbe == neighborProbe) {
+          comboLink = true;
+        }
+      }
+      if (comboLink) {
         pen.setColor(withComboLinkColor);
       } else {
         pen.setColor(noComboLinkColor);
