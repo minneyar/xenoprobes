@@ -10,6 +10,7 @@ add_library(probeoptimizer
         probe_optimizer.cpp
         site.cpp
         solution.cpp
+        sitedata.cpp
         semaphore.cpp
 )
 target_link_libraries(probeoptimizer PRIVATE

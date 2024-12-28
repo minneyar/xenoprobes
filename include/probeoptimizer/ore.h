@@ -11,21 +11,21 @@
 struct Ore {
   using Ptr = const Ore *;
 
-  static const Ore arcSandOre;
-  static const Ore aurorite;
-  static const Ore boiledEggOre;
-  static const Ore bonjelium;
-  static const Ore cimmerianCinnabar;
-  static const Ore dawnstone;
-  static const Ore enduronLead;
-  static const Ore everfreezeOre;
-  static const Ore foucaultium;
-  static const Ore infernium;
-  static const Ore lionboneBort;
-  static const Ore marineRutile;
-  static const Ore ouroborosCrystal;
-  static const Ore parhelionPlatinum;
-  static const Ore whiteCometite;
+  static const Ore::Ptr arcSandOre;
+  static const Ore::Ptr aurorite;
+  static const Ore::Ptr boiledEggOre;
+  static const Ore::Ptr bonjelium;
+  static const Ore::Ptr cimmerianCinnabar;
+  static const Ore::Ptr dawnstone;
+  static const Ore::Ptr enduronLead;
+  static const Ore::Ptr everfreezeOre;
+  static const Ore::Ptr foucaultium;
+  static const Ore::Ptr infernium;
+  static const Ore::Ptr lionboneBort;
+  static const Ore::Ptr marineRutile;
+  static const Ore::Ptr ouroborosCrystal;
+  static const Ore::Ptr parhelionPlatinum;
+  static const Ore::Ptr whiteCometite;
 
   static const std::vector<Ptr> ALL;
 
