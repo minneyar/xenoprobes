@@ -22,6 +22,8 @@ qt_add_executable(${PROJECT_NAME}_gui
         SolutionWidget.cpp
         SolverRunner.h
         SolverRunner.cpp
+        themeIcon.h
+        themeIcon.cpp
         main.cpp
 )
 

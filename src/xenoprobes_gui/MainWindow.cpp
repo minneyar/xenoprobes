@@ -23,6 +23,8 @@
 #include "InventoryLoader.h"
 #include "SiteListLoader.h"
 #include "settings.h"
+#include "themeIcon.h"
+
 #include <probeoptimizer/site.h>
 
 #include <ranges>
@@ -133,33 +135,22 @@ void MainWindow::initUi() {
 void MainWindow::initActions() {
   // File
   // Open
-  actions.fileOpen = new QAction(
-#if QT_VERSION >= QT_VERSION_CHECK(6, 7, 0)
-      QIcon::fromTheme(QIcon::ThemeIcon::DocumentOpen),
-#endif
-      tr("&Open"), this);
+  actions.fileOpen =
+      new QAction(qIconFromTheme(ThemeIcon::DocumentOpen), tr("&Open"), this);
   actions.fileOpen->setShortcut(QKeySequence::Open);
   connect(actions.fileOpen, &QAction::triggered, this, &MainWindow::fileOpen);
   // Recent
   actions.fileRecent = new QMenu(tr("Recent Documents"), this);
-#if QT_VERSION >= QT_VERSION_CHECK(6, 7, 0)
-  actions.fileRecent->setIcon(QIcon::fromTheme(QIcon::ThemeIcon::DocumentOpenRecent));
-#endif
+  actions.fileRecent->setIcon(qIconFromTheme(ThemeIcon::DocumentOpenRecent));
   updateRecentDocuments();
   // Save
-  actions.fileSave = new QAction(
-#if QT_VERSION >= QT_VERSION_CHECK(6, 7, 0)
-      QIcon::fromTheme(QIcon::ThemeIcon::DocumentSave),
-#endif
-      tr("&Save"), this);
+  actions.fileSave =
+      new QAction(qIconFromTheme(ThemeIcon::DocumentSave), tr("&Save"), this);
   actions.fileSave->setShortcut(QKeySequence::Save);
   connect(actions.fileSave, &QAction::triggered, this, &MainWindow::fileSave);
   // Save As
-  actions.fileSaveAs = new QAction(
-#if QT_VERSION >= QT_VERSION_CHECK(6, 7, 0)
-      QIcon::fromTheme(QIcon::ThemeIcon::DocumentSaveAs),
-#endif
-      tr("Save &As"), this);
+  actions.fileSaveAs = new QAction(qIconFromTheme(ThemeIcon::DocumentSaveAs),
+                                   tr("Save &As"), this);
   actions.fileSaveAs->setShortcut(QKeySequence::SaveAs);
   connect(actions.fileSaveAs, &QAction::triggered, this,
           &MainWindow::fileSaveAs);
@@ -180,11 +171,8 @@ void MainWindow::initActions() {
   connect(actions.fileExportInventory, &QAction::triggered, this,
           &MainWindow::fileExportInventory);
   // Exit
-  actions.fileExit = new QAction(
-#if QT_VERSION >= QT_VERSION_CHECK(6, 7, 0)
-      QIcon::fromTheme(QIcon::ThemeIcon::ApplicationExit),
-#endif
-      "E&xit", this);
+  actions.fileExit =
+      new QAction(qIconFromTheme(ThemeIcon::ApplicationExit), "E&xit", this);
   connect(actions.fileExit, &QAction::triggered, this, &MainWindow::close);
 }
 
