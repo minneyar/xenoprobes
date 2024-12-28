@@ -23,11 +23,11 @@
 std::atomic<bool> ProbeOptimizer::shouldStop_(false);
 
 ProbeOptimizer::ProbeOptimizer() {
-  for (const auto &probeId : Probe::ALL | std::views::keys) {
-    if (probeId == "B") {
+  for (const auto probe : Probe::ALL | std::views::values) {
+    if (probe->id == "B") {
       continue;
     }
-    inventory_.emplace(Probe::fromString(probeId), 0);
+    inventory_.emplace(probe, 0);
   }
 }
 
@@ -73,22 +73,22 @@ void ProbeOptimizer::loadInventory(const ProbeInventory &inventory) {
 
   // Ensure every probe type is accounted for in the inventory.
   ProbeInventory::mapped_type probeCount = 0;
-  for (const auto &probeId : Probe::ALL | std::views::keys) {
-    if (probeId == "B") {
+  for (const auto probe : Probe::ALL | std::views::values) {
+    if (probe->id == "B") {
       continue;
     }
     // Inserts a 0 if not already present in inventory.
-    probeCount += newInventory[Probe::fromString(probeId)];
+    probeCount += newInventory[probe];
   }
 
   // ensure inventory is as big as needed to fill the entire map
   if (probeCount < sites_.size()) {
-    newInventory[Probe::fromString("B")] = sites_.size() - probeCount;
+    newInventory[Probe::B] = sites_.size() - probeCount;
   }
 
   spdlog::info("Inventory has {} probes.", probeCount);
-  if (newInventory[Probe::fromString("B")] > 0)
-    spdlog::info("{} are Basic Probes.", newInventory[Probe::fromString("B")]);
+  if (newInventory[Probe::B] > 0)
+    spdlog::info("{} are Basic Probes.", newInventory[Probe::B]);
   inventory_ = newInventory;
 }
 

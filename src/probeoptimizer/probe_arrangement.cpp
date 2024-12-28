@@ -26,7 +26,7 @@ void ProbeArrangement::resize(size_t size) {
   }
 
   spdlog::debug("Resizing to {}", size);
-  probes_.resize(size, Probe::fromString("B"));
+  probes_.resize(size, Probe::B);
 }
 
 void ProbeArrangement::setProbeAt(size_t index, const Probe::Ptr &type) {

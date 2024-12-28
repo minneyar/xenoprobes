@@ -21,12 +21,11 @@ InventoryLoader::readInventoryFromJson(const QJsonValue &json) {
   }
   const auto &jsonMap = json.toObject();
   ProbeOptimizer::ProbeInventory probeInventory;
-  for (const auto probeId : Probe::ALL | std::views::keys) {
-    const auto probe = Probe::fromString(probeId);
+  for (const auto probe : Probe::ALL | std::views::values) {
     if (probe->category == Probe::Category::Basic) {
       continue;
     }
-    auto quantity = jsonMap.value(QString::fromStdString(probeId));
+    auto quantity = jsonMap.value(QString::fromStdString(probe->id));
     if (quantity.isUndefined()) {
       quantity = 0;
     } else if (!quantity.isDouble()) {

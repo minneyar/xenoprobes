@@ -30,8 +30,33 @@ struct Probe {
     Battle,
   };
 
-  static const std::map<Id, Probe> ALL;
-
+  static const Probe::Ptr B;
+  static const Probe::Ptr M1;
+  static const Probe::Ptr M2;
+  static const Probe::Ptr M3;
+  static const Probe::Ptr M4;
+  static const Probe::Ptr M5;
+  static const Probe::Ptr M6;
+  static const Probe::Ptr M7;
+  static const Probe::Ptr M8;
+  static const Probe::Ptr M9;
+  static const Probe::Ptr M10;
+  static const Probe::Ptr R1;
+  static const Probe::Ptr R2;
+  static const Probe::Ptr R3;
+  static const Probe::Ptr R4;
+  static const Probe::Ptr R5;
+  static const Probe::Ptr R6;
+  static const Probe::Ptr B1;
+  static const Probe::Ptr B2;
+  static const Probe::Ptr D;
+  static const Probe::Ptr S;
+  static const Probe::Ptr CF;
+  static const Probe::Ptr CM;
+  static const Probe::Ptr CR;
+  static const Probe::Ptr CD;
+  static const Probe::Ptr CA;
+  static const std::map<Id, Probe::Ptr> ALL;
   static Ptr fromString(const std::string &str);
 
   Id id;
