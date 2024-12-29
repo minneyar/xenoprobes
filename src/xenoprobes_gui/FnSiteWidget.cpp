@@ -156,7 +156,7 @@ DataProbeWidget::DataProbeWidget(const Site::Ptr site, FnSiteWidget *parent)
     });
     addAction(action);
   }
-  setContextMenuPolicy(Qt::ActionsContextMenu);
+  setVisited(visited_);
 }
 
 FnSiteWidget *DataProbeWidget::parentFnSiteWidget() const {
@@ -165,6 +165,9 @@ FnSiteWidget *DataProbeWidget::parentFnSiteWidget() const {
 
 void DataProbeWidget::setVisited(const bool visited) {
   visited_ = visited;
+  // Don't allow changing probes if site is not visited.
+  setContextMenuPolicy(visited ? Qt::ActionsContextMenu
+                               : Qt::PreventContextMenu);
   update();
 }
 void DataProbeWidget::setDataProbe(const Probe *dataProbe) {
