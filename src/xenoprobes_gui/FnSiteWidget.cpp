@@ -9,6 +9,7 @@
 #include "FnSiteWidget.h"
 
 #include "DataProbe.h"
+#include <QAction>
 #include <QFile>
 #include <QLocale>
 #include <QPaintEvent>
@@ -169,10 +170,16 @@ void VisitedWidget::setVisited(const bool visited) {
   updateCheckbox();
 }
 void VisitedWidget::mousePressEvent(QMouseEvent *event) {
+  if (event->button() != Qt::LeftButton) {
+    return;
+  }
   // Needed in order to receive mouse release events.
   event->accept();
 }
 void VisitedWidget::mouseReleaseEvent(QMouseEvent *event) {
+  if (event->button() != Qt::LeftButton) {
+    return;
+  }
   setVisited(!visited_);
   event->accept();
 }
