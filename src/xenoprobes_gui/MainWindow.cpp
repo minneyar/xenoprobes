@@ -19,6 +19,7 @@
 #include <QPushButton>
 #include <QSplitter>
 #include <QTabBar>
+#include <QToolBar>
 #include <QToolBox>
 
 #include "FnSiteWidget.h"
@@ -55,8 +56,8 @@ void MainWindow::initUi() {
   central->addWidget(leftWidget);
 
   // Menubar
-  auto *menuFile = menuBar()->addMenu(tr("&File"));
   // File menu
+  auto *menuFile = menuBar()->addMenu(tr("&File"));
   menuFile->addAction(actions.fileOpen);
   menuFile->addMenu(actions.fileRecent);
   menuFile->addAction(actions.fileSave);
@@ -68,6 +69,22 @@ void MainWindow::initUi() {
   menuFile->addAction(actions.fileExportInventory);
   menuFile->addSeparator();
   menuFile->addAction(actions.fileExit);
+  // View menu
+  auto *menuView = menuBar()->addMenu(tr("&View"));
+  menuView->addAction(actions.viewZoomIn);
+  menuView->addAction(actions.viewZoomOut);
+  menuView->addAction(actions.viewZoomAll);
+
+  // Toolbar
+  auto *toolbar = addToolBar(tr("Toolbar"));
+  toolbar->setMovable(false);
+  toolbar->addAction(actions.fileOpen);
+  toolbar->addAction(actions.fileSave);
+  toolbar->addAction(actions.fileSaveAs);
+  toolbar->addSeparator();
+  toolbar->addAction(actions.viewZoomIn);
+  toolbar->addAction(actions.viewZoomOut);
+  toolbar->addAction(actions.viewZoomAll);
 
   // Map
   auto mapLayout = new QVBoxLayout(leftWidget);
@@ -88,6 +105,12 @@ void MainWindow::initUi() {
           &MainWindow::probeMapChanged);
   connect(widgets_.miraMap, &MiraMap::siteProbeMapChanged, this,
           &MainWindow::probeMapChanged);
+  connect(actions.viewZoomIn, &QAction::triggered, widgets_.miraMap,
+          &MiraMap::zoomIn);
+  connect(actions.viewZoomOut, &QAction::triggered, widgets_.miraMap,
+          &MiraMap::zoomOut);
+  connect(actions.viewZoomAll, &QAction::triggered, widgets_.miraMap,
+          &MiraMap::fitAll);
 
   // Tabs
   widgets_.tabBar = new QTabBar(leftWidget);
@@ -138,7 +161,8 @@ void MainWindow::initUi() {
   // Current solution
   auto *solutionScrollArea = new QScrollArea(configToolbox);
   widgets_.solutionWidget = new SolutionWidget(configToolbox);
-  widgets_.solutionWidget->setMinimumWidth(widgets_.inventoryTable->minimumWidth());
+  widgets_.solutionWidget->setMinimumWidth(
+      widgets_.inventoryTable->minimumWidth());
   widgets_.solutionWidget->setSolution(probeOptimizer_.solution().getSetup());
   solutionScrollArea->setWidget(widgets_.solutionWidget);
   solutionScrollArea->setWidgetResizable(true);
@@ -195,6 +219,21 @@ void MainWindow::initActions() {
   actions.fileExit =
       new QAction(qIconFromTheme(ThemeIcon::ApplicationExit), "E&xit", this);
   connect(actions.fileExit, &QAction::triggered, this, &MainWindow::close);
+
+  // Zoom In
+  actions.viewZoomIn =
+      new QAction(qIconFromTheme(ThemeIcon::ZoomIn), "Zoom &In", this);
+  actions.viewZoomIn->setShortcut(QKeySequence::ZoomIn);
+
+  // Zoom Out
+  actions.viewZoomOut =
+      new QAction(qIconFromTheme(ThemeIcon::ZoomOut), "Zoom &Out", this);
+  actions.viewZoomOut->setShortcut(QKeySequence::ZoomOut);
+
+  // Zoom All
+  actions.viewZoomAll =
+      new QAction(qIconFromTheme(ThemeIcon::ZoomFitBest), "Zoom &All", this);
+  actions.viewZoomAll->setShortcut(QKeySequence::SelectAll);
 }
 
 void MainWindow::updateWindowTitle() {

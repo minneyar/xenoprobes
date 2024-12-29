@@ -40,6 +40,9 @@ private:
     QAction *fileImportInventory = nullptr;
     QAction *fileExportInventory = nullptr;
     QAction *fileExit = nullptr;
+    QAction *viewZoomIn = nullptr;
+    QAction *viewZoomOut = nullptr;
+    QAction *viewZoomAll = nullptr;
   };
 
   Actions actions;

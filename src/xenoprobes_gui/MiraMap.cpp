@@ -89,6 +89,9 @@ void MiraMap::fitAll() {
   fitInView(mapScene_.itemsBoundingRect(), Qt::KeepAspectRatio);
 }
 
+void MiraMap::zoomIn() { scale(1 + kZoomFactor, 1 + kZoomFactor); }
+void MiraMap::zoomOut() { scale(1 - kZoomFactor, 1 - kZoomFactor); }
+
 void MiraMap::resizeEvent(QResizeEvent *event) {
   fitAll();
   QGraphicsView::resizeEvent(event);

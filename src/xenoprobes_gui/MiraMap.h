@@ -23,11 +23,15 @@ public:
   explicit MiraMap(ProbeOptimizer *probeOptimizer, QWidget *parent = nullptr);
   void setProbeOptimizer(ProbeOptimizer *probeOptimizer);
   void setViewMode(const FnSiteWidget::ViewMode viewMode);
-  void fitAll();
 
 Q_SIGNALS:
   void sitesVisitedChanged();
   void siteProbeMapChanged();
+
+public Q_SLOTS:
+  void fitAll();
+  void zoomIn();
+  void zoomOut();
 
 protected:
   void resizeEvent(QResizeEvent *event) override;
@@ -37,6 +41,7 @@ protected:
 
 private:
   using GraphicsItemPtr = std::unique_ptr<QGraphicsItem, QGraphicsItemDeleter>;
+  static constexpr auto kZoomFactor = 0.25;
   static constexpr auto kZSites = 0;
   static constexpr auto kZCombo = -5;
   static constexpr auto kZLinks = -10;
