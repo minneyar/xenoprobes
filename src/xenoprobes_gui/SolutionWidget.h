@@ -19,6 +19,9 @@ public:
   explicit SolutionWidget(QWidget *parent = nullptr);
   void setSolution(const ProbeArrangement &probeArrangement);
 
+Q_SIGNALS:
+  void simulateRequested();
+
 private:
   QLabel *productionLabel_;
   QLabel *revenueLabel_;

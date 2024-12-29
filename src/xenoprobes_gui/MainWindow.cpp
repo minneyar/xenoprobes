@@ -9,6 +9,7 @@
 #include "MainWindow.h"
 #include <QApplication>
 #include <QCloseEvent>
+#include <QDockWidget>
 #include <QFileDialog>
 #include <QHBoxLayout>
 #include <QHeaderView>
@@ -17,10 +18,8 @@
 #include <QMenuBar>
 #include <QMessageBox>
 #include <QPushButton>
-#include <QSplitter>
 #include <QTabBar>
 #include <QToolBar>
-#include <QToolBox>
 
 #include "FnSiteWidget.h"
 #include "InventoryLoader.h"
@@ -49,11 +48,8 @@ void MainWindow::initUi() {
 
   initActions();
 
-  auto central = new QSplitter(this);
-  central->setChildrenCollapsible(false);
+  auto central = new QWidget(this);
   setCentralWidget(central);
-  auto leftWidget = new QWidget(central);
-  central->addWidget(leftWidget);
 
   // Menubar
   // File menu
@@ -85,16 +81,18 @@ void MainWindow::initUi() {
   toolbar->addAction(actions.viewZoomIn);
   toolbar->addAction(actions.viewZoomOut);
   toolbar->addAction(actions.viewZoomAll);
+  toolbar->addSeparator();
+  toolbar->addAction(actions.runSimulation);
 
   // Map
-  auto mapLayout = new QVBoxLayout(leftWidget);
+  auto mapLayout = new QVBoxLayout(central);
   // Start with all sites enabled.
   ProbeOptimizer::SiteList sites;
   for (const auto site : Site::ALL | std::views::values) {
     sites.insert(site);
   }
   probeOptimizer_.loadSites(sites);
-  widgets_.miraMap = new MiraMap(&probeOptimizer_, leftWidget);
+  widgets_.miraMap = new MiraMap(&probeOptimizer_, central);
   mapLayout->addWidget(widgets_.miraMap);
   widgets_.miraMap->show();
   connect(widgets_.miraMap, &MiraMap::sitesVisitedChanged, this,
@@ -113,7 +111,7 @@ void MainWindow::initUi() {
           &MiraMap::fitAll);
 
   // Tabs
-  widgets_.tabBar = new QTabBar(leftWidget);
+  widgets_.tabBar = new QTabBar(central);
   mapLayout->addWidget(widgets_.tabBar);
   widgets_.tabBar->setShape(QTabBar::RoundedSouth);
   auto tabSitesVisited = widgets_.tabBar->addTab(tr("Sites Visited"));
@@ -127,26 +125,22 @@ void MainWindow::initUi() {
   tabChanged(widgets_.tabBar->currentIndex());
 
   // Config pane
-  auto *rightWidget = new QWidget(central);
-  central->addWidget(rightWidget);
-  auto *rightLayout = new QVBoxLayout(rightWidget);
-  auto *configToolbox = new QToolBox(rightWidget);
-  configToolbox->setSizePolicy(QSizePolicy::MinimumExpanding,
-                               QSizePolicy::Preferred);
-  rightLayout->addWidget(configToolbox);
-
   // Inventory
-  widgets_.inventoryTable = new QTableView(configToolbox);
-  configToolbox->addItem(widgets_.inventoryTable, tr("Inventory"));
+  widgets_.inventoryTable = new QTableView(this);
   widgets_.inventoryTable->setModel(inventoryModel_);
   widgets_.inventoryTable->verticalHeader()->hide();
   widgets_.inventoryTable->resizeColumnsToContents();
   widgets_.inventoryTable->setSizeAdjustPolicy(QTableView::AdjustToContents);
   widgets_.inventoryTable->setSizePolicy(QSizePolicy::MinimumExpanding,
                                          QSizePolicy::Preferred);
+  auto *inventoryDockWidget = new QDockWidget(tr("Inventory"), this);
+  inventoryDockWidget->setFeatures(QDockWidget::DockWidgetMovable |
+                                   QDockWidget::DockWidgetFloatable);
+  inventoryDockWidget->setWidget(widgets_.inventoryTable);
+  addDockWidget(Qt::RightDockWidgetArea, inventoryDockWidget);
 
   // Run Options
-  auto *optionsScrollArea = new QScrollArea(configToolbox);
+  auto *optionsScrollArea = new QScrollArea(this);
   widgets_.runOptions = new RunOptionsWidget(optionsScrollArea);
   widgets_.runOptions->setMinimumWidth(widgets_.inventoryTable->minimumWidth());
   optionsScrollArea->setWidget(widgets_.runOptions);
@@ -154,13 +148,17 @@ void MainWindow::initUi() {
   optionsScrollArea->setSizeAdjustPolicy(QScrollArea::AdjustToContents);
   optionsScrollArea->setSizePolicy(QSizePolicy::MinimumExpanding,
                                    QSizePolicy::Preferred);
-  configToolbox->addItem(optionsScrollArea, tr("Run Options"));
   connect(widgets_.runOptions, &RunOptionsWidget::settingsChanged, this,
           &MainWindow::dataChanged);
+  auto *optionsDockWidget = new QDockWidget(tr("Run Options"), this);
+  optionsDockWidget->setFeatures(QDockWidget::DockWidgetMovable |
+                                 QDockWidget::DockWidgetFloatable);
+  optionsDockWidget->setWidget(optionsScrollArea);
+  addDockWidget(Qt::RightDockWidgetArea, optionsDockWidget);
 
   // Current solution
-  auto *solutionScrollArea = new QScrollArea(configToolbox);
-  widgets_.solutionWidget = new SolutionWidget(configToolbox);
+  auto *solutionScrollArea = new QScrollArea(this);
+  widgets_.solutionWidget = new SolutionWidget(solutionScrollArea);
   widgets_.solutionWidget->setMinimumWidth(
       widgets_.inventoryTable->minimumWidth());
   widgets_.solutionWidget->setSolution(probeOptimizer_.solution().getSetup());
@@ -169,12 +167,13 @@ void MainWindow::initUi() {
   solutionScrollArea->setSizeAdjustPolicy(QScrollArea::AdjustToContents);
   solutionScrollArea->setSizePolicy(QSizePolicy::MinimumExpanding,
                                     QSizePolicy::Preferred);
-  configToolbox->addItem(solutionScrollArea, tr("Results"));
-
-  // Solve button
-  auto *solveBtn = new QPushButton(tr("Solve"), rightWidget);
-  rightLayout->addWidget(solveBtn);
-  connect(solveBtn, &QPushButton::clicked, this, &MainWindow::solve);
+  connect(widgets_.solutionWidget, &SolutionWidget::simulateRequested, this,
+          &MainWindow::solve);
+  auto *resultsDockWidget = new QDockWidget(tr("Results"), this);
+  resultsDockWidget->setFeatures(QDockWidget::DockWidgetMovable |
+                                 QDockWidget::DockWidgetFloatable);
+  resultsDockWidget->setWidget(solutionScrollArea);
+  addDockWidget(Qt::RightDockWidgetArea, resultsDockWidget);
 }
 
 void MainWindow::initActions() {
@@ -200,40 +199,44 @@ void MainWindow::initActions() {
   connect(actions.fileSaveAs, &QAction::triggered, this,
           &MainWindow::fileSaveAs);
   // Import Sites
-  actions.fileImportSites = new QAction("Import Sites", this);
+  actions.fileImportSites = new QAction(tr("Import Sites"), this);
   connect(actions.fileImportSites, &QAction::triggered, this,
           &MainWindow::fileImportSites);
   // Export Sites
-  actions.fileExportSites = new QAction("Export Sites", this);
+  actions.fileExportSites = new QAction(tr("Export Sites"), this);
   connect(actions.fileExportSites, &QAction::triggered, this,
           &MainWindow::fileExportSites);
   // Import Inventory
-  actions.fileImportInventory = new QAction("Import Inventory", this);
+  actions.fileImportInventory = new QAction(tr("Import Inventory"), this);
   connect(actions.fileImportInventory, &QAction::triggered, this,
           &MainWindow::fileImportInventory);
   // Export Inventory
-  actions.fileExportInventory = new QAction("Export Inventory", this);
+  actions.fileExportInventory = new QAction(tr("Export Inventory"), this);
   connect(actions.fileExportInventory, &QAction::triggered, this,
           &MainWindow::fileExportInventory);
   // Exit
-  actions.fileExit =
-      new QAction(qIconFromTheme(ThemeIcon::ApplicationExit), "E&xit", this);
+  actions.fileExit = new QAction(qIconFromTheme(ThemeIcon::ApplicationExit),
+                                 tr("E&xit"), this);
   connect(actions.fileExit, &QAction::triggered, this, &MainWindow::close);
 
   // Zoom In
   actions.viewZoomIn =
-      new QAction(qIconFromTheme(ThemeIcon::ZoomIn), "Zoom &In", this);
+      new QAction(qIconFromTheme(ThemeIcon::ZoomIn), tr("Zoom &In"), this);
   actions.viewZoomIn->setShortcut(QKeySequence::ZoomIn);
-
   // Zoom Out
   actions.viewZoomOut =
-      new QAction(qIconFromTheme(ThemeIcon::ZoomOut), "Zoom &Out", this);
+      new QAction(qIconFromTheme(ThemeIcon::ZoomOut), tr("Zoom &Out"), this);
   actions.viewZoomOut->setShortcut(QKeySequence::ZoomOut);
-
   // Zoom All
-  actions.viewZoomAll =
-      new QAction(qIconFromTheme(ThemeIcon::ZoomFitBest), "Zoom &All", this);
+  actions.viewZoomAll = new QAction(qIconFromTheme(ThemeIcon::ZoomFitBest),
+                                    tr("Zoom &All"), this);
   actions.viewZoomAll->setShortcut(QKeySequence::SelectAll);
+
+  // Run Simulation
+  actions.runSimulation = new QAction(
+      qIconFromTheme(ThemeIcon::MediaPlaybackStart), tr("Solve"), this);
+  actions.runSimulation->setShortcut(QKeySequence::Refresh);
+  connect(actions.runSimulation, &QAction::triggered, this, &MainWindow::solve);
 }
 
 void MainWindow::updateWindowTitle() {

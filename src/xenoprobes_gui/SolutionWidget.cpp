@@ -8,6 +8,7 @@
 
 #include "SolutionWidget.h"
 #include <QFormLayout>
+#include <QPushButton>
 
 SolutionWidget::SolutionWidget(QWidget *parent)
     : QWidget(parent), productionLabel_(new QLabel(this)),
@@ -17,6 +18,10 @@ SolutionWidget::SolutionWidget(QWidget *parent)
   layout->setFieldGrowthPolicy(QFormLayout::AllNonFixedFieldsGrow);
   layout->setLabelAlignment(Qt::AlignRight | Qt::AlignTop);
   layout->setFormAlignment(Qt::AlignLeft | Qt::AlignTop);
+  auto *runButton = new QPushButton(tr("Solve"), this);
+  connect(runButton, &QPushButton::clicked, this,
+          &SolutionWidget::simulateRequested);
+  layout->addRow(runButton);
   layout->addRow(tr("Production:"), productionLabel_);
   layout->addRow(tr("Revenue:"), revenueLabel_);
   layout->addRow(tr("Storage:"), storageLabel_);

@@ -43,6 +43,7 @@ private:
     QAction *viewZoomIn = nullptr;
     QAction *viewZoomOut = nullptr;
     QAction *viewZoomAll = nullptr;
+    QAction *runSimulation = nullptr;
   };
 
   Actions actions;
