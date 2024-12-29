@@ -30,6 +30,9 @@ set(Boost_USE_MULTITHREADED ON)
 
 add_compile_definitions(QT_NO_KEYWORDS)
 include_directories("${PROJECT_SOURCE_DIR}/include" "${PROJECT_BINARY_DIR}/include")
+if (MSVC)
+    add_compile_options("/utf-8")
+endif ()
 
 find_package(Qt6 6.2 REQUIRED COMPONENTS
         Core

@@ -15,6 +15,8 @@ add_library(probeoptimizer
 )
 target_link_libraries(probeoptimizer PRIVATE
         Boost::system
-        spdlog::spdlog
         Threads::Threads
+)
+target_link_libraries(probeoptimizer PUBLIC
+        spdlog::spdlog
 )

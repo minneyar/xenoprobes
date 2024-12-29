@@ -33,11 +33,9 @@ if (CMAKE_SYSTEM_NAME STREQUAL "Windows")
 endif ()
 
 find_package(Boost COMPONENTS container_hash REQUIRED)
-find_package(spdlog REQUIRED)
 target_link_libraries(${PROJECT_NAME}_gui PRIVATE
         probeoptimizer
         Boost::container_hash
-        spdlog::spdlog
         Qt::Svg
         Qt::Widgets
 )
