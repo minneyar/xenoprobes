@@ -9,6 +9,7 @@
 #include "MainWindow.h"
 #include <QApplication>
 #include <QCloseEvent>
+#include <QDesktopServices>
 #include <QDockWidget>
 #include <QFileDialog>
 #include <QHBoxLayout>
@@ -21,11 +22,13 @@
 #include <QTabBar>
 #include <QToolBar>
 
+#include "AboutDialog.h"
 #include "FnSiteWidget.h"
 #include "InventoryLoader.h"
 #include "SiteListLoader.h"
 #include "settings.h"
 #include "themeIcon.h"
+#include "xenoprobes_config.h"
 
 #include <probeoptimizer/site.h>
 
@@ -70,6 +73,10 @@ void MainWindow::initUi() {
   menuView->addAction(actions.viewZoomIn);
   menuView->addAction(actions.viewZoomOut);
   menuView->addAction(actions.viewZoomAll);
+  // Help menu
+  auto *menuHelp = menuBar()->addMenu(tr("&Help"));
+  menuHelp->addAction(actions.helpAbout);
+  menuHelp->addAction(actions.helpWebsite);
 
   // Toolbar
   auto *toolbar = addToolBar(tr("Toolbar"));
@@ -219,6 +226,7 @@ void MainWindow::initActions() {
                                  tr("E&xit"), this);
   connect(actions.fileExit, &QAction::triggered, this, &MainWindow::close);
 
+  // View
   // Zoom In
   actions.viewZoomIn =
       new QAction(qIconFromTheme(ThemeIcon::ZoomIn), tr("Zoom &In"), this);
@@ -231,6 +239,18 @@ void MainWindow::initActions() {
   actions.viewZoomAll = new QAction(qIconFromTheme(ThemeIcon::ZoomFitBest),
                                     tr("Zoom &All"), this);
   actions.viewZoomAll->setShortcut(QKeySequence::SelectAll);
+
+  // Help
+  // About
+  actions.helpAbout =
+      new QAction(qIconFromTheme(ThemeIcon::HelpAbout), tr("About"), this);
+  connect(actions.helpAbout, &QAction::triggered, this, &MainWindow::helpAbout);
+  // Show website
+  actions.helpWebsite =
+      new QAction(qIconFromTheme(ThemeIcon::HelpFaq), tr("Website"), this);
+  actions.helpWebsite->setShortcut(QKeySequence::HelpContents);
+  connect(actions.helpWebsite, &QAction::triggered, this,
+          &MainWindow::helpWebsite);
 
   // Run Simulation
   actions.runSimulation = new QAction(
@@ -511,6 +531,16 @@ void MainWindow::fileExportInventory() {
     QMessageBox::critical(this, tr("Failed to save file"),
                           tr("Could not save %1").arg(filenames.first()));
   }
+}
+
+void MainWindow::helpAbout() {
+  AboutDialog about(this);
+  about.exec();
+}
+
+void MainWindow::helpWebsite() {
+  QDesktopServices::openUrl(
+      QUrl(config::kProjectHomepageUrl, QUrl::TolerantMode));
 }
 
 void MainWindow::tabChanged(int index) {

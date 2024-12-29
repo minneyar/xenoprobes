@@ -43,6 +43,8 @@ private:
     QAction *viewZoomIn = nullptr;
     QAction *viewZoomOut = nullptr;
     QAction *viewZoomAll = nullptr;
+    QAction *helpAbout = nullptr;
+    QAction *helpWebsite = nullptr;
     QAction *runSimulation = nullptr;
   };
 
@@ -81,6 +83,8 @@ private Q_SLOTS:
   void fileExportSites();
   void fileImportInventory();
   void fileExportInventory();
+  void helpAbout();
+  void helpWebsite();
   void tabChanged(int index);
   void dataChanged();
   void probeMapChanged();

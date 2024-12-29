@@ -1,5 +1,7 @@
 qt_add_executable(${PROJECT_NAME}_gui
         ${PROJECT_SOURCE_DIR}/resources/resources.qrc
+        AboutDialog.h
+        AboutDialog.cpp
         DataProbe.cpp
         DataProbe.h
         FnSiteWidget.cpp

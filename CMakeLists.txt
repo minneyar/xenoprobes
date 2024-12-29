@@ -7,6 +7,10 @@ project (xenoprobes
 )
 set(PROJECT_DISPLAY_NAME "XenoProbes")
 set(PROJECT_ORGANIZATION_NAME "minneyar")
+file(READ "${PROJECT_SOURCE_DIR}/AUTHORS" PROJECT_AUTHORS)
+# Insert 2 escaped newlines for every newline in the file.
+string(REPLACE "\n" "\\n\\n\"\n\"" PROJECT_AUTHORS "${PROJECT_AUTHORS}")
+set(PROJECT_AUTHORS_CARR "\"${PROJECT_AUTHORS_CARR}\"")
 string(TIMESTAMP PROJECT_BUILD_TIMESTAMP "%s" UTC)
 find_package(Git REQUIRED)
 execute_process(COMMAND "${GIT_EXECUTABLE}" log -n1 --format=%H
