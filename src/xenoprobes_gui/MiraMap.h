@@ -23,6 +23,7 @@ public:
   explicit MiraMap(ProbeOptimizer *probeOptimizer, QWidget *parent = nullptr);
   void setProbeOptimizer(ProbeOptimizer *probeOptimizer);
   void setViewMode(const FnSiteWidget::ViewMode viewMode);
+  void fitAll();
 
 Q_SIGNALS:
   void sitesVisitedChanged();

@@ -17,7 +17,9 @@
 #include <QMenuBar>
 #include <QMessageBox>
 #include <QPushButton>
+#include <QSplitter>
 #include <QTabBar>
+#include <QToolBox>
 
 #include "FnSiteWidget.h"
 #include "InventoryLoader.h"
@@ -46,9 +48,11 @@ void MainWindow::initUi() {
 
   initActions();
 
-  auto central = new QWidget(this);
+  auto central = new QSplitter(this);
+  central->setChildrenCollapsible(false);
   setCentralWidget(central);
-  auto layout = new QHBoxLayout(central);
+  auto leftWidget = new QWidget(central);
+  central->addWidget(leftWidget);
 
   // Menubar
   auto *menuFile = menuBar()->addMenu(tr("&File"));
@@ -66,15 +70,14 @@ void MainWindow::initUi() {
   menuFile->addAction(actions.fileExit);
 
   // Map
-  auto mapLayout = new QVBoxLayout();
-  layout->addLayout(mapLayout);
+  auto mapLayout = new QVBoxLayout(leftWidget);
   // Start with all sites enabled.
   ProbeOptimizer::SiteList sites;
   for (const auto site : Site::ALL | std::views::values) {
     sites.insert(site);
   }
   probeOptimizer_.loadSites(sites);
-  widgets_.miraMap = new MiraMap(&probeOptimizer_, central);
+  widgets_.miraMap = new MiraMap(&probeOptimizer_, leftWidget);
   mapLayout->addWidget(widgets_.miraMap);
 
   widgets_.miraMap->show();
@@ -88,7 +91,7 @@ void MainWindow::initUi() {
           &MainWindow::probeMapChanged);
 
   // Tabs
-  widgets_.tabBar = new QTabBar(central);
+  widgets_.tabBar = new QTabBar(leftWidget);
   mapLayout->addWidget(widgets_.tabBar);
   widgets_.tabBar->setShape(QTabBar::RoundedSouth);
   auto tabSitesVisited = widgets_.tabBar->addTab(tr("Sites Visited"));
@@ -102,37 +105,52 @@ void MainWindow::initUi() {
   tabChanged(widgets_.tabBar->currentIndex());
 
   // Config pane
-  auto configLayout = new QVBoxLayout();
-  layout->addLayout(configLayout);
+  auto *rightWidget = new QWidget(central);
+  central->addWidget(rightWidget);
+  auto *rightLayout = new QVBoxLayout(rightWidget);
+  auto *configToolbox = new QToolBox(rightWidget);
+  configToolbox->setSizePolicy(QSizePolicy::MinimumExpanding,
+                               QSizePolicy::Preferred);
+  rightLayout->addWidget(configToolbox);
 
   // Inventory
-  widgets_.inventoryTable = new QTableView(central);
-  configLayout->addWidget(widgets_.inventoryTable);
+  widgets_.inventoryTable = new QTableView(configToolbox);
+  configToolbox->addItem(widgets_.inventoryTable, tr("Inventory"));
   widgets_.inventoryTable->setModel(inventoryModel_);
   widgets_.inventoryTable->verticalHeader()->hide();
-  widgets_.inventoryTable->setSizePolicy(QSizePolicy::MinimumExpanding,
-                                         QSizePolicy::MinimumExpanding);
   widgets_.inventoryTable->resizeColumnsToContents();
+  widgets_.inventoryTable->setSizeAdjustPolicy(QTableView::AdjustToContents);
+  widgets_.inventoryTable->setSizePolicy(QSizePolicy::MinimumExpanding,
+                                         QSizePolicy::Preferred);
 
   // Run Options
-  auto *optionsScrollArea = new QScrollArea(central);
-  widgets_.runOptions = new RunOptionsWidget(central);
+  auto *optionsScrollArea = new QScrollArea(configToolbox);
+  widgets_.runOptions = new RunOptionsWidget(optionsScrollArea);
+  widgets_.runOptions->setMinimumWidth(widgets_.inventoryTable->minimumWidth());
   optionsScrollArea->setWidget(widgets_.runOptions);
-  configLayout->addWidget(optionsScrollArea);
+  optionsScrollArea->setWidgetResizable(true);
+  optionsScrollArea->setSizeAdjustPolicy(QScrollArea::AdjustToContents);
+  optionsScrollArea->setSizePolicy(QSizePolicy::MinimumExpanding,
+                                   QSizePolicy::Preferred);
+  configToolbox->addItem(optionsScrollArea, tr("Run Options"));
   connect(widgets_.runOptions, &RunOptionsWidget::settingsChanged, this,
           &MainWindow::dataChanged);
 
   // Current solution
-  auto *solutionScrollArea = new QScrollArea(central);
-  widgets_.solutionWidget = new SolutionWidget(central);
+  auto *solutionScrollArea = new QScrollArea(configToolbox);
+  widgets_.solutionWidget = new SolutionWidget(configToolbox);
+  widgets_.solutionWidget->setMinimumWidth(widgets_.inventoryTable->minimumWidth());
   widgets_.solutionWidget->setSolution(probeOptimizer_.solution().getSetup());
   solutionScrollArea->setWidget(widgets_.solutionWidget);
   solutionScrollArea->setWidgetResizable(true);
-  configLayout->addWidget(solutionScrollArea);
+  solutionScrollArea->setSizeAdjustPolicy(QScrollArea::AdjustToContents);
+  solutionScrollArea->setSizePolicy(QSizePolicy::MinimumExpanding,
+                                    QSizePolicy::Preferred);
+  configToolbox->addItem(solutionScrollArea, tr("Results"));
 
   // Solve button
-  auto *solveBtn = new QPushButton(tr("Solve"), central);
-  configLayout->addWidget(solveBtn);
+  auto *solveBtn = new QPushButton(tr("Solve"), rightWidget);
+  rightLayout->addWidget(solveBtn);
   connect(solveBtn, &QPushButton::clicked, this, &MainWindow::solve);
 }
 

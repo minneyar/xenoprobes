@@ -83,6 +83,11 @@ void MiraMap::setViewMode(const FnSiteWidget::ViewMode viewMode) {
   }
 }
 
+void MiraMap::fitAll() {
+  const auto rect = mapScene_.itemsBoundingRect();
+  fitInView(rect, Qt::AspectRatioMode::KeepAspectRatio);
+}
+
 void MiraMap::wheelEvent(QWheelEvent *event) {
   if (qApp->queryKeyboardModifiers() == Qt::ControlModifier) {
     // Ctrl+Wheel to zoom.
