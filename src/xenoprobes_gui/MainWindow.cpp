@@ -595,6 +595,7 @@ void MainWindow::solved(ProbeArrangement probeArrangement) {
   probeOptimizer_.loadSetup(probeArrangement);
   widgets_.miraMap->setProbeOptimizer(&probeOptimizer_);
   widgets_.solutionWidget->setSolution(probeArrangement);
+  inventoryModel_->setProbeOptimizer(&probeOptimizer_);
 
   QStringList ores;
   for (const auto &ore : probeArrangement.getOres()) {
