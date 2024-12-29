@@ -65,9 +65,6 @@ public:
   [[nodiscard]] const Probe::Ptr dataProbe() const { return dataProbe_; }
   void setDataProbe(Probe::Ptr dataProbe);
 
-Q_SIGNALS:
-  void dataProbeChanged(Probe::Ptr dataProbe);
-
 protected:
   void paintEvent(QPaintEvent *event) override;
 
@@ -123,8 +120,11 @@ private:
   detail::VisitedWidget *visitedWidget_;
   detail::DataProbeWidget *dataProbeWidget_;
   bool tooltipShown_ = false;
+  QAction *visitedAction_;
+  std::vector<QAction *> setProbeActions_;
 
   void updateTooltipText();
+  void updateSetProbeActions();
 };
 
 #endif // FNSITEWIDGET_H

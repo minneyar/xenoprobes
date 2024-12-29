@@ -12,6 +12,7 @@
 #include <QGraphicsProxyWidget>
 #include <QGuiApplication>
 #include <QJsonArray>
+#include <QMenu>
 #include <boost/container_hash/hash.hpp>
 #include <ranges>
 
@@ -96,6 +97,28 @@ void MiraMap::wheelEvent(QWheelEvent *event) {
   }
   QGraphicsView::wheelEvent(event);
 }
+
+void MiraMap::contextMenuEvent(QContextMenuEvent *event) {
+  // If the widget is responsible for popping its own menu, it is scaled with
+  // the rest of the view which makes it hard to read. Popping it here (in the
+  // scene) does not scale the menu.
+  const auto item = itemAt(event->pos());
+  const auto widget = qgraphicsitem_cast<QGraphicsProxyWidget *>(item);
+  if (widget == nullptr) {
+    return;
+  }
+
+  // Add the widget's actions to this menu.
+  QMenu menu;
+  for (const auto action : widget->widget()->actions()) {
+    menu.addAction(action);
+  }
+  menu.exec(event->globalPos());
+
+  event->accept();
+}
+
+void MiraMap::probeContextMenuEvent(QContextMenuEvent *event) {}
 
 void MiraMap::calculateSiteWidgets() {
   for (auto &widget : siteWidgets_) {

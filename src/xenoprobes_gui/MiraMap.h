@@ -15,8 +15,6 @@
 #include "QGraphicsItemDeleter.h"
 
 #include <probeoptimizer/probe_optimizer.h>
-#include <probeoptimizer/site.h>
-#include <unordered_set>
 
 class MiraMap : public QGraphicsView {
   Q_OBJECT
@@ -32,6 +30,8 @@ Q_SIGNALS:
 
 protected:
   void wheelEvent(QWheelEvent *event) override;
+  void contextMenuEvent(QContextMenuEvent *event) override;
+  void probeContextMenuEvent(QContextMenuEvent *event);
 
 private:
   using GraphicsItemPtr = std::unique_ptr<QGraphicsItem, QGraphicsItemDeleter>;

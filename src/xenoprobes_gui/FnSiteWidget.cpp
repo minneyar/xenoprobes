@@ -23,17 +23,52 @@ FnSiteWidget::FnSiteWidget(const Site::Ptr site, QWidget *parent)
       dataProbeWidget_(new detail::DataProbeWidget(site, this)) {
   setFixedSize(kSize, kSize);
 
+  visitedAction_ = new QAction(tr("Visited"), this);
+  visitedAction_->setCheckable(true);
+  visitedAction_->setChecked(visited_);
+  connect(visitedAction_, &QAction::triggered, [this](bool checked) {
+    visited_ = checked;
+    visitedWidget_->setVisited(checked);
+    dataProbeWidget_->setVisited(checked);
+    updateTooltipText();
+    updateSetProbeActions();
+    Q_EMIT(visitedChanged(checked));
+  });
+  addAction(visitedAction_);
   addWidget(visitedWidget_);
   visitedWidget_->setVisited(visited_);
-  connect(visitedWidget_, &detail::VisitedWidget::visitedChanged, this,
-          &FnSiteWidget::visitedChanged);
+  connect(visitedWidget_, &detail::VisitedWidget::visitedChanged,
+          [this](bool visited) {
+            visited_ = visited;
+            visitedAction_->setChecked(visited);
+            dataProbeWidget_->setVisited(visited);
+            updateTooltipText();
+            updateSetProbeActions();
+            Q_EMIT(visitedChanged(visited));
+          });
+
   addWidget(dataProbeWidget_);
   dataProbeWidget_->setVisited(visited_);
-  connect(dataProbeWidget_, &detail::DataProbeWidget::dataProbeChanged, this,
-          &FnSiteWidget::dataProbeChanged);
 
   setViewMode(viewMode_);
   updateTooltipText();
+
+  // Actions to change probe.
+  auto sep = new QAction(this);
+  sep->setSeparator(true);
+  addAction(sep);
+  setProbeActions_.reserve(Probe::ALL_SORTED.size());
+  for (const auto probe : Probe::ALL_SORTED) {
+    auto *action = new QAction(this);
+    action->setIcon(QIcon(dataProbeIcon(probe)));
+    action->setText(dataProbeName(probe));
+    connect(action, &QAction::triggered, [this, probe]() {
+      setDataProbe(probe);
+      Q_EMIT(dataProbeChanged(probe));
+    });
+    addAction(action);
+    setProbeActions_.push_back(action);
+  }
 }
 
 void FnSiteWidget::setViewMode(const ViewMode viewMode) {
@@ -52,9 +87,11 @@ void FnSiteWidget::setViewMode(const ViewMode viewMode) {
 
 void FnSiteWidget::setVisited(const bool visited) {
   visited_ = visited;
+  visitedAction_->setChecked(visited);
   visitedWidget_->setVisited(visited);
   dataProbeWidget_->setVisited(visited);
   updateTooltipText();
+  updateSetProbeActions();
 }
 
 void FnSiteWidget::setDataProbe(const Probe::Id &dataProbeId) {
@@ -85,6 +122,12 @@ void FnSiteWidget::updateTooltipText() {
           .arg(Site::gradeToChar(site_->revenue))
           .arg(Site::gradeToChar(site_->combat))
           .arg(QLocale().createSeparatedList(oreStrings)));
+}
+
+void FnSiteWidget::updateSetProbeActions() {
+  for (auto action : setProbeActions_) {
+    action->setEnabled(visited_);
+  }
 }
 
 namespace detail {
@@ -145,18 +188,6 @@ FnSiteWidget *VisitedWidget::parentFnSiteWidget() const {
 DataProbeWidget::DataProbeWidget(const Site::Ptr site, FnSiteWidget *parent)
     : QWidget(parent), site_(site) {
   setAttribute(Qt::WA_NoSystemBackground, true);
-
-  for (const auto probe : Probe::ALL_SORTED) {
-    QAction *action = new QAction(this);
-    action->setIcon(QIcon(dataProbeIcon(probe)));
-    action->setText(dataProbeName(probe));
-    connect(action, &QAction::triggered, [this, probe]() {
-      setDataProbe(probe);
-      Q_EMIT(dataProbeChanged(probe));
-    });
-    addAction(action);
-  }
-  setVisited(visited_);
 }
 
 FnSiteWidget *DataProbeWidget::parentFnSiteWidget() const {
@@ -165,9 +196,6 @@ FnSiteWidget *DataProbeWidget::parentFnSiteWidget() const {
 
 void DataProbeWidget::setVisited(const bool visited) {
   visited_ = visited;
-  // Don't allow changing probes if site is not visited.
-  setContextMenuPolicy(visited ? Qt::ActionsContextMenu
-                               : Qt::PreventContextMenu);
   update();
 }
 void DataProbeWidget::setDataProbe(const Probe *dataProbe) {
