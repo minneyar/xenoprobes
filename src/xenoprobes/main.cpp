@@ -16,12 +16,12 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include "probeoptimizer/probe_optimizer.h"
 #include <boost/filesystem.hpp>
 #include <boost/program_options.hpp>
 #include <csignal>
 #include <iostream>
-
-#include "probeoptimizer/probe_optimizer.h"
+#include <spdlog/spdlog.h>
 
 #ifdef __MINGW32__
 #define WIN32_LEAN_AND_MEAN
@@ -129,7 +129,7 @@ void doWin32Init() {
     if (::GetLastError() != ERROR_INSUFFICIENT_BUFFER) {
       std::string exeFilename(buffer.begin(), buffer.begin() + length);
       fs::path exePath = fs::path(exeFilename).parent_path();
-      clog << "setting working directory to " << exePath << endl;
+      spdlog::info("Setting working directory to {}", exePath.string());
       fs::current_path(exePath);
     }
   }
@@ -137,6 +137,9 @@ void doWin32Init() {
 #endif
 
 int main(int argc, const char **argv) {
+  // Remove log metadata from console output.
+  spdlog::set_pattern("%^%v%$");
+
 #ifdef __MINGW32__
   doWin32Init();
 #endif

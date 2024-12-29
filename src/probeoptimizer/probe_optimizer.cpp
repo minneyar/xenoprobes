@@ -176,6 +176,11 @@ void ProbeOptimizer::loadSites(const std::unordered_set<Site::Id> &idList) {
 }
 
 void ProbeOptimizer::loadSites(const SiteList &sites) {
+  sites_ = sites;
+  updateSiteListIndexes();
+  setup_.resize(sites_.size());
+  solution_.setSetup(setup_);
+
   int numConnections = 0;
   for (const auto site : sites) {
     numConnections += site->getNeighbors().size();
@@ -184,10 +189,6 @@ void ProbeOptimizer::loadSites(const SiteList &sites) {
   numConnections /= 2;
   spdlog::info("Loaded {} FN sites with {} connections.", sites.size(),
                numConnections);
-  sites_ = sites;
-  updateSiteListIndexes();
-  setup_.resize(sites_.size());
-  solution_.setSetup(setup_);
 }
 
 void ProbeOptimizer::updateSiteListIndexes() {
