@@ -125,6 +125,7 @@ void MainWindow::initUi() {
   // Current solution
   auto *solutionScrollArea = new QScrollArea(central);
   widgets_.solutionWidget = new SolutionWidget(central);
+  widgets_.solutionWidget->setSolution(probeOptimizer_.solution().getSetup());
   solutionScrollArea->setWidget(widgets_.solutionWidget);
   solutionScrollArea->setWidgetResizable(true);
   configLayout->addWidget(solutionScrollArea);
@@ -338,6 +339,7 @@ void MainWindow::openFromPath(const QString &path) {
     widgets_.miraMap->setProbeOptimizer(&probeOptimizer_);
     inventoryModel_->setProbeOptimizer(&probeOptimizer_);
     widgets_.runOptions->setOptions(options);
+    widgets_.solutionWidget->setSolution(probeOptimizer_.solution().getSetup());
 
     setWindowFilePath(path);
     setWindowModified(false);
@@ -388,6 +390,7 @@ void MainWindow::fileImportSites() {
     probeOptimizer_.loadSites(siteList);
     widgets_.miraMap->setProbeOptimizer(&probeOptimizer_);
     dataChanged();
+    probeMapChanged();
   } catch (const std::exception &e) {
     spdlog::error(e.what());
     QMessageBox::critical(this, tr("Failed to open file"),
@@ -426,6 +429,7 @@ void MainWindow::fileImportInventory() {
     probeOptimizer_.loadInventory(filenames.first().toStdString());
     inventoryModel_->setProbeOptimizer(&probeOptimizer_);
     dataChanged();
+    probeMapChanged();
   } catch (const std::exception &) {
     QMessageBox::critical(this, tr("Failed to open file"),
                           tr("Could not open %1").arg(filenames.first()));
@@ -466,7 +470,7 @@ void MainWindow::dataChanged() {
 
 void MainWindow::probeMapChanged() {
   inventoryModel_->setProbeOptimizer(&probeOptimizer_);
-  // TODO: Update solution widget.
+  widgets_.solutionWidget->setSolution(probeOptimizer_.solution().getSetup());
 }
 
 void MainWindow::solve() {
