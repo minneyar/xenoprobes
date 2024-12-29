@@ -58,6 +58,7 @@ private:
   QElapsedTimer solverStopwatch_;
   SolverRunner *solverRunner_ = nullptr;
   ProbeOptimizer probeOptimizer_;
+  bool shownForFirstTime = false;
 
   void initUi();
   void initActions();

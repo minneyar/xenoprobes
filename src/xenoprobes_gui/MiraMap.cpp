@@ -18,9 +18,11 @@
 
 MiraMap::MiraMap(ProbeOptimizer *probeOptimizer, QWidget *parent)
     : QGraphicsView(parent), probeOptimizer_(probeOptimizer) {
-  setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
+  setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
   setDragMode(ScrollHandDrag);
   setMouseTracking(true);
+  setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
+  setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
 
   // Add map tiles.
   const auto tileSize = 256; // 256x256 pixels
@@ -84,8 +86,12 @@ void MiraMap::setViewMode(const FnSiteWidget::ViewMode viewMode) {
 }
 
 void MiraMap::fitAll() {
-  const auto rect = mapScene_.itemsBoundingRect();
-  fitInView(rect, Qt::AspectRatioMode::KeepAspectRatio);
+  fitInView(mapScene_.itemsBoundingRect(), Qt::KeepAspectRatio);
+}
+
+void MiraMap::resizeEvent(QResizeEvent *event) {
+  fitAll();
+  QGraphicsView::resizeEvent(event);
 }
 
 void MiraMap::wheelEvent(QWheelEvent *event) {

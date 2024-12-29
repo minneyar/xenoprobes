@@ -79,7 +79,6 @@ void MainWindow::initUi() {
   probeOptimizer_.loadSites(sites);
   widgets_.miraMap = new MiraMap(&probeOptimizer_, leftWidget);
   mapLayout->addWidget(widgets_.miraMap);
-
   widgets_.miraMap->show();
   connect(widgets_.miraMap, &MiraMap::sitesVisitedChanged, this,
           &MainWindow::dataChanged);

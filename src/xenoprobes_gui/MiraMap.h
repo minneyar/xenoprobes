@@ -30,6 +30,7 @@ Q_SIGNALS:
   void siteProbeMapChanged();
 
 protected:
+  void resizeEvent(QResizeEvent *event) override;
   void wheelEvent(QWheelEvent *event) override;
   void contextMenuEvent(QContextMenuEvent *event) override;
   void probeContextMenuEvent(QContextMenuEvent *event);
