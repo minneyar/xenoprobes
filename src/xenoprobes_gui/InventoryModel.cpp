@@ -40,6 +40,10 @@ QVariant InventoryModel::headerData(int section, Qt::Orientation orientation,
         return tr("Name");
       case Column::Quantity:
         return tr("#");
+      case Column::Used:
+        return tr("Used");
+      case Column::Remaining:
+        return tr("Remaining");
       }
     }
   }
@@ -61,6 +65,14 @@ QVariant InventoryModel::data(const QModelIndex &index, int role) const {
       return dataProbeName(probe);
     } else if (col == Column::Quantity) {
       return quantity;
+    } else if (col == Column::Used) {
+      const auto usedProbes =
+          probeOptimizer_->solution().getSetup().getUsedProbes();
+      return usedProbes.at(probe);
+    } else if (col == Column::Remaining) {
+      const auto usedProbes =
+          probeOptimizer_->solution().getSetup().getUsedProbes();
+      return quantity - usedProbes.at(probe);
     }
   } else if (role == Qt::EditRole) {
     if (col == Column::Quantity) {
@@ -95,12 +107,12 @@ bool InventoryModel::setData(const QModelIndex &index, const QVariant &value,
 
 Qt::ItemFlags InventoryModel::flags(const QModelIndex &index) const {
   const auto col = static_cast<Column>(index.column());
-  const auto defaults = Qt::ItemIsEnabled | Qt::ItemNeverHasChildren;
+  const auto defaults = Qt::ItemNeverHasChildren;
   switch (col) {
   case Column::Name:
-    return defaults;
+    return defaults | Qt::ItemIsEnabled;
   case Column::Quantity:
-    return defaults | Qt::ItemIsEditable;
+    return defaults | Qt::ItemIsEnabled | Qt::ItemIsEditable;
   }
 
   return QAbstractTableModel::flags(index);

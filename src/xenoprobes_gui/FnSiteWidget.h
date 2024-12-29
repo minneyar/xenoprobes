@@ -62,7 +62,7 @@ public:
   [[nodiscard]] Site::Ptr site() const { return site_; }
   [[nodiscard]] bool visited() const { return visited_; }
   void setVisited(const bool visited);
-  [[nodiscard]] const Probe *dataProbe() const { return dataProbe_; }
+  [[nodiscard]] const Probe::Ptr dataProbe() const { return dataProbe_; }
   void setDataProbe(const Probe *dataProbe);
 
 protected:
@@ -71,7 +71,7 @@ protected:
 private:
   const Site::Ptr site_;
   bool visited_ = false;
-  const Probe *dataProbe_ = nullptr;
+  Probe::Ptr dataProbe_ = nullptr;
 
   [[nodiscard]] FnSiteWidget *parentFnSiteWidget() const;
   [[nodiscard]] QPixmap probeImage() const;
@@ -100,7 +100,7 @@ public:
   [[nodiscard]] Site::Ptr site() const { return site_; }
   [[nodiscard]] bool visited() const { return visited_; }
   void setVisited(const bool visited);
-  [[nodiscard]] const Probe *dataProbe() const {
+  [[nodiscard]] const Probe::Ptr dataProbe() const {
     return dataProbeWidget_->dataProbe();
   }
   void setDataProbe(const Probe::Id &dataProbeId);

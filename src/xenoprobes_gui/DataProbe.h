@@ -9,8 +9,6 @@
 #ifndef DATAPROBE_H
 #define DATAPROBE_H
 
-#include <vector>
-#include <utility>
 #include <QString>
 #include <probeoptimizer/probe.h>
 

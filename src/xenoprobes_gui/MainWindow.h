@@ -78,6 +78,7 @@ private Q_SLOTS:
   void fileExportInventory();
   void tabChanged(int index);
   void dataChanged();
+  void probeMapChanged();
   void solve();
   void progress(unsigned long iter, double bestScore, double worstScore,
                 unsigned long killed);

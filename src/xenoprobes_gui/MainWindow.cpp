@@ -82,6 +82,10 @@ void MainWindow::initUi() {
           &MainWindow::dataChanged);
   connect(widgets_.miraMap, &MiraMap::siteProbeMapChanged, this,
           &MainWindow::dataChanged);
+  connect(widgets_.miraMap, &MiraMap::sitesVisitedChanged, this,
+          &MainWindow::probeMapChanged);
+  connect(widgets_.miraMap, &MiraMap::siteProbeMapChanged, this,
+          &MainWindow::probeMapChanged);
 
   // Tabs
   widgets_.tabBar = new QTabBar(central);
@@ -106,7 +110,6 @@ void MainWindow::initUi() {
   configLayout->addWidget(widgets_.inventoryTable);
   widgets_.inventoryTable->setModel(inventoryModel_);
   widgets_.inventoryTable->verticalHeader()->hide();
-  widgets_.inventoryTable->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
   widgets_.inventoryTable->setSizePolicy(QSizePolicy::MinimumExpanding,
                                          QSizePolicy::MinimumExpanding);
   widgets_.inventoryTable->resizeColumnsToContents();
@@ -459,6 +462,10 @@ void MainWindow::tabChanged(int index) {
 void MainWindow::dataChanged() {
   setWindowModified(true);
   updateWindowTitle();
+}
+
+void MainWindow::probeMapChanged() {
+  inventoryModel_->setProbeOptimizer(&probeOptimizer_);
   // TODO: Update solution widget.
 }
 

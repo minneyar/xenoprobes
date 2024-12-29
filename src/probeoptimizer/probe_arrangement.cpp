@@ -3,9 +3,9 @@
 //
 
 #include <algorithm>
-#include <iomanip>
 #include <iostream>
 #include <queue>
+#include <ranges>
 #include <set>
 
 #include "probeoptimizer/probe_arrangement.h"
@@ -27,11 +27,15 @@ void ProbeArrangement::resize(size_t size) {
 
   spdlog::debug("Resizing to {}", size);
   probes_.resize(size, Probe::B);
+  setupDirty_ = true;
+  usedProbesDirty_ = true;
 }
 
 void ProbeArrangement::setProbeAt(size_t index, const Probe::Ptr &type) {
   spdlog::debug("Setting probe at {} to {}", index, type->id);
   probes_[index] = type;
+  setupDirty_ = true;
+  usedProbesDirty_ = true;
 }
 
 bool operator==(const ProbeArrangement &l, const ProbeArrangement &r) {
@@ -66,6 +70,8 @@ void ProbeArrangement::mutate(double probability) {
       std::swap(probes_[idx], probes_[dest]);
     }
   }
+  setupDirty_ = true;
+  usedProbesDirty_ = true;
 }
 
 double ProbeArrangement::evaluate() const {
@@ -89,6 +95,8 @@ void ProbeArrangement::randomize() {
   }
   std::shuffle(probes_.begin(), probes_.end(), mt);
   resize(ProbeOptimizer::getSites().size());
+  setupDirty_ = true;
+  usedProbesDirty_ = true;
 }
 
 void ProbeArrangement::printSetup() const {
@@ -99,17 +107,22 @@ void ProbeArrangement::printSetup() const {
   }
 }
 
-std::map<Site::Ptr, Probe::Ptr> ProbeArrangement::getSetup() const {
-  std::map<Site::Ptr, Probe::Ptr> setup;
-  assert(ProbeOptimizer::getSites().size() == probes_.size());
-  auto site = ProbeOptimizer::getSites().cbegin();
-  auto probe = probes_.cbegin();
-  for (; site != ProbeOptimizer::getSites().end() && probe != probes_.cend();
-       ++site, ++probe) {
-    setup.emplace(*site, *probe);
+const std::map<Site::Ptr, Probe::Ptr> &ProbeArrangement::getSetup() const {
+  static std::mutex mutex;
+  std::scoped_lock lock(mutex);
+  if (setupDirty_) {
+    assert(ProbeOptimizer::getSites().size() == probes_.size());
+    setup_.clear();
+    auto site = ProbeOptimizer::getSites().cbegin();
+    auto probe = probes_.cbegin();
+    for (; site != ProbeOptimizer::getSites().end() && probe != probes_.cend();
+         ++site, ++probe) {
+      setup_.emplace(*site, *probe);
+    }
+    setupDirty_ = false;
   }
 
-  return setup;
+  return setup_;
 }
 
 void ProbeArrangement::loadSetup(const std::map<Site::Ptr, Probe::Ptr> &setup) {
@@ -118,6 +131,24 @@ void ProbeArrangement::loadSetup(const std::map<Site::Ptr, Probe::Ptr> &setup) {
   for (const auto [site, probe] : setup) {
     probes_[ProbeOptimizer::getIndexForSiteId(site->name)] = probe;
   }
+  setupDirty_ = true;
+  usedProbesDirty_ = true;
+}
+
+const std::map<Probe::Ptr, int> &ProbeArrangement::getUsedProbes() const {
+  static std::mutex mutex;
+  std::scoped_lock lock(mutex);
+  if (usedProbesDirty_) {
+    for (const auto probe : Probe::ALL | std::views::values) {
+      usedProbes_.insert_or_assign(probe, 0);
+    }
+    for (const auto probe : probes_) {
+      ++usedProbes_[probe];
+    }
+    usedProbesDirty_ = false;
+  }
+
+  return usedProbes_;
 }
 
 double ProbeArrangement::getStorageWeight() const { return storage_weight_; }

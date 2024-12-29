@@ -19,8 +19,10 @@ public:
   enum class Column {
     Name,
     Quantity,
+    Used,
+    Remaining,
   };
-  static constexpr auto kColumnCount = static_cast<int>(Column::Quantity) + 1;
+  static constexpr auto kColumnCount = static_cast<int>(Column::Remaining) + 1;
 
   explicit InventoryModel(ProbeOptimizer* probeOptimizer, QObject *parent = nullptr);
   void setProbeOptimizer(ProbeOptimizer *probeOptimizer);
