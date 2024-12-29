@@ -63,7 +63,10 @@ public:
   [[nodiscard]] bool visited() const { return visited_; }
   void setVisited(const bool visited);
   [[nodiscard]] const Probe::Ptr dataProbe() const { return dataProbe_; }
-  void setDataProbe(const Probe *dataProbe);
+  void setDataProbe(Probe::Ptr dataProbe);
+
+Q_SIGNALS:
+  void dataProbeChanged(Probe::Ptr dataProbe);
 
 protected:
   void paintEvent(QPaintEvent *event) override;
@@ -93,7 +96,7 @@ public:
 
   static constexpr auto kSize = 64;
 
-  explicit FnSiteWidget(const Site::Ptr site, QWidget *parent = nullptr);
+  explicit FnSiteWidget(Site::Ptr site, QWidget *parent = nullptr);
 
   [[nodiscard]] ViewMode viewMode() const { return viewMode_; }
   void setViewMode(const ViewMode viewMode);
@@ -111,7 +114,7 @@ public:
 
 Q_SIGNALS:
   void visitedChanged(bool visited);
-  void dataProbeChanged(const Probe *data_probe);
+  void dataProbeChanged(Probe::Ptr dataProbe);
 
 private:
   ViewMode viewMode_ = ViewMode::DataProbe;

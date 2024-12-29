@@ -5,7 +5,8 @@
 #ifndef XENOPROBES_PROBE_H
 #define XENOPROBES_PROBE_H
 
-#include <map>
+#include <unordered_map>
+#include <vector>
 #include <string>
 
 struct Probe {
@@ -56,7 +57,8 @@ struct Probe {
   static const Probe::Ptr CR;
   static const Probe::Ptr CD;
   static const Probe::Ptr CA;
-  static const std::map<Id, Probe::Ptr> ALL;
+  static const std::unordered_map<Id, Probe::Ptr> ALL;
+  static const std::vector<Probe::Ptr> ALL_SORTED;
   static Ptr fromString(const std::string &str);
 
   Id id;

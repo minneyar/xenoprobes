@@ -9,13 +9,13 @@
 #include "FnSiteWidget.h"
 
 #include "DataProbe.h"
-
 #include <QFile>
 #include <QLocale>
 #include <QPaintEvent>
 #include <QPainter>
 #include <QSvgRenderer>
 #include <QVBoxLayout>
+#include <ranges>
 
 FnSiteWidget::FnSiteWidget(const Site::Ptr site, QWidget *parent)
     : QStackedWidget(parent), site_(site),
@@ -29,6 +29,8 @@ FnSiteWidget::FnSiteWidget(const Site::Ptr site, QWidget *parent)
           &FnSiteWidget::visitedChanged);
   addWidget(dataProbeWidget_);
   dataProbeWidget_->setVisited(visited_);
+  connect(dataProbeWidget_, &detail::DataProbeWidget::dataProbeChanged, this,
+          &FnSiteWidget::dataProbeChanged);
 
   setViewMode(viewMode_);
   updateTooltipText();
@@ -100,7 +102,7 @@ VisitedWidget::VisitedWidget(const Site::Ptr site, FnSiteWidget *parent)
   updateCheckbox();
   connect(widgets_.checkBox,
 #if QT_VERSION >= QT_VERSION_CHECK(6, 7, 0)
-    &QCheckBox::checkStateChanged,
+          &QCheckBox::checkStateChanged,
           [this](Qt::CheckState checkState)
 #else
     &QCheckBox::stateChanged,
@@ -143,6 +145,18 @@ FnSiteWidget *VisitedWidget::parentFnSiteWidget() const {
 DataProbeWidget::DataProbeWidget(const Site::Ptr site, FnSiteWidget *parent)
     : QWidget(parent), site_(site) {
   setAttribute(Qt::WA_NoSystemBackground, true);
+
+  for (const auto probe : Probe::ALL_SORTED) {
+    QAction *action = new QAction(this);
+    action->setIcon(QIcon(dataProbeIcon(probe)));
+    action->setText(dataProbeName(probe));
+    connect(action, &QAction::triggered, [this, probe]() {
+      setDataProbe(probe);
+      Q_EMIT(dataProbeChanged(probe));
+    });
+    addAction(action);
+  }
+  setContextMenuPolicy(Qt::ActionsContextMenu);
 }
 
 FnSiteWidget *DataProbeWidget::parentFnSiteWidget() const {

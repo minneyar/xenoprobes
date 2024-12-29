@@ -33,7 +33,7 @@ const Probe::Ptr Probe::CD = new Probe{.id = "CD", .category = Category::Battle,
 const Probe::Ptr Probe::CA = new Probe{.id = "CA", .category = Category::Battle, .level = 0, .production = 0, .revenue = 0, .boost = 1};
 // clang-format on
 
-const std::map<Probe::Id, Probe::Ptr> Probe::ALL{
+const std::unordered_map<Probe::Id, Probe::Ptr> Probe::ALL{
     {"B", Probe::B},   {"M1", Probe::M1},   {"M2", Probe::M2},
     {"M3", Probe::M3}, {"M4", Probe::M4},   {"M5", Probe::M5},
     {"M6", Probe::M6}, {"M7", Probe::M7},   {"M8", Probe::M8},
@@ -43,6 +43,13 @@ const std::map<Probe::Id, Probe::Ptr> Probe::ALL{
     {"B2", Probe::B2}, {"D", Probe::D},     {"S", Probe::S},
     {"CF", Probe::CF}, {"CM", Probe::CM},   {"CR", Probe::CR},
     {"CD", Probe::CD}, {"CA", Probe::CA},
+};
+const std::vector<Probe::Ptr> Probe::ALL_SORTED{
+    Probe::B,  Probe::M1, Probe::M2, Probe::M3, Probe::M4,  Probe::M5,
+    Probe::M6, Probe::M7, Probe::M8, Probe::M9, Probe::M10, Probe::R1,
+    Probe::R2, Probe::R3, Probe::R4, Probe::R5, Probe::R6,  Probe::B1,
+    Probe::B2, Probe::D,  Probe::S,  Probe::CF, Probe::CM,  Probe::CR,
+    Probe::CD, Probe::CA,
 };
 
 Probe::Ptr Probe::fromString(const std::string &s) { return Probe::ALL.at(s); }

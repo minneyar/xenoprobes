@@ -50,11 +50,14 @@ MiraMap::MiraMap(ProbeOptimizer *probeOptimizer, QWidget *parent)
                 probeOptimizer_->removeSite(site);
               }
               calculateSiteWidgets();
+              Q_EMIT(sitesVisitedChanged());
             });
-    connect(siteWidget, &FnSiteWidget::visitedChanged, this,
-            &MiraMap::sitesVisitedChanged);
-    connect(siteWidget, &FnSiteWidget::dataProbeChanged, this,
-            &MiraMap::siteProbeMapChanged);
+    connect(siteWidget, &FnSiteWidget::dataProbeChanged,
+            [this, site](const Probe::Ptr probe) {
+              probeOptimizer_->setProbeAt(site, probe);
+              calculateLinks();
+              Q_EMIT(siteProbeMapChanged());
+            });
     auto &siteButton =
         siteWidgets_.emplace_back(mapScene_.addWidget(siteWidget));
     // Site data stores the center point, so we need to half it to get the

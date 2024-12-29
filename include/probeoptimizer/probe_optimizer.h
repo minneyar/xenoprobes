@@ -58,6 +58,7 @@ public:
   void setMaxIterations(size_t maxIterations);
   void setMaxAge(int maxAge);
   void setMaxThreads(size_t threads);
+  void setProbeAt(Site::Ptr site, Probe::Ptr probe);
 
   static void handleSIGINT(int);
   static void requestStop();

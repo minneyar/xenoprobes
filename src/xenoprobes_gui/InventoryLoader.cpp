@@ -21,7 +21,7 @@ InventoryLoader::readInventoryFromJson(const QJsonValue &json) {
   }
   const auto &jsonMap = json.toObject();
   ProbeOptimizer::ProbeInventory probeInventory;
-  for (const auto probe : Probe::ALL | std::views::values) {
+  for (const auto probe : Probe::ALL_SORTED) {
     if (probe->category == Probe::Category::Basic) {
       continue;
     }

@@ -23,7 +23,7 @@
 std::atomic<bool> ProbeOptimizer::shouldStop_(false);
 
 ProbeOptimizer::ProbeOptimizer() {
-  for (const auto probe : Probe::ALL | std::views::values) {
+  for (const auto probe : Probe::ALL_SORTED) {
     if (probe->id == "B") {
       continue;
     }
@@ -73,7 +73,7 @@ void ProbeOptimizer::loadInventory(const ProbeInventory &inventory) {
 
   // Ensure every probe type is accounted for in the inventory.
   ProbeInventory::mapped_type probeCount = 0;
-  for (const auto probe : Probe::ALL | std::views::values) {
+  for (const auto probe : Probe::ALL_SORTED) {
     if (probe->id == "B") {
       continue;
     }
@@ -330,6 +330,12 @@ void ProbeOptimizer::setMaxIterations(size_t maxIterations) {
 void ProbeOptimizer::setMaxAge(int maxAge) { maxAge_ = maxAge; }
 
 void ProbeOptimizer::setMaxThreads(size_t threads) { max_threads_ = threads; }
+
+void ProbeOptimizer::setProbeAt(Site::Ptr site, Probe::Ptr probe) {
+  const auto ix = getIndexForSiteId(site->name);
+  setup_.setProbeAt(ix, probe);
+  solution_.setSetup(setup_);
+}
 
 void ProbeOptimizer::handleSIGINT(int) { requestStop(); }
 

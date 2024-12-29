@@ -139,7 +139,7 @@ const std::map<Probe::Ptr, int> &ProbeArrangement::getUsedProbes() const {
   static std::mutex mutex;
   std::scoped_lock lock(mutex);
   if (usedProbesDirty_) {
-    for (const auto probe : Probe::ALL | std::views::values) {
+    for (const auto probe : Probe::ALL_SORTED) {
       usedProbes_.insert_or_assign(probe, 0);
     }
     for (const auto probe : probes_) {

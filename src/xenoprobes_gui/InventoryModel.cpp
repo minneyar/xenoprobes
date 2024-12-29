@@ -8,6 +8,9 @@
 
 #include "InventoryModel.h"
 #include "InventoryLoader.h"
+
+#include <QBrush>
+#include <QColor>
 #include <ranges>
 
 const std::vector<Probe::Id> InventoryModel::kProbeIdOrder{
@@ -58,7 +61,7 @@ QVariant InventoryModel::data(const QModelIndex &index, int role) const {
   const auto col = static_cast<Column>(index.column());
   const auto probeId = kProbeIdOrder.at(index.row());
   const auto probe = Probe::fromString(probeId);
-  const auto quantity = probeOptimizer_->getInventory().at(probe);
+  const int quantity = probeOptimizer_->getInventory().at(probe);
 
   if (role == Qt::DisplayRole) {
     if (col == Column::Name) {
@@ -77,6 +80,14 @@ QVariant InventoryModel::data(const QModelIndex &index, int role) const {
   } else if (role == Qt::EditRole) {
     if (col == Column::Quantity) {
       return quantity;
+    }
+  } else if (role == Qt::BackgroundRole) {
+    const auto usedProbes =
+        probeOptimizer_->solution().getSetup().getUsedProbes();
+    if (usedProbes.at(probe) > quantity) {
+      return QBrush(QColorConstants::Red);
+    } else {
+      return {};
     }
   }
 
