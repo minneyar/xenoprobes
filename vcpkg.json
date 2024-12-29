@@ -17,5 +17,8 @@
   }, {
     "name" : "spdlog",
     "version>=" : "1.15.0"
+  }, {
+    "name" : "boost-container-hash",
+    "version>=" : "1.86.0"
   } ]
 }

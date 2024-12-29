@@ -34,16 +34,16 @@ protected:
   void wheelEvent(QWheelEvent *event) override;
 
 private:
+  using GraphicsItemPtr = std::unique_ptr<QGraphicsItem, QGraphicsItemDeleter>;
   static constexpr auto kZSites = 0;
+  static constexpr auto kZCombo = -5;
   static constexpr auto kZLinks = -10;
   static constexpr auto kZMap = -100;
   QGraphicsScene mapScene_;
   ProbeOptimizer *probeOptimizer_;
-  // std::unordered_set<Site::Id> sitesVisited_;
-  std::vector<std::unique_ptr<QGraphicsItem, QGraphicsItemDeleter>>
-      siteWidgets_;
-  std::vector<std::unique_ptr<QGraphicsItem, QGraphicsItemDeleter>>
-      linkGraphics_;
+  std::vector<GraphicsItemPtr> siteWidgets_;
+  std::vector<GraphicsItemPtr> linkGraphics_;
+  std::vector<GraphicsItemPtr> comboGraphics_;
 
 private Q_SLOTS:
   void calculateSiteWidgets();

@@ -12,6 +12,7 @@
 #include <QGraphicsProxyWidget>
 #include <QGuiApplication>
 #include <QJsonArray>
+#include <boost/container_hash/hash.hpp>
 #include <ranges>
 
 MiraMap::MiraMap(ProbeOptimizer *probeOptimizer, QWidget *parent)
@@ -118,31 +119,34 @@ void MiraMap::calculateSiteWidgets() {
 
 static const auto noComboLinkColor = QColorConstants::Svg::cyan;
 static const auto withComboLinkColor = QColorConstants::Svg::deeppink;
+static const auto comboCircleColor = QColorConstants::Svg::red;
 
 void MiraMap::calculateLinks() {
   QPen pen(Qt::SolidLine);
   pen.setWidth(4);
   linkGraphics_.clear();
+  comboGraphics_.clear();
   // Need to track which lines have already been drawn as both sides of the link
   // are stored.
-  std::vector<std::set<Site::Id>> drawnLinks;
+  std::unordered_set<std::set<Site::Id>, boost::hash<std::set<Site::Id>>>
+      drawnLinks;
   for (const auto site : Site::ALL | std::views::values) {
     if (!probeOptimizer_->getSites().contains(site)) {
       // Do not draw links between sites not visited.
       continue;
     }
+    const auto comboBonus =
+        probeOptimizer_->solution().getSetup().getComboBonus(
+            ProbeOptimizer::getIndexForSiteId(site->name));
     for (const auto neighbor : site->getNeighbors()) {
-      bool comboLink = false;
+      // Don't draw combo lines more than once.
       const std::set linkPair{site->name, neighbor->name};
-      if (std::ranges::find(drawnLinks, linkPair) != drawnLinks.cend()) {
+      if (drawnLinks.contains(linkPair)) {
         // Already drawn line.
         continue;
       }
-      const auto [x1, y1] = site->position;
-      const auto [x2, y2] = neighbor->position;
-      const auto comboBonus =
-          probeOptimizer_->solution().getSetup().getComboBonus(
-              ProbeOptimizer::getIndexForSiteId(site->name));
+
+      bool comboLink = false;
       if (comboBonus > 1) {
         // This site participates in a combo, determine if this link is part of
         // it.
@@ -161,10 +165,26 @@ void MiraMap::calculateLinks() {
       } else {
         pen.setColor(noComboLinkColor);
       }
+
+      const auto [x1, y1] = site->position;
+      const auto [x2, y2] = neighbor->position;
       auto &linkItem = linkGraphics_.emplace_back(
           mapScene_.addLine(QLine(x1, y1, x2, y2), pen));
       linkItem->setZValue(kZLinks);
-      drawnLinks.emplace_back(std::move(linkPair));
+      drawnLinks.insert(linkPair);
+    }
+
+    // Draw circles on sites that are part of a combo.
+    if (comboBonus > 1) {
+      pen.setColor(comboCircleColor);
+      auto [x, y] = site->position;
+      const auto w = 96;
+      const auto h = w;
+      x -= w / 2;
+      y -= h / 2;
+      auto &comboItem = comboGraphics_.emplace_back(
+          mapScene_.addEllipse(QRect(x, y, w, h), pen));
+      comboItem->setZValue(kZCombo);
     }
   }
 }
