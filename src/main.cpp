@@ -99,7 +99,7 @@ RunMode parseOptions(int argc, const char** argv, ProbeOptimizer& optimizer)
     optimizer.setSetupInput(vm["setup"].as<std::string>());
     optimizer.setStorageWeight(vm["storageweight"].as<float>());
     optimizer.setRevenueWeight(vm["revenueweight"].as<float>());
-    optimizer.setProductionWeight(vm["revenueweight"].as<float>());
+    optimizer.setProductionWeight(vm["productionweight"].as<float>());
     optimizer.setMaxIterations(vm["iterations"].as<size_t>());
     optimizer.setNumOffsprings(vm["offsprings"].as<size_t>());
     optimizer.setMutationRate(vm["mutation"].as<float>());
