@@ -42,7 +42,8 @@ jobs:
         name: ubuntu # optional, default is artifact
         # A file, directory or wildcard pattern that describes what to upload
         path: |
-          ./build/xenoprobes
+          ./build/src/xenoprobes/xenoprobes
+          ./build/src/xenoprobes_gui/xenoprobes_gui
           ./sites.csv
         # The desired behavior if no files are found using the provided path.
         if-no-files-found: error
