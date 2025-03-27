@@ -32,12 +32,15 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest] # macos-latest needs autoconf, figure out how to install that
+        os: [ubuntu-latest] # , windows-latest] # macos-latest needs autoconf, figure out how to install that
         include:
-          - os: windows-latest
-            vcpkgCommitId: 'd172727ef04337ef0021640302a9a3a91ad17414'
+#           - os: windows-latest
+#             vcpkgCommitId: 'd172727ef04337ef0021640302a9a3a91ad17414'
+#             # Has to be as short as possible for some packages to build
+#             vcpkgDirectory: 'D:/v'
           - os: ubuntu-latest
             vcpkgCommitId: 'd172727ef04337ef0021640302a9a3a91ad17414'
+            vcpkgDirectory: '${{ runner.workspace }}/v'
 #          - os: macos-latest
 #            vcpkgCommitId: 'd172727ef04337ef0021640302a9a3a91ad17414'
 
@@ -64,8 +67,7 @@ jobs:
         uses: lukka/run-vcpkg@v11
         id: runvcpkg
         with:
-          # Have to make this as short as possible for some packages to build
-          vcpkgDirectory: 'D:/v'
+          vcpkgDirectory: '${{ matrix.vcpkgDirectory }}'
           vcpkgGitCommitId: '${{ matrix.vcpkgCommitId }}'
           runVcpkgInstall: true
           vcpkgJsonGlob: '**/vcpkg.json'
