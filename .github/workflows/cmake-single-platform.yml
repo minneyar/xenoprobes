@@ -1,103 +1,46 @@
-# Copyright (c) 2019-2020-2021-2022-2023 Luca Cappa
-# Released under the term specified in file LICENSE.txt
-# SPDX short identifier: MIT
-#
-# The peculiarity of this workflow is that runs `vcpkg install` at `run-vcpkg`,
-# rather than with `run-cmake.
-# Also, it does not assume that vcpkg is a submodule of this repository.
-#
-# The workflow does the following:
-# - Download and setup vcpkg (which is stored NOT in a Git submodule), then run
-#   `vcpkg install` to install the packages described in vcpkg.json manifest file.
-# - Note: at this point, all the vcpkg dependencies specified in vcpkg.json are installed,
-#   and it is possible to run anything that is needed to build the C++ application as.
-#   long the paths to headers and libraries are correctly set.
-#
-# - _Warning:_ in this sample, CMake is going to be used to build the application,
-#   but anything else could be used. This means that vcpkg will be run again and
-#   it will quickly realize that all dependencies are already installed.
-#   In short: *it is not needed to run vcpkg* in the step before if you build with CMake,
-#   since CMake will run it for you already!
-#   Look to (hosted-ninja-vcpkg_submod.yml)[./hosted-ninja-vcpkg_submod.yml] sample.
-#
-# - Finally, it runs CMake with CMakePreset.json and vcpkg's toolchain file to build
-#   the C++ sources with Ninja.
-name: hosted-ninja-vcpkg-install-cacheoff
-on: [push, workflow_dispatch]
+name: CMake on Ubuntu Linux
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+
+env:
+  # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)
+  BUILD_TYPE: Release
 
 jobs:
-  job:
-    name: ${{ matrix.os }}-${{ github.workflow }}
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-latest] # , windows-latest] # macos-latest needs autoconf, figure out how to install that
-        include:
-#           - os: windows-latest
-#             vcpkgCommitId: 'd172727ef04337ef0021640302a9a3a91ad17414'
-#             # Has to be as short as possible for some packages to build
-#             vcpkgDirectory: 'D:/v'
-          - os: ubuntu-latest
-            vcpkgCommitId: 'd172727ef04337ef0021640302a9a3a91ad17414'
-            vcpkgDirectory: '${{ runner.workspace }}/v'
-#          - os: macos-latest
-#            vcpkgCommitId: 'd172727ef04337ef0021640302a9a3a91ad17414'
+  build:
+    # The CMake configure and build commands are platform agnostic and should work equally well on Windows or Mac.
+    # You can convert this to a matrix build if you need cross-platform coverage.
+    # See: https://docs.github.com/en/free-pro-team@latest/actions/learn-github-actions/managing-complex-workflows#using-a-build-matrix
+    runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v3
-        with:
-          submodules: true
+    - uses: actions/checkout@v4
 
-      - uses: lukka/get-cmake@latest
-      - name: List $RUNNER_WORKSPACE before build
-        run: find $RUNNER_WORKSPACE
-        shell: bash
+    - name: Install Dependencies
+      run: |
+        sudo apt update
+        sudo apt install -y qt6-base-dev qt6-svg-dev libboost-all-dev libspdlog-dev cmake build-essential git ninja-build
 
-      # Some vcpkg libraries need extra packages on Ubuntu
-      - name: Prepare Ubuntu
-        run: |
-          if [ "$RUNNER_OS" == "Linux" ]; then
-            sudo apt update
-            sudo apt install -y autoconf-archive libtool libltdl-dev
-          fi
-        shell: bash
+    - name: Configure CMake
+      run: cmake -G Ninja -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
 
-      - name: Setup vcpkg
-        uses: lukka/run-vcpkg@v11
-        id: runvcpkg
-        with:
-          vcpkgDirectory: '${{ matrix.vcpkgDirectory }}'
-          vcpkgGitCommitId: '${{ matrix.vcpkgCommitId }}'
-          runVcpkgInstall: true
-          vcpkgJsonGlob: '**/vcpkg.json'
+    - name: Build
+      run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
 
-      - name: Prints output of run-vcpkg's action.
-        run: echo "root='${{ steps.runvcpkg.outputs.RUNVCPKG_VCPKG_ROOT_OUT }}', triplet='${{ steps.runvcpkg.outputs.RUNVCPKG_VCPKG_DEFAULT_TRIPLET_OUT }}' "
+    - name: Prepare Artifacts
+      run: |
+        mkdir dist
+        cp ${{github.workspace}}/build/src/xenoprobes/xenoprobes dist/
+        cp ${{github.workspace}}/build/src/xenoprobes_gui/xenoprobes_gui dist/
+        cp ${{github.workspace}}/sites.csv dist/
+        cp ${{github.workspace}}/sample-inventory.csv dist/
 
-      - name: Run CMake with Ninja
-        uses: lukka/run-cmake@v10
-        with:
-          cmakeListsTxtPath: '${{ github.workspace }}/CMakeLists.txt'
-          configurePreset: 'ninja-multi-vcpkg'
-          buildPreset: 'ninja-multi-vcpkg'
-          buildPresetAdditionalArgs: "['--config Release']"
-
-      - name: List $RUNNER_WORKSPACE after build
-        run: find $RUNNER_WORKSPACE
-        shell: bash
-
-      - name: Prepare Artifacts
-        shell: bash
-        run: |
-          mkdir dist
-          cp ${{ github.workspace }}/builds/ninja-multi-vcpkg/Release/src/xenoprobes/xenoprobes dist/
-          cp ${{ github.workspace }}/builds/ninja-multi-vcpkg/Release/src/xenoprobes_gui/xenoprobes_gui dist/
-          cp ${{ github.workspace }}/sites.csv dist/
-          cp ${{ github.workspace }}/sample-inventory.csv dist/
-
-      - name: Upload a Build Artifact
-        uses: actions/upload-artifact@v4.6.2
-        with:
-          path: dist/
-          if-no-files-found: error
+    - name: Upload Build Artifacts
+      uses: actions/upload-artifact@v4.6.2
+      with:
+        path: dist/
+        if-no-files-found: error
