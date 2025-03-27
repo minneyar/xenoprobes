@@ -20,5 +20,8 @@
   }, {
     "name" : "boost-container-hash",
     "version>=" : "1.83.0"
+  }, {
+    "name" : "expat",
+    "version>=" : "2.6.1"
   } ]
 }
