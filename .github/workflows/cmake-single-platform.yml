@@ -1,82 +1,84 @@
-# This starter workflow is for a CMake project running on a single platform. There is a different starter workflow if you need cross-platform coverage.
-# See: https://github.com/actions/starter-workflows/blob/main/ci/cmake-multi-platform.yml
-name: CMake on a single platform
-
-on:
-  push:
-    branches: [ "master" ]
-  pull_request:
-    branches: [ "master" ]
-
-env:
-  # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)
-  BUILD_TYPE: Release
+# Copyright (c) 2019-2020-2021-2022-2023 Luca Cappa
+# Released under the term specified in file LICENSE.txt
+# SPDX short identifier: MIT
+#
+# The peculiarity of this workflow is that runs `vcpkg install` at `run-vcpkg`,
+# rather than with `run-cmake.
+# Also, it does not assume that vcpkg is a submodule of this repository.
+#
+# The workflow does the following:
+# - Download and setup vcpkg (which is stored NOT in a Git submodule), then run
+#   `vcpkg install` to install the packages described in vcpkg.json manifest file.
+# - Note: at this point, all the vcpkg dependencies specified in vcpkg.json are installed,
+#   and it is possible to run anything that is needed to build the C++ application as.
+#   long the paths to headers and libraries are correctly set.
+#
+# - _Warning:_ in this sample, CMake is going to be used to build the application,
+#   but anything else could be used. This means that vcpkg will be run again and
+#   it will quickly realize that all dependencies are already installed.
+#   In short: *it is not needed to run vcpkg* in the step before if you build with CMake,
+#   since CMake will run it for you already!
+#   Look to (hosted-ninja-vcpkg_submod.yml)[./hosted-ninja-vcpkg_submod.yml] sample.
+#
+# - Finally, it runs CMake with CMakePreset.json and vcpkg's toolchain file to build
+#   the C++ sources with Ninja.
+name: hosted-ninja-vcpkg-install-cacheoff
+on: [push, workflow_dispatch]
 
 jobs:
-  ubuntu2404:
-    # The CMake configure and build commands are platform agnostic and should work equally well on Windows or Mac.
-    # You can convert this to a matrix build if you need cross-platform coverage.
-    # See: https://docs.github.com/en/free-pro-team@latest/actions/learn-github-actions/managing-complex-workflows#using-a-build-matrix
-    runs-on: ubuntu-latest
+  job:
+    name: ${{ matrix.os }}-${{ github.workflow }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        include:
+          - os: windows-latest
+            vcpkgCommitId: 'd172727ef04337ef0021640302a9a3a91ad17414'
+          - os: ubuntu-latest
+            vcpkgCommitId: 'd172727ef04337ef0021640302a9a3a91ad17414'
+          - os: macos-latest
+            vcpkgCommitId: 'd172727ef04337ef0021640302a9a3a91ad17414'
 
     steps:
-    - uses: actions/checkout@v4
+      - uses: actions/checkout@v3
+        with:
+          submodules: true
 
-    - name: Install Dependencies
-
-      run: sudo apt update && sudo apt install -y qt6-base-dev qt6-svg-dev libboost-all-dev libspdlog-dev cmake build-essential git
-
-    - name: Configure CMake
-      # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
-      # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
-      run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
-
-    - name: Build
-      # Build your program with the given configuration
-      run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
-
-    - name: Upload a Build Artifact
-      uses: actions/upload-artifact@v4.6.2
-      with:
-        # Artifact name
-        name: ubuntu # optional, default is artifact
-        # A file, directory or wildcard pattern that describes what to upload
-        path: |
-          ./build/xenoprobes
-          ./sites.csv
-        # The desired behavior if no files are found using the provided path.
-        if-no-files-found: error
-
-  windows:
-    runs-on: windows-latest
-
-    steps:
-      - uses: actions/checkout@v4
+      - uses: lukka/get-cmake@latest
+      - name: List $RUNNER_WORKSPACE before build
+        run: find $RUNNER_WORKSPACE
+        shell: bash
 
       - name: Setup vcpkg
         uses: lukka/run-vcpkg@v11
         id: runvcpkg
         with:
           vcpkgDirectory: '${{ runner.workspace }}/b/vcpkg'
-          vcpkgGitCommitId: 'd172727ef04337ef0021640302a9a3a91ad17414'
+          vcpkgGitCommitId: '${{ matrix.vcpkgCommitId }}'
           # Run vcpkg with the command specified by the `runVcpkgFormatString` input.
           runVcpkgInstall: true
           vcpkgJsonGlob: '**/vcpkg.json'
 
-      - name: Configure CMake
-        # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
-        # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
-        run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
+      - name: Prints output of run-vcpkg's action.
+        run: echo "root='${{ steps.runvcpkg.outputs.RUNVCPKG_VCPKG_ROOT_OUT }}', triplet='${{ steps.runvcpkg.outputs.RUNVCPKG_VCPKG_DEFAULT_TRIPLET_OUT }}' "
 
-      - name: Build
-        # Build your program with the given configuration
-        run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
+      - name: Run CMake with Ninja
+        uses: lukka/run-cmake@v10
+        with:
+          cmakeListsTxtPath: '${{ github.workspace }}/CMakeLists.txt'
+          configurePreset: 'ninja-multi-vcpkg'
+          buildPreset: 'ninja-multi-vcpkg'
+
+      - name: List $RUNNER_WORKSPACE after build
+        run: find $RUNNER_WORKSPACE
+        shell: bash
 
       - name: Upload a Build Artifact
         uses: actions/upload-artifact@v4.6.2
         with:
           # Artifact name
-          name: windows # optional, default is artifact
           # A file, directory or wildcard pattern that describes what to upload
           path: |
             ./build/xenoprobes
