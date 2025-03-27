@@ -15,6 +15,6 @@
 
 using CsvRecordVal = std::variant<std::string, int>;
 int csvRecordValToInt(const CsvRecordVal& val);
-std::vector<std::vector<CsvRecordVal>> loadCSV(std::string fname);
+std::vector<std::vector<CsvRecordVal>> loadCSV(const std::string& fname);
 
 #endif //XENOPROBES_CSV_H

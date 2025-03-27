@@ -5,9 +5,7 @@
 #ifndef XENOPROBES_SOLUTION_H
 #define XENOPROBES_SOLUTION_H
 
-#include "probe.h"
 #include "probe_arrangement.h"
-#include <vector>
 
 class Solution {
 public:
@@ -31,9 +29,9 @@ public:
 
   Solution findBestChild(size_t numOffsprings, double mutationRate) const;
 
-  bool operator==(const Solution &b);
-  bool operator<(const Solution &b);
-  bool operator>(const Solution &b);
+  bool operator==(const Solution &b) const;
+  bool operator<(const Solution &b) const;
+  bool operator>(const Solution &b) const;
 
 private:
   double score_ = 0;

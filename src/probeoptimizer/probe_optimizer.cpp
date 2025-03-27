@@ -5,7 +5,6 @@
 #include <fstream>
 #include <iostream>
 #include <map>
-// #include <bits/stl_algo.h>
 #include <boost/algorithm/string/split.hpp>
 #include <boost/algorithm/string/trim.hpp>
 #include <iomanip>
@@ -206,8 +205,8 @@ void ProbeOptimizer::printSetup() const { setup_.printSetup(); }
 
 void ProbeOptimizer::printTotals() const { setup_.printTotals(); }
 
-void ProbeOptimizer::doHillClimbing(ProgressCallback progressCallback,
-                                    StopCallback stopCallback) const {
+void ProbeOptimizer::doHillClimbing(const ProgressCallback& progressCallback,
+                                    const StopCallback& stopCallback) const {
   spdlog::info(
       "Starting Hill Climbing with parameters:\n"
       "  storage weight   = {storageWeight: 6}\n"

@@ -1,6 +1,0 @@
-2015-12-27 P. J. Reed
-    * Using CMake to build instead of autotools.
-
-2015-12-25 Daniel K. O.
-    * First public release.
-

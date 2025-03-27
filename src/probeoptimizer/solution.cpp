@@ -18,7 +18,7 @@ int Solution::getAge() const {
     return age_;
 }
 
-void Solution::setAge(int age) {
+void Solution::setAge(const int age) {
     age_ = age;
 }
 
@@ -31,7 +31,7 @@ void Solution::evaluate() {
     score_ = setup_.evaluate();
 }
 
-void Solution::mutate(double rate) {
+void Solution::mutate(const double rate) {
     setup_.mutate(rate);
 }
 
@@ -69,14 +69,14 @@ Solution Solution::findBestChild(size_t numOffsprings, double mutationRate) cons
     return bestChild;
 }
 
-bool Solution::operator==(const Solution &b) {
+bool Solution::operator==(const Solution &b) const {
     return score_ == b.score_ && setup_ == b.setup_;
 }
 
-bool Solution::operator<( const Solution &b) {
+bool Solution::operator<(const Solution &b) const {
     return score_ < b.score_;
 }
 
-bool Solution::operator>(const Solution &b) {
+bool Solution::operator>(const Solution &b) const {
     return score_ > b.score_;
 }

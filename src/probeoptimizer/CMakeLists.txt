@@ -1,5 +1,5 @@
-find_package (Threads)
-find_package (Boost COMPONENTS system REQUIRED)
+find_package(Threads)
+find_package(Boost COMPONENTS system REQUIRED)
 find_package(spdlog REQUIRED)
 
 add_library(probeoptimizer

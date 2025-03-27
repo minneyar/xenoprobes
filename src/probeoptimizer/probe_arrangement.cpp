@@ -3,9 +3,7 @@
 //
 
 #include <algorithm>
-#include <iostream>
 #include <queue>
-#include <ranges>
 #include <set>
 
 #include "probeoptimizer/probe_arrangement.h"

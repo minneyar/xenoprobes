@@ -143,6 +143,8 @@ Site::Grade Site::gradeFromChar(char grade) {
     return Site::Grade::F;
   case 'S':
     return Site::Grade::S;
+  default:
+    break;
   }
   throw std::invalid_argument("Invalid grade");
 }
@@ -177,6 +179,8 @@ int Site::getProductionVal() const {
     return 350;
   case Grade::C:
     return 250;
+  default:
+    break;
   }
   throw std::invalid_argument("Invalid production grade");
 }

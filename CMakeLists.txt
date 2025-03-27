@@ -1,6 +1,6 @@
 cmake_minimum_required (VERSION 3.22)
 project (xenoprobes
-    VERSION 1.0.0
+    VERSION 2.0.0
     DESCRIPTION "Calculate the optimal Data Probe layout for Xenoblade Chronicles X"
     LANGUAGES CXX
     HOMEPAGE_URL "https://github.com/minneyar/xenoprobes"
