@@ -76,13 +76,19 @@ jobs:
         run: find $RUNNER_WORKSPACE
         shell: bash
 
+      - name: Prepare Artifacts
+        shell: bash
+        run: |
+          mkdir dist
+          cp ${{ github.workspace }}/builds/ninja-multi-vcpkg/Release/xenoprobes dist/
+          cp ${{ github.workspace }}/sites.csv dist/
+          cp ${{ github.workspace }}/sample-inventory.csv dist/
+
       - name: Upload a Build Artifact
         uses: actions/upload-artifact@v4.6.2
         with:
           # Artifact name
           # A file, directory or wildcard pattern that describes what to upload
-          path: |
-            ${{ github.workspace }}/builds/ninja-multi-vcpkg/Release/xenoprobes
-            ${{ github.workspace }}/sites.csv
+          path: dist/
           # The desired behavior if no files are found using the provided path.
           if-no-files-found: error
