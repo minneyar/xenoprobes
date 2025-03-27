@@ -58,7 +58,7 @@ jobs:
         run: |
           if [ "$RUNNER_OS" == "Linux" ]; then
             sudo apt update
-            sudo apt install -y autoconf-archive libtool libltdl-dev
+            sudo apt install -y autoconf-archive libtool libltdl-dev libx11-xcb-dev libglu1-mesa-dev libxrender-dev libxi-dev libxkbcommon-dev libxkbcommon-x11-dev libegl1-mesa-dev
           fi
         shell: bash
 
