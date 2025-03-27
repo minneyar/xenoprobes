@@ -32,14 +32,14 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
+        os: [ubuntu-latest, windows-latest] # macos-latest needs autoconf, figure out how to install that
         include:
           - os: windows-latest
             vcpkgCommitId: 'd172727ef04337ef0021640302a9a3a91ad17414'
           - os: ubuntu-latest
             vcpkgCommitId: 'd172727ef04337ef0021640302a9a3a91ad17414'
-          - os: macos-latest
-            vcpkgCommitId: 'd172727ef04337ef0021640302a9a3a91ad17414'
+#          - os: macos-latest
+#            vcpkgCommitId: 'd172727ef04337ef0021640302a9a3a91ad17414'
 
     steps:
       - uses: actions/checkout@v3
@@ -51,12 +51,12 @@ jobs:
         run: find $RUNNER_WORKSPACE
         shell: bash
 
-      # One of our vcpkg deps needs autoconf-archive on Ubuntu, so install it here
+      # Some vcpkg libraries need extra packages on Ubuntu
       - name: Prepare Ubuntu
         run: |
           if [ "$RUNNER_OS" == "Linux" ]; then
             sudo apt update
-            sudo apt install -y autoconf-archive
+            sudo apt install -y autoconf-archive libtool
           fi
         shell: bash
 
@@ -64,7 +64,7 @@ jobs:
         uses: lukka/run-vcpkg@v11
         id: runvcpkg
         with:
-          vcpkgDirectory: '${{ runner.workspace }}/b/vcpkg'
+          vcpkgDirectory: '${{ runner.workspace }}/v'
           vcpkgGitCommitId: '${{ matrix.vcpkgCommitId }}'
           # Run vcpkg with the command specified by the `runVcpkgFormatString` input.
           runVcpkgInstall: true
