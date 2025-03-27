@@ -82,7 +82,7 @@ jobs:
           # Artifact name
           # A file, directory or wildcard pattern that describes what to upload
           path: |
-            '${{ github.workspace }}/builds/ninja-multi-vcpkg/Release/xenoprobes'
-            '${{ github.workspace }}/sites.csv'
+            ${{ github.workspace }}/builds/ninja-multi-vcpkg/Release/xenoprobes
+            ${{ github.workspace }}/sites.csv
           # The desired behavior if no files are found using the provided path.
           if-no-files-found: error
