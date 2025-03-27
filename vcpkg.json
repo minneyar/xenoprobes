@@ -1,24 +1,30 @@
 {
   "name" : "xenoprobes",
   "version-string" : "1.0.0",
-  "builtin-baseline" : "b2cb0da531c2f1f740045bfe7c4dac59f0b2b69c",
+  "builtin-baseline" : "d172727ef04337ef0021640302a9a3a91ad17414",
   "dependencies" : [ {
     "name" : "boost-filesystem",
-    "version>=" : "1.85.0#2"
+    "version>=" : "1.83.0"
   }, {
     "name" : "boost-program-options",
-    "version>=" : "1.85.0#2"
+    "version>=" : "1.83.0"
   }, {
     "name" : "boost-system",
-    "version>=" : "1.85.0#1"
+    "version>=" : "1.83.0"
   }, {
     "name" : "boost-algorithm",
-    "version>=" : "1.85.0#1"
+    "version>=" : "1.83.0"
   }, {
     "name" : "spdlog",
     "version>=" : "1.15.0"
   }, {
     "name" : "boost-container-hash",
-    "version>=" : "1.86.0"
+    "version>=" : "1.83.0"
+  }, {
+    "name": "qt",
+    "version>=": "6.4.2"
+  }, {
+    "name": "qtsvg",
+    "version>=": "6.4.2"
   } ]
 }
