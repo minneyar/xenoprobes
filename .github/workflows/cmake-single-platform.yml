@@ -32,14 +32,14 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest] # , macos-latest, windows-latest]
+        os: [ubuntu-latest, macos-latest, windows-latest]
         include:
           - os: windows-latest
             vcpkgCommitId: 'd172727ef04337ef0021640302a9a3a91ad17414'
           - os: ubuntu-latest
             vcpkgCommitId: 'd172727ef04337ef0021640302a9a3a91ad17414'
-#          - os: macos-latest
-#            vcpkgCommitId: 'd172727ef04337ef0021640302a9a3a91ad17414'
+          - os: macos-latest
+            vcpkgCommitId: 'd172727ef04337ef0021640302a9a3a91ad17414'
 
     steps:
       - uses: actions/checkout@v3
@@ -49,6 +49,15 @@ jobs:
       - uses: lukka/get-cmake@latest
       - name: List $RUNNER_WORKSPACE before build
         run: find $RUNNER_WORKSPACE
+        shell: bash
+
+      # One of our vcpkg deps needs autoconf-archive on Ubuntu, so install it here
+      - name: Prepare Ubuntu
+        run: |
+          if [ "$RUNNER_OS" == "Linux" ]; then
+            sudo apt update
+            sudo apt install -y autoconf-archive
+          fi
         shell: bash
 
       - name: Setup vcpkg
@@ -80,7 +89,8 @@ jobs:
         shell: bash
         run: |
           mkdir dist
-          cp ${{ github.workspace }}/builds/ninja-multi-vcpkg/Release/xenoprobes dist/
+          cp ${{ github.workspace }}/builds/ninja-multi-vcpkg/Release/src/xenoprobes/xenoprobes dist/
+          cp ${{ github.workspace }}/builds/ninja-multi-vcpkg/Release/src/xenoprobes_gui/xenoprobes_gui dist/
           cp ${{ github.workspace }}/sites.csv dist/
           cp ${{ github.workspace }}/sample-inventory.csv dist/
 
