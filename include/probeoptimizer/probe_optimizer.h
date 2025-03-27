@@ -46,8 +46,8 @@ public:
   void printTotals() const;
 
   void
-  doHillClimbing(ProgressCallback progressCallback = {},
-                 StopCallback stopCallback = &ProbeOptimizer::shouldStop) const;
+  doHillClimbing(const ProgressCallback& progressCallback = {},
+                 const StopCallback& stopCallback = &ProbeOptimizer::shouldStop) const;
 
   void setStorageWeight(float storageWeight);
   void setRevenueWeight(float revenueWeight);
@@ -92,14 +92,14 @@ private:
   inline static ProbeArrangement setup_;
   static void updateSiteListIndexes();
 
-  float mutationRate_;
-  float eliteRatio_;
-  size_t maxPopSize_;
-  size_t tournamentRank_;
-  size_t numOffsprings_;
-  size_t maxIterations_;
-  int maxAge_;
-  size_t max_threads_;
+  float mutationRate_{};
+  float eliteRatio_{};
+  size_t maxPopSize_{};
+  size_t tournamentRank_{};
+  size_t numOffsprings_{};
+  size_t maxIterations_{};
+  int maxAge_{};
+  size_t max_threads_{};
   mutable Solution solution_;
 
   static std::atomic<bool> shouldStop_;

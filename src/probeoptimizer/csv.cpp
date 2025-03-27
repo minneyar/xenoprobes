@@ -11,7 +11,7 @@
 #include <boost/algorithm/string/trim.hpp>
 #include <fstream>
 
-std::vector<std::vector<CsvRecordVal>> loadCSV(std::string fname) {
+std::vector<std::vector<CsvRecordVal>> loadCSV(const std::string& fname) {
   std::vector<std::vector<CsvRecordVal>> result;
 
   std::ifstream file{fname};
