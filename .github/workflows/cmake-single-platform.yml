@@ -40,7 +40,6 @@ jobs:
 #             vcpkgDirectory: 'D:/v'
           - os: ubuntu-latest
             vcpkgCommitId: 'd172727ef04337ef0021640302a9a3a91ad17414'
-            vcpkgDirectory: '${{ runner.workspace }}/v'
 #          - os: macos-latest
 #            vcpkgCommitId: 'd172727ef04337ef0021640302a9a3a91ad17414'
 
@@ -67,7 +66,7 @@ jobs:
         uses: lukka/run-vcpkg@v11
         id: runvcpkg
         with:
-          vcpkgDirectory: '${{ matrix.vcpkgDirectory }}'
+          vcpkgDirectory: '${{ runner.workspace }}/b'
           vcpkgGitCommitId: '${{ matrix.vcpkgCommitId }}'
           runVcpkgInstall: true
           vcpkgJsonGlob: '**/vcpkg.json'
