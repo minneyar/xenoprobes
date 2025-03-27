@@ -1,49 +1,47 @@
-cmake_minimum_required (VERSION 3.8)
+cmake_minimum_required (VERSION 3.22)
 project (xenoprobes
     VERSION 1.0.0
-    LANGUAGES CXX)
+    DESCRIPTION "Calculate the optimal Data Probe layout for Xenoblade Chronicles X"
+    LANGUAGES CXX
+    HOMEPAGE_URL "https://github.com/minneyar/xenoprobes"
+)
+set(PROJECT_DISPLAY_NAME "XenoProbes")
+set(PROJECT_ORGANIZATION_NAME "minneyar")
+file(READ "${PROJECT_SOURCE_DIR}/AUTHORS" PROJECT_AUTHORS)
+# Insert 2 escaped newlines for every newline in the file.
+string(REPLACE "\n" "\\n\\n\"\n\"" PROJECT_AUTHORS "${PROJECT_AUTHORS}")
+set(PROJECT_AUTHORS_CARR "\"${PROJECT_AUTHORS_CARR}\"")
+string(TIMESTAMP PROJECT_BUILD_TIMESTAMP "%s" UTC)
+find_package(Git REQUIRED)
+execute_process(COMMAND "${GIT_EXECUTABLE}" log -n1 --format=%H
+        OUTPUT_VARIABLE PROJECT_COMMIT_SHA
+        COMMAND_ERROR_IS_FATAL ANY
+)
+string(STRIP "${PROJECT_COMMIT_SHA}" PROJECT_COMMIT_SHA)
+execute_process(COMMAND "${GIT_EXECUTABLE}" tag --points-at=HEAD
+        OUTPUT_VARIABLE PROJECT_COMMIT_TAG
+        COMMAND_ERROR_IS_FATAL ANY
+)
+string(STRIP "${PROJECT_COMMIT_TAG}" PROJECT_COMMIT_TAG)
 
-find_package (Threads)
+list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake")
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_AUTOMOC ON)
+set(CMAKE_AUTORCC ON)
+set(CMAKE_AUTOUIC ON)
 set(Boost_USE_STATIC_LIBS ON)
 set(Boost_USE_MULTITHREADED ON)
-find_package (Boost COMPONENTS filesystem program_options system REQUIRED)
 
-if(MSVC)
-  add_compile_options(
-    $<$<CONFIG:>:/MT> #---------|
-    $<$<CONFIG:Debug>:/MTd> #---|-- Statically link the runtime libraries
-    $<$<CONFIG:Release>:/MT> #--|
-  )
-endif()
-
-add_executable(${PROJECT_NAME})
-
+add_compile_definitions(QT_NO_KEYWORDS)
+include_directories("${PROJECT_SOURCE_DIR}/include" "${PROJECT_BINARY_DIR}/include")
 if (MSVC)
-  set_target_properties(${PROJECT_NAME} PROPERTIES
-      MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
-      CXX_STANDARD 14
-      )
-else()
-  set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD 14)
-endif()
+    add_compile_options("/utf-8")
+endif ()
 
-target_sources(${PROJECT_NAME} PRIVATE
-  src/main.cpp
-  src/ore.cpp
-  src/probe_arrangement.cpp
-  src/probe.cpp
-  src/probe_optimizer.cpp
-  src/site.cpp
-  src/site_list.cpp
-  src/solution.cpp
-  src/semaphore.cpp
-)
-target_link_libraries (${PROJECT_NAME}
-  PRIVATE
-  Boost::filesystem
-  Boost::program_options
-  Boost::system
-  Threads::Threads
-  $<IF:$<BOOL:MSVC>,,-static>
+find_package(Qt6 6.2 REQUIRED COMPONENTS
+        Core
+        Svg
+        Widgets
 )
 
+add_subdirectory(src)

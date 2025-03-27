@@ -21,7 +21,10 @@
     "name" : "boost-container-hash",
     "version>=" : "1.83.0"
   }, {
-    "name" : "expat",
-    "version>=" : "2.6.1"
+    "name": "qt",
+    "version>=": "6.4.2"
+  }, {
+    "name": "qtsvg",
+    "version>=": "6.4.2"
   } ]
 }

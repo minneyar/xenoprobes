@@ -29,7 +29,11 @@
 
 # CLion project
 .idea/
+cmake-build-*
 
 # CMake build dir
 build/
 cmake-build-*/
+
+# Runtime files
+inventory.csv
