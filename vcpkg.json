@@ -3,6 +3,9 @@
   "version-string" : "1.0.0",
   "builtin-baseline" : "d172727ef04337ef0021640302a9a3a91ad17414",
   "dependencies" : [ {
+    "name" : "boost",
+    "version>=" : "1.83.0"
+  }, {
     "name" : "boost-filesystem",
     "version>=" : "1.83.0"
   }, {
