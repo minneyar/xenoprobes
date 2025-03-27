@@ -26,7 +26,7 @@ jobs:
         sudo apt install -y qt6-base-dev qt6-svg-dev libboost-all-dev libspdlog-dev cmake build-essential git ninja-build
 
     - name: Configure CMake
-      run: cmake -G ninja -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
+      run: cmake -G Ninja -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
 
     - name: Build
       run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
